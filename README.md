@@ -26,3 +26,7 @@ launch({
     }
 })
 ```
+
+#### What should it look like running from console?
+
+![gif](https://pierce.is-serious.business/7d91a7.gif)
