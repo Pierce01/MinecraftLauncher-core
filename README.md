@@ -16,7 +16,7 @@ launch({
     },
 	// All of the following is required
     root: "directory", // C:/Users/user/AppData/Roaming/.mc
-    os: "windows",
+    os: "windows", // windows, osx, linux
     version: {
         number: "1.12.2", // Minecraft version you want to launch
         type: "MC-Launcher" // Type. Can be anything
