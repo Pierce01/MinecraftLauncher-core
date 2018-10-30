@@ -41,7 +41,7 @@ module.exports.getVersion = function (version) {
 
             const parsed = JSON.parse(body);
 
-            for (let desiredVersion in parsed.versions) {
+            for (const desiredVersion in parsed.versions) {
                 if(parsed.versions[desiredVersion].id === version) {
                     request.get(parsed.versions[desiredVersion].url, function(error, response, body) {
                         if (error) resolve(error);
@@ -66,7 +66,7 @@ module.exports.getJar = function (version, number, directory) {
 
 module.exports.getAssets = function (directory, version) {
     return new Promise(async(resolve) => {
-        const assetsUrl = 'http://resources.download.minecraft.net';
+        const assetsUrl = 'https://resources.download.minecraft.net';
         const failed = [];
 
         if(!fs.existsSync(path.join(directory, 'assets', 'indexes', `${version.assetIndex.id}.json`))) {
