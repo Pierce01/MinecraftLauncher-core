@@ -6,25 +6,23 @@ A script that launches Minecraft using NodeJS.
 #### Usage
 
 ```javascript
-const launch = require('./pathtomodule').core;
+const launcher = require('./pathtomodule');
 
-launch({
-    login: {
-        username: "", // required
-        password: "", // optional
-        offline: false // optional
-    },
+launcher.authenticator("email", "password").then(auth => {
+    launcher.core({
+        authorization: auth,
 	// All of the following is required
-    root: "directory", // C:/Users/user/AppData/Roaming/.mc
-    os: "windows", // windows, osx, linux
-    version: {
-        number: "1.12.2", // Minecraft version you want to launch
-        type: "MC-Launcher" // Type. Can be anything
-    },
-    memory: {
-        max: "5000"
-    }
-})
+        root: "directory", // C:/Users/user/AppData/Roaming/.mc
+        os: "windows", // windows, osx, linux
+        version: {
+            number: "1.13.2", // Minecraft version you want to launch
+            type: "MCC-Launcher" // Type. Can be anything
+        },
+        memory: {
+            max: "500"
+        }
+    });
+});
 ```
 
 #### What should it look like running from console?
