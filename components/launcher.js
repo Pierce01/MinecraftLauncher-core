@@ -9,8 +9,6 @@ const shelljs = require('shelljs');
 module.exports = async function (options) {
     if (!fs.existsSync(options.root)) fs.mkdirSync(options.root);
 
-    options.authorization = await ygg(options.login.offline, options.login.username, options.login.password);
-
     const versionFile = await handler.getVersion(options.version.number);
     const directory = path.join(options.root, 'versions', options.version.number);
     options.directory = directory;
