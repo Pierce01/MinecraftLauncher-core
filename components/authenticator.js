@@ -3,20 +3,8 @@ const uuid = require('uuid/v1');
 const api_url = "https://authserver.mojang.com";
 
 
-function getAuth(username, password) {
+function login(username, password) {
     return new Promise(resolve => {
-        if(!password) {
-            const user = {
-                access_token: uuid(),
-                client_token: uuid(),
-                uuid: uuid(),
-                name: username,
-                user_object: JSON.stringify({})
-            };
-
-            resolve(user);
-        }
-
         const requestObject = {
             url: api_url + "/authenticate",
             json: {
@@ -49,6 +37,23 @@ function getAuth(username, password) {
     });
 }
 
-module.exports = async function(username, password) {
-    return await getAuth(username, password);
+function offline(username) {
+    let user = {
+        access_token: uuid(),
+        client_token: uuid(),
+        uuid: uuid(),
+        name: username,
+        user_object: JSON.stringify({})
+    };
+
+    return user;
+}
+
+
+module.exports = async function(_offline, username, password) {
+    if(_offline) {
+        return offline(username);
+    }
+
+    return await login(username, password);
 };
