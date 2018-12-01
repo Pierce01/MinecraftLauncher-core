@@ -9,7 +9,7 @@ A script that launches Minecraft using NodeJS.
 ```javascript
 const launcher = require('./pathtomodule');
 
-launcher.authenticator("email", "password").then(auth => {
+launcher.authenticator.getAuth("email", "password").then(auth => {
     // Save the auth to a file so it can be used later on!
     launcher.core({
         authorization: auth,
