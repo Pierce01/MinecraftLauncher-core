@@ -13,6 +13,7 @@ launcher.authenticator.getAuth("email", "password").then(auth => {
     // Save the auth to a file so it can be used later on!
     launcher.core({
         authorization: auth,
+        clientPackage: null,
 	    // All of the following is required
         root: "directory", // C:/Users/user/AppData/Roaming/.mc
         os: "windows", // windows, osx, linux
@@ -38,6 +39,7 @@ launcher.authenticator.getAuth("email", "password").then(auth => {
     }
     launcher.core({
         authorization: auth,
+        clientPackage: null,
 	    // All of the following is required
         root: "directory", // C:/Users/user/AppData/Roaming/.mc
         os: "windows", // windows, osx, linux
@@ -51,6 +53,17 @@ launcher.authenticator.getAuth("email", "password").then(auth => {
     });
 });
 ```
+
+#### Client Packages
+
+Client Packages allow the client to run offline on setup.
+
+* makePackage - `launcher.handler.makePackage(["arrayOfVersions"], "os");`
+* extractPackage - `launcher.handler.extractPackage("directory", "packageDirectory")`
+
+If you're using a clientPackage, change `null` for `clientPackage` to the zip directory in the example.
+
+
 
 #### What should it look like running from console?
 
