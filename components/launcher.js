@@ -8,9 +8,13 @@ const shelljs = require('shelljs');
 module.exports = async function (options) {
     if (!fs.existsSync(options.root)) fs.mkdirSync(options.root);
 
-    const versionFile = await handler.getVersion(options.version.number);
+    if(options.clientPackage) {
+        await handler.extractPackage(options.root, options.clientPackage);
+    }
+
     const directory = path.join(options.root, 'versions', options.version.number);
     options.directory = directory;
+    const versionFile = await handler.getVersion(options.version.number, options.directory);
     const mcPath = path.join(directory, `${options.version.number}.jar`);
     const nativePath = await handler.getNatives(options.root, versionFile, options.os);
 
@@ -53,5 +57,5 @@ module.exports = async function (options) {
 
     minecraft.stdout.on('data', (data) => {console.log(`[Minecraft] ${data}`)});
     minecraft.stderr.on('data', (data) => {console.error(`[Error] ${data}`)});
-    minecraft.on('close', (code) => {shelljs.rm('-rf', nativePath); console.log(`Minecraft closed with code ${code}`)});
+    minecraft.on('close', (code) => {console.log(`Minecraft closed with code ${code}`)});
 };

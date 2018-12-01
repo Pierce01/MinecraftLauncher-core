@@ -2,7 +2,7 @@ const fs =  require('fs');
 const shelljs = require('shelljs');
 const path = require('path');
 const request = require('request');
-const unzip = require('extract-zip');
+const zip = require('adm-zip');
 
 
 function downloadAsync (url, directory, name) {
@@ -33,8 +33,10 @@ function downloadAsync (url, directory, name) {
     });
 }
 
-module.exports.getVersion = function (version) {
+module.exports.getVersion = function (version, directory) {
     return new Promise(resolve => {
+        if(fs.existsSync(path.join(directory, `${version}.json`))) resolve(require(path.join(directory, `${version}.json`)));
+
         const manifest = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
         request.get(manifest, function(error, response, body) {
             if (error) resolve(error);
@@ -98,26 +100,30 @@ module.exports.getAssets = function (directory, version) {
 
 module.exports.getNatives = function (root, version, os) {
     return new Promise(async(resolve) => {
-        const nativeDirectory = path.join(root, "natives", `${Math.floor(Math.random() * 1000000000)}`);
-        shelljs.mkdir('-p', nativeDirectory);
+        let nativeDirectory;
 
-        const download = version.libraries.map(async function (lib) {
-            if (!lib.downloads.classifiers) return;
-            const type = `natives-${os}`;
-            const native = lib.downloads.classifiers[type];
+        if(fs.existsSync(path.join(root, 'natives', version.id))) {
+            nativeDirectory = path.join(root, 'natives', version.id);
+        } else {
+            nativeDirectory = path.join(root, "natives", version.id);
 
-            if (native) {
-                const name = native.path.split('/').pop();
+            shelljs.mkdir('-p', nativeDirectory);
 
-                await downloadAsync(native.url, nativeDirectory, name);
+            const download = version.libraries.map(async function (lib) {
+                if (!lib.downloads.classifiers) return;
+                const type = `natives-${os}`;
+                const native = lib.downloads.classifiers[type];
 
-                unzip(`${path.join(nativeDirectory, name)}`, {dir: nativeDirectory},e => {
+                if (native) {
+                    const name = native.path.split('/').pop();
+                    await downloadAsync(native.url, nativeDirectory, name);
+                    new zip(path.join(nativeDirectory, name)).extractAllTo(nativeDirectory, true);
                     shelljs.rm(path.join(nativeDirectory, name));
-                })
-            }
-        });
+                }
+            });
 
-        await Promise.all(download);
+            await Promise.all(download);
+        }
 
         resolve(nativeDirectory);
     });
@@ -194,5 +200,28 @@ module.exports.getJVM = function (version, options) {
                 break;
             }
         }
+    });
+};
+
+module.exports.makePackage = async function(versions, os) {
+    const directory = path.join(process.cwd(), 'clientpackage');
+
+    for(const version in versions) {
+        const versionFile = await this.getVersion(versions[version], directory);
+        await this.getNatives(`${directory}/natives/${versions[version]}`, versionFile, os, true);
+        await this.getJar(versionFile, versions[version], `${directory}/versions/${versions[version]}`);
+        await this.getClasses(directory, versionFile);
+        await this.getAssets(directory, versionFile);
+    }
+
+    const archive = new zip();
+    archive.addLocalFolder(directory);
+    archive.writeZip(`${directory}.zip`);
+};
+
+module.exports.extractPackage = function(root, clientPackage) {
+    return new Promise(resolve => {
+        new zip(clientPackage).extractAllTo(root, true);
+        resolve();
     });
 };
