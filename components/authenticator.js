@@ -41,6 +41,7 @@ function getAuth(username, password) {
                 client_token: uuid(),
                 uuid: body.selectedProfile.id,
                 name: body.selectedProfile.name,
+                selected_profile: body.selectedProfile,
                 user_properties: JSON.stringify((body.user || {}).properties || {})
             };
 
@@ -49,6 +50,53 @@ function getAuth(username, password) {
     });
 }
 
-module.exports = async function(username, password) {
-    return await getAuth(username, password);
-};
+function validate(access_token) {
+    return new Promise(resolve => {
+        const requestObject = {
+            url: api_url + "/validate",
+            json: {
+                "accessToken": access_token
+            }
+        };
+
+        request.post(requestObject, async function(error, response, body) {
+            if (error) resolve(error);
+
+            if(!body) resolve(true); else resolve(false);
+        });
+    });
+}
+
+function refreshAuth(accessToken, clientToken, selectedProfile) {
+    return new Promise(resolve => {
+        const requestObject = {
+            url: api_url + "/refresh",
+            json: {
+                "accessToken": accessToken,
+                "clientToken": clientToken,
+                "selectedProfile": selectedProfile,
+                "requestUser": true
+            }
+        };
+
+        request.post(requestObject, function(error, response, body) {
+            if (error) resolve(error);
+            console.log(body);
+            if(!body.selectedProfile) {
+                throw new Error("Validation error: " + response.statusMessage);
+            }
+
+            const userProfile = {
+                access_token: body.accessToken,
+                client_token: uuid(),
+                uuid: body.selectedProfile.id,
+                name: body.selectedProfile.name,
+                user_properties: JSON.stringify((body.user || {}).properties || {})
+            };
+
+            resolve(userProfile);
+        });
+    });
+}
+
+module.exports = {getAuth, validate, refreshAuth};
