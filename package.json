@@ -1,18 +1,31 @@
 {
-  "name": "mcclauncher",
-  "version": "0.0.1",
-  "description": "Launcher for MCC",
+  "name": "minecraft-launcher-core",
+  "version": "1.0.1",
+  "description": "Module that downloads Minecraft assets and runs Minecraft.",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Pierce",
-  "license": "MIT",
   "dependencies": {
     "adm-zip": "^0.4.13",
     "node-fetch": "^2.2.0",
     "request": "^2.88.0",
     "shelljs": "^0.8.2",
     "uuid": "^3.3.2"
-  }
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pierce01/MinecraftLauncher-core.git"
+  },
+  "keywords": [
+    "minecraft",
+    "minecraft-launcher-node"
+  ],
+  "author": "Pierce Harriz",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Pierce01/MinecraftLauncher-core/issues"
+  },
+  "homepage": "https://github.com/Pierce01/MinecraftLauncher-core#readme"
 }

@@ -2,11 +2,10 @@ const child = require('child_process');
 const path = require('path');
 const handler = require('./handler');
 const fs = require('fs');
-const shelljs = require('shelljs');
 
 
 module.exports = async function (options) {
-    if (!fs.existsSync(options.root)) fs.mkdirSync(options.root);
+    if(!fs.existsSync(options.root)) fs.mkdirSync(options.root);
 
     if(options.clientPackage) {
         await handler.extractPackage(options.root, options.clientPackage);
