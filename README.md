@@ -3,6 +3,10 @@
 
 A script that launches Minecraft using NodeJS.
 
+#### Installing
+
+`npm i minecraft-launcher-core`
+
 #### Usage
 
 ##### Basic Login
