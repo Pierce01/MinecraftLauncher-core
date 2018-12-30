@@ -102,7 +102,7 @@ launcher.core({
         max: "500"
     }
 });
-``
+```
 
 
 #### What should it look like running from console?
