@@ -14,13 +14,13 @@ A script that launches Minecraft using NodeJS.
 
 | Parameter        | Type     | Description                                                                               | Required |
 |------------------|----------|-------------------------------------------------------------------------------------------|----------|
-| `authorization`  | Object | The result from `getAuth` function, allows the client to login in online or offline mode. | True     |
-| `clientPackage`  | String   | Path to the client package zip file.                                                      | False    |
-| `root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`    | True     |
-| `os`             | String   | windows, osx or linux                                                                     | True     |
-| `version.number` | String   | Minecraft version that is going to be launched.                                           | True     |
-| `version.type`   | String   | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
-| `memory.max`     | String   | Max amount of memory being used by Minectaft                                              | True     |
+| `options.authorization`  | Object | The result from `getAuth` function, allows the client to login in online or offline mode. | True     |
+| `options.clientPackage`  | String   | Path to the client package zip file.                                                      | False    |
+| `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`    | True     |
+| `options.os`             | String   | windows, osx or linux                                                                     | True     |
+| `options.version.number` | String   | Minecraft version that is going to be launched.                                           | True     |
+| `options.version.type`   | String   | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
+| `options.memory.max`     | String   | Max amount of memory being used by Minectaft                                              | True     |
 
 #### launcher.authenticator Functions 
 

@@ -1,6 +1,6 @@
 {
   "name": "minecraft-launcher-core",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Module that downloads Minecraft assets and runs Minecraft.",
   "main": "index.js",
   "dependencies": {
