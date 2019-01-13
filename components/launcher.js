@@ -1,4 +1,5 @@
 const child = require('child_process');
+const event = require('./events');
 const path = require('path');
 const handler = require('./handler');
 const fs = require('fs');
@@ -53,8 +54,8 @@ module.exports = async function (options) {
     const arguments = args.concat(memory, jvm, classPaths, launchOptions);
     const minecraft = child.spawn("java", arguments);
 
-
-    minecraft.stdout.on('data', (data) => {console.log(`[Minecraft] ${data}`)});
-    minecraft.stderr.on('data', (data) => {console.error(`[Error] ${data}`)});
-    minecraft.on('close', (code) => {console.log(`Minecraft closed with code ${code}`)});
+    event.emit('start', null);
+    minecraft.stdout.on('data', (data) => event.emit('data', data));
+    minecraft.stderr.on('data', (data) => event.emit('error', data));
+    minecraft.on('close', (code) => event.emit('close', code));
 };
