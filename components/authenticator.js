@@ -15,6 +15,7 @@ function getAuth(username, password) {
             };
 
             resolve(user);
+            return;
         }
 
         const requestObject = {
