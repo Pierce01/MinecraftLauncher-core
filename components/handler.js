@@ -3,6 +3,7 @@ const shelljs = require('shelljs');
 const path = require('path');
 const request = require('request');
 const zip = require('adm-zip');
+const event = require('./events');
 
 
 function downloadAsync (url, directory, name) {
@@ -220,8 +221,13 @@ module.exports.makePackage = async function(versions, os) {
 };
 
 module.exports.extractPackage = function(root, clientPackage) {
-    return new Promise(resolve => {
+    return new Promise(async resolve => {
+        if(clientPackage.startsWith('http')) {
+            await downloadAsync(clientPackage, root, "clientPackage.zip")
+            clientPackage = path.join(root, "clientPackage.zip")
+        }
         new zip(clientPackage).extractAllTo(root, true);
+        event.emit('package-extract', true);
         resolve();
     });
 };
