@@ -24,6 +24,13 @@ function downloadAsync (url, directory, name) {
             });
         });
 
+        _request.on('data', (data) => {
+            event.emit('download-status', {
+                "current": Math.round(fs.statSync(path.join(directory, name))["size"] / 10000),
+                "total": data.length
+            })
+        });
+
         const file = fs.createWriteStream(path.join(directory, name));
         _request.pipe(file);
 
@@ -223,7 +230,7 @@ module.exports.makePackage = async function(versions, os) {
 module.exports.extractPackage = function(root, clientPackage) {
     return new Promise(async resolve => {
         if(clientPackage.startsWith('http')) {
-            await downloadAsync(clientPackage, root, "clientPackage.zip")
+            await downloadAsync(clientPackage, root, "clientPackage.zip");
             clientPackage = path.join(root, "clientPackage.zip")
         }
         new zip(clientPackage).extractAllTo(root, true);
