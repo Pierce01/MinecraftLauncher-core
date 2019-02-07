@@ -137,6 +137,39 @@ module.exports.getNatives = function (root, version, os) {
     });
 };
 
+module.exports.getForgeDependencies = async function(root, version, forgeJarPath) {
+    if(!fs.existsSync(path.join(root, 'forge'))) {
+        shelljs.mkdir('-p', path.join(root, 'forge'));
+    }
+    await new zip(forgeJarPath).extractEntryTo('version.json', path.join(root, 'forge', `${version.id}`), false, true)
+
+    const forgeLibs = require(path.join(root, 'forge', `${version.id}`, 'version.json')).libraries;
+    const marvenUrl = 'http://files.minecraftforge.net/maven/';
+    const paths = [];
+
+    const download = forgeLibs.map(async library => {
+        const lib = library.name.split(':');
+
+        if(lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) return;
+        if(!library.url) return;
+
+        const url = `${marvenUrl}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${lib[1]}-${lib[2]}.jar`;
+        const jarPath = path.join(root, 'libraries', `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`);
+        const name = `${lib[1]}-${lib[2]}.jar`;
+
+        if(fs.existsSync(path.join(jarPath, name))) return;
+        if(!fs.existsSync(jarPath)) shelljs.mkdir('-p', jarPath);
+
+        await downloadAsync(url, jarPath, name);
+
+        paths.push(`${jarPath}//${name}`);
+    })
+
+    await Promise.all(download);
+
+    return paths;
+};
+
 module.exports.getClasses = function (root, version) {
     return new Promise(async (resolve) => {
         const libs = [];
