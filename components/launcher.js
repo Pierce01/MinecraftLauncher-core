@@ -42,14 +42,12 @@ module.exports = async function (options) {
     jvm.push(await handler.getJVM(versionFile, options));
     if(options.customArgs) jvm = jvm.concat(options.customArgs);
 
-    let mainClass;
     const classes = await handler.getClasses(options.root, versionFile);
-    const classPaths = [];
+    const classPaths = ['-cp'];
     if(forge) {
         classPaths.push(`${options.forge.path};${forge.paths.join(';')};${classes.join(';')};${mcPath}`);
-        mainClass = forge.forge.mainClass
+        classPaths.push(forge.forge.mainClass)
     } else {
-        classPaths.push('-cp');
         classPaths.push(`${mcPath};${classes.join(";")}`);
         classPaths.push(versionFile.mainClass);
     }
@@ -65,9 +63,7 @@ module.exports = async function (options) {
         launchOptions = await handler.getLaunchOptions(versionFile, null, options);
     }
 
-    // NOTE: Hacky way of setting up launch options, will rework this next update.
-    let launchArguments = args.concat(jvm, classPaths, launchOptions);
-    if(forge) launchArguments = `${jvm.join(' ')} -cp ${classPaths} ${mainClass} ${launchOptions.join(' ')}`.split(' ');
+    const launchArguments = args.concat(jvm, classPaths, launchOptions);
 
     const minecraft = child.spawn(`java`, launchArguments);
     event.emit('start', null);
