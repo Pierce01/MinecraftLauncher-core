@@ -27,7 +27,7 @@ module.exports = async function (options) {
         forge = await handler.getForgeDependencies(options.root, versionFile, options.forge.path);
     }
 
-    const args = []
+    const args = [];
 
     // Jvm
     let jvm = [
@@ -40,9 +40,10 @@ module.exports = async function (options) {
         '-Xincgc'
     ];
     jvm.push(await handler.getJVM(versionFile, options));
+    if(options.customArgs) jvm = jvm.concat(options.customArgs);
 
-    const classes = await handler.getClasses(options.root, versionFile);
     let mainClass;
+    const classes = await handler.getClasses(options.root, versionFile);
     const classPaths = [];
     if(forge) {
         classPaths.push(`${options.forge.path};${forge.paths.join(';')};${classes.join(';')};${mcPath}`);
@@ -57,14 +58,18 @@ module.exports = async function (options) {
     await handler.getAssets(options.root, versionFile);
 
     // Launch options
-    const launchOptions = await handler.getLaunchOptions(versionFile, options);
-    if(forge) launchOptions.push('--tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker');
+    let launchOptions;
+    if(forge) {
+        launchOptions = await handler.getLaunchOptions(versionFile, forge.forge, options);
+    } else {
+        launchOptions = await handler.getLaunchOptions(versionFile, null, options);
+    }
 
     // NOTE: Hacky way of setting up launch options, will rework this next update.
     let launchArguments = args.concat(jvm, classPaths, launchOptions);
     if(forge) launchArguments = `${jvm.join(' ')} -cp ${classPaths} ${mainClass} ${launchOptions.join(' ')}`.split(' ');
 
-    const minecraft = child.spawn(`java`, launchArguments)
+    const minecraft = child.spawn(`java`, launchArguments);
     event.emit('start', null);
     minecraft.stdout.on('data', (data) => event.emit('data', data));
     minecraft.stderr.on('data', (data) => event.emit('error', data));

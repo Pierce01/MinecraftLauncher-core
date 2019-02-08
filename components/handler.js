@@ -177,7 +177,7 @@ module.exports.getForgeDependencies = async function(root, version, forgeJarPath
         await downloadAsync(downloadLink, jarPath, name);
 
         paths.push(`${jarPath}\\${name}`);
-    })
+    });
 
     await Promise.all(download);
 
@@ -212,9 +212,14 @@ module.exports.getClasses = function (root, version) {
     });
 };
 
-module.exports.getLaunchOptions = function (version, options) {
+module.exports.getLaunchOptions = function (version, forge, options) {
     return new Promise(resolve => {
-        let arguments = version.minecraftArguments ? version.minecraftArguments.split(' ') : version.arguments.game;
+        let arguments;
+        if(forge) {
+            arguments = forge.minecraftArguments ? forge.minecraftArguments.split(' ') : forge.arguments.game;
+        } else {
+            arguments = version.minecraftArguments ? version.minecraftArguments.split(' ') : version.arguments.game;
+        }
         const fields = {
             '${auth_access_token}': options.authorization.access_token,
             '${auth_session}': options.authorization.access_token,
