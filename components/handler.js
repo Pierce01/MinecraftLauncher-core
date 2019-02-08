@@ -143,31 +143,45 @@ module.exports.getForgeDependencies = async function(root, version, forgeJarPath
     }
     await new zip(forgeJarPath).extractEntryTo('version.json', path.join(root, 'forge', `${version.id}`), false, true)
 
-    const forgeLibs = require(path.join(root, 'forge', `${version.id}`, 'version.json')).libraries;
-    const marvenUrl = 'http://files.minecraftforge.net/maven/';
+    const forge = require(path.join(root, 'forge', `${version.id}`, 'version.json'));
+    const forgeLibs = forge.libraries;
+    const mavenUrl = 'http://files.minecraftforge.net/maven/';
+    const defaultRepo = 'https://libraries.minecraft.net/';
     const paths = [];
 
     const download = forgeLibs.map(async library => {
         const lib = library.name.split(':');
 
         if(lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) return;
-        if(!library.url) return;
 
-        const url = `${marvenUrl}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${lib[1]}-${lib[2]}.jar`;
+        let url = mavenUrl;
         const jarPath = path.join(root, 'libraries', `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`);
         const name = `${lib[1]}-${lib[2]}.jar`;
 
-        if(fs.existsSync(path.join(jarPath, name))) return;
+        if(!library.url) {
+            if(library.serverreq || library.clientreq) {
+                url = defaultRepo;
+            } else {
+                return
+            }
+        }
+
+        const downloadLink = `${url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${lib[1]}-${lib[2]}.jar`;
+
+        if(fs.existsSync(path.join(jarPath, name))) {
+            paths.push(`${jarPath}\\${name}`);
+            return;
+        }
         if(!fs.existsSync(jarPath)) shelljs.mkdir('-p', jarPath);
 
-        await downloadAsync(url, jarPath, name);
+        await downloadAsync(downloadLink, jarPath, name);
 
-        paths.push(`${jarPath}//${name}`);
+        paths.push(`${jarPath}\\${name}`);
     })
 
     await Promise.all(download);
 
-    return paths;
+    return {paths, forge};
 };
 
 module.exports.getClasses = function (root, version) {

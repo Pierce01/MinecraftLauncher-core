@@ -22,13 +22,12 @@ module.exports = async function (options) {
         await handler.getJar(versionFile, options.version.number, directory);
     }
 
-    const args = [];
+    let forge = null;
+    if(options.forge) {
+        forge = await handler.getForgeDependencies(options.root, versionFile, options.forge.path);
+    }
 
-    // CGC
-    args.push('-Xincgc');
-
-    // Memory
-    const memory = [`-Xmx${options.memory.max}M`];
+    const args = []
 
     // Jvm
     let jvm = [
@@ -36,24 +35,36 @@ module.exports = async function (options) {
         '-XX:-OmitStackTraceInFastThrow',
         '-Dfml.ignorePatchDiscrepancies=true',
         '-Dfml.ignoreInvalidMinecraftCertificates=true',
-        `-Djava.library.path=${nativePath}`
+        `-Djava.library.path=${nativePath}`,
+        `-Xmx${options.memory.max}M`,
+        '-Xincgc'
     ];
     jvm.push(await handler.getJVM(versionFile, options));
 
     const classes = await handler.getClasses(options.root, versionFile);
-    const classPaths = ['-cp'];
-    classPaths.push(`${mcPath}; ${classes.join(";")}`);
-    classPaths.push(versionFile.mainClass);
+    let mainClass;
+    const classPaths = [];
+    if(forge) {
+        classPaths.push(`${options.forge.path};${forge.paths.join(';')};${classes.join(';')};${mcPath}`);
+        mainClass = forge.forge.mainClass
+    } else {
+        classPaths.push('-cp');
+        classPaths.push(`${mcPath};${classes.join(";")}`);
+        classPaths.push(versionFile.mainClass);
+    }
 
     // Download version's assets
     await handler.getAssets(options.root, versionFile);
 
     // Launch options
     const launchOptions = await handler.getLaunchOptions(versionFile, options);
+    if(forge) launchOptions.push('--tweakClass net.minecraftforge.fml.common.launcher.FMLTweaker');
 
-    const arguments = args.concat(memory, jvm, classPaths, launchOptions);
-    const minecraft = child.spawn("java", arguments);
+    // NOTE: Hacky way of setting up launch options, will rework this next update.
+    let launchArguments = args.concat(jvm, classPaths, launchOptions);
+    if(forge) launchArguments = `${jvm.join(' ')} -cp ${classPaths} ${mainClass} ${launchOptions.join(' ')}`.split(' ');
 
+    const minecraft = child.spawn(`java`, launchArguments)
     event.emit('start', null);
     minecraft.stdout.on('data', (data) => event.emit('data', data));
     minecraft.stderr.on('data', (data) => event.emit('error', data));
