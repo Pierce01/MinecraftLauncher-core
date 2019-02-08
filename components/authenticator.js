@@ -11,7 +11,7 @@ function getAuth(username, password) {
                 client_token: uuid(),
                 uuid: uuid(),
                 name: username,
-                user_object: JSON.stringify({})
+                user_properties: JSON.stringify({})
             };
 
             resolve(user);
