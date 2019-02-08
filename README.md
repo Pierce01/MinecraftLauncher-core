@@ -22,6 +22,7 @@ Supports Vanilla and Forge.
 | `options.version.number` | String | Minecraft version that is going to be launched.                                           | True     |
 | `options.version.type`   | String | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
 | `options.memory.max`     | String | Max amount of memory being used by Minectaft                                              | True     |
+| `options.forge.path`     | String | Path to Universal Forge Jar                                                               | False    |
 
 #### launcher.authenticator Functions 
 
@@ -54,7 +55,7 @@ Supports Vanilla and Forge.
 | `close`           | Integer | Code number that is returned by the Minecraft Process                               |
 | `error`           | String  | Emitted when the Minecraft Process errors                                           |
 | `package-extract` | null    | Emitted when `clientPackage` finishes being extracted                               |
-| `start`           | null    | Emitted after `launchOptions` are set.  THIS WILL BE DEPRECATED AS ITS NOT ACCURATE |
+| `start`           | null    | Emitted after `launchArguments` are set.  THIS WILL BE DEPRECATED AS ITS NOT ACCURATE |
 
 #### Client Package Function
 
