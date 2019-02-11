@@ -25,8 +25,11 @@ function downloadAsync (url, directory, name) {
         });
 
         _request.on('data', (data) => {
+            let size = 0;
+            if(fs.existsSync(path.join(directory, name))) size = fs.statSync(path.join(directory, name))["size"];
             event.emit('download-status', {
-                "current": Math.round(fs.statSync(path.join(directory, name))["size"] / 10000),
+                "name": name,
+                "current": Math.round(size / 10000),
                 "total": data.length
             })
         });
@@ -35,7 +38,7 @@ function downloadAsync (url, directory, name) {
         _request.pipe(file);
 
         file.once('finish', function() {
-            console.log("Downloaded: " + name);
+            event.emit('download', name);
             resolve({failed: false, asset: null});
         });
     });

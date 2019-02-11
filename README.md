@@ -1,15 +1,14 @@
 # Minecraft Launcher Core
 ### Currently only supports MC 1.7.3 and up.
 
-A script that launches Minecraft using NodeJS. 
-Supports Vanilla and Forge.
+MCLC is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
+Basically a core for your Electron or script based launchers.
 
 ### Installing
 
 `npm i minecraft-launcher-core`
 
 ### Usage
-
 
 ##### launcher.core Options
 
@@ -49,14 +48,15 @@ Supports Vanilla and Forge.
 
 #### Events
 
-| Event Name        | Type    | Description                                                                         |
-|-------------------|---------|-------------------------------------------------------------------------------------|
-| `data`            | Buffer  | Emitted when information is returned from the Minecraft Process                     |
-| `close`           | Integer | Code number that is returned by the Minecraft Process                               |
-| `error`           | String  | Emitted when the Minecraft Process errors                                           |
-| `package-extract` | null    | Emitted when `clientPackage` finishes being extracted                               |
+| Event Name        | Type    | Description                                                                           |
+|-------------------|---------|---------------------------------------------------------------------------------------|
+| `data`            | Buffer  | Emitted when information is returned from the Minecraft Process                       |
+| `close`           | Integer | Code number that is returned by the Minecraft Process                                 |
+| `error`           | String  | Emitted when the Minecraft Process errors                                             |
+| `package-extract` | null    | Emitted when `clientPackage` finishes being extracted                                 |
 | `start`           | null    | Emitted after `launchArguments` are set.  THIS WILL BE DEPRECATED AS ITS NOT ACCURATE |
-
+| `download`        | String  | Emitted when a file successfully downloads                                            |
+| `download-status` | Object  | Emitted when data is received while downloading                                       |
 #### Client Package Function
 
 Client Packages allow the client to run offline on setup. This function should be used outside the actual launcher.
@@ -68,7 +68,6 @@ this function is in the `handler` component.
 |------------|--------|-----------------------------------------------------------------------|----------|
 | `versions` | Array  | Array of the versions being downloaded and being made into a package. | True     |
 | `os`       | String | OS that the package will be loaded on. OS specific natives need this. | True     |
-
 
 ### Examples
 ```javascript
