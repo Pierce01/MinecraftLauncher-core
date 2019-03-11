@@ -217,12 +217,9 @@ module.exports.getClasses = function (root, version) {
 
 module.exports.getLaunchOptions = function (version, forge, options) {
     return new Promise(resolve => {
-        let arguments;
-        if(forge) {
-            arguments = forge.minecraftArguments ? forge.minecraftArguments.split(' ') : forge.arguments.game;
-        } else {
-            arguments = version.minecraftArguments ? version.minecraftArguments.split(' ') : version.arguments.game;
-        }
+        let type = forge || version;
+        let arguments = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
+
         const fields = {
             '${auth_access_token}': options.authorization.access_token,
             '${auth_session}': options.authorization.access_token,
@@ -242,6 +239,18 @@ module.exports.getLaunchOptions = function (version, forge, options) {
                 arguments[index] = fields[arguments[index]];
             }
         }
+
+        if(options.server) arguments.push('--server', options.server.host, '--port', options.server.port || "25565");
+        if(options.proxy) arguments.push(
+            '--proxyHost',
+            options.proxy.host,
+            '--proxyPort',
+            options.proxy.port || "8080",
+            '--proxyUser',
+            options.proxy.username,
+            '--proxyPass',
+            options.proxy.password
+        );
 
         resolve(arguments);
     });

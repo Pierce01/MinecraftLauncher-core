@@ -43,7 +43,7 @@ function getAuth(username, password) {
                 uuid: body.selectedProfile.id,
                 name: body.selectedProfile.name,
                 selected_profile: body.selectedProfile,
-                user_properties: JSON.stringify((body.user || {}).properties || {})
+                user_properties: JSON.stringify(body.user.properties || {})
             };
 
             resolve(userProfile);

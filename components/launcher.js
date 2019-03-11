@@ -37,6 +37,7 @@ module.exports = async function (options) {
         '-Dfml.ignoreInvalidMinecraftCertificates=true',
         `-Djava.library.path=${nativePath}`,
         `-Xmx${options.memory.max}M`,
+        `-Xms${options.memory.min}M`,
         '-Xincgc'
     ];
     jvm.push(await handler.getJVM(versionFile, options));
@@ -55,13 +56,9 @@ module.exports = async function (options) {
     // Download version's assets
     await handler.getAssets(options.root, versionFile);
 
-    // Launch options
+    // Launch options. Thank you Lyrus for the reformat <3
     let launchOptions;
-    if(forge) {
-        launchOptions = await handler.getLaunchOptions(versionFile, forge.forge, options);
-    } else {
-        launchOptions = await handler.getLaunchOptions(versionFile, null, options);
-    }
+    launchOptions = await handler.getLaunchOptions(versionFile, forge ? forge.forge : null, options);
 
     const launchArguments = args.concat(jvm, classPaths, launchOptions);
 

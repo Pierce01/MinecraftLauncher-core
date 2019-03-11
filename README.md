@@ -8,6 +8,39 @@ Basically a core for your Electron or script based launchers.
 
 `npm i minecraft-launcher-core`
 
+### Standard Example
+```javascript
+const launcher = require('minecraft-launcher-core');
+
+launcher.authenticator.getAuth("email", "password").then(auth => {
+    // Save the auth to a file so it can be used later on!
+    launcher.core({
+        authorization: auth,
+        clientPackage: null,
+        forge: null,
+        root: "C:/Users/user/AppData/Roaming/.mc",
+        os: "windows",
+        version: {
+            number: "1.13.2",
+            type: "release" 
+        },
+        memory: {
+            max: "3000",
+            min: "1000"
+        },
+        server: {
+            host: "server.url",
+            port: "25565"
+        },
+        proxy: {
+            host: "proxy.url",
+            port: "8080",
+            username: "username",
+            password: "password"
+        }
+    });
+});
+```
 ### Usage
 
 ##### launcher.core Options
@@ -22,6 +55,12 @@ Basically a core for your Electron or script based launchers.
 | `options.version.type`   | String | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
 | `options.memory.max`     | String | Max amount of memory being used by Minectaft                                              | True     |
 | `options.forge.path`     | String | Path to Universal Forge Jar                                                               | False    |
+| `options.server.host`    | String | Host url to the server, don't include the port                                            | False    |
+| `options.server.port`    | String | Port of the host url, will default to `25565` if not entered.                             | False    |
+| `options.proxy.host`     | String | Host url to the proxy, don't include the port                                             | False    |
+| `options.proxy.port`     | String | Port of the host proxy, will default to `8080` if not entered.                            | False    |
+| `options.proxy.username` | String | Username for the proxy.                                                                   | False    |
+| `options.proxy.password` | String | Password for the proxy.                                                                   | False    |
 
 #### launcher.authenticator Functions 
 
@@ -69,28 +108,7 @@ this function is in the `handler` component.
 | `versions` | Array  | Array of the versions being downloaded and being made into a package. | True     |
 | `os`       | String | OS that the package will be loaded on. OS specific natives need this. | True     |
 
-### Examples
-```javascript
-const launcher = require('minecraft-launcher-core');
-
-launcher.authenticator.getAuth("email", "password").then(auth => {
-    // Save the auth to a file so it can be used later on!
-    launcher.core({
-        authorization: auth,
-        clientPackage: null,
-        forge: null,
-        root: "C:/Users/user/AppData/Roaming/.mc",
-        os: "windows",
-        version: {
-            number: "1.13.2",
-            type: "MCC-Launcher" 
-        },
-        memory: {
-            max: "500"
-        }
-    });
-});
-```
+### Other Examples
 
 ##### Using Validate and Refresh
 
@@ -111,7 +129,18 @@ launcher.core({
         type: "MCC-Launcher"
     },
     memory: {
-        max: "500"
+        max: "500",
+        min: "100"
+    },
+    server: {
+        host: "server.url",
+        port: "25565"
+    },
+    proxy: {
+        host: "proxy.url",
+        port: "8080",
+        username: "username",
+        password: "password"
     }
 });
 ```
@@ -133,7 +162,18 @@ launcher.authenticator.getAuth("email", "password").then(auth => {
             type: "MCC-Launcher" 
         },
         memory: {
-            max: "500"
+            max: "500",
+            min: "100"
+        },
+        server: {
+            host: "server.url",
+            port: "25565"
+        },
+        proxy: {
+            host: "proxy.url",
+            port: "8080",
+            username: "username",
+            password: "password"
         }
     });
 });
