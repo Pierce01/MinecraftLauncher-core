@@ -92,7 +92,7 @@ function refreshAuth(accessToken, clientToken, selectedProfile) {
                 client_token: uuid(),
                 uuid: body.selectedProfile.id,
                 name: body.selectedProfile.name,
-                user_properties: JSON.stringify((body.user || {}).properties || {})
+                user_properties: JSON.stringify(body.user.properties || {})
             };
 
             resolve(userProfile);
