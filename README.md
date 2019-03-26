@@ -1,5 +1,4 @@
 # Minecraft Launcher Core
-### Currently only supports MC 1.7.3 and up.
 
 MCLC is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
 Basically a core for your Electron or script based launchers.

@@ -81,6 +81,7 @@ module.exports.getAssets = function (directory, version) {
     return new Promise(async(resolve) => {
         const assetsUrl = 'https://resources.download.minecraft.net';
         const failed = [];
+        const parseVersion = version.assetIndex.id.split('.');
 
         if(!fs.existsSync(path.join(directory, 'assets', 'indexes', `${version.assetIndex.id}.json`))) {
             await downloadAsync(version.assetIndex.url, path.join(directory, 'assets', 'indexes'), `${version.assetIndex.id}.json`);
@@ -97,6 +98,16 @@ module.exports.getAssets = function (directory, version) {
                 const download = await downloadAsync(`${assetsUrl}/${subhash}/${hash}`, assetDirectory, hash);
 
                 if(download.failed) failed.push(download.asset);
+
+                if(parseVersion[1] < 8 && parseVersion[2] < 3) {
+                    let legacyAsset = asset.split('/')
+                    legacyAsset.pop()
+
+                    if(!fs.existsSync(path.join(directory, 'assets', 'legacy', legacyAsset.join('/')))) {
+                        shelljs.mkdir('-p', path.join(directory, 'assets', 'legacy', legacyAsset.join('/')));
+                        fs.copyFileSync(path.join(assetDirectory, hash), path.join(directory, 'assets', 'legacy', asset))
+                    }
+                }
             }
         }
 
@@ -217,8 +228,10 @@ module.exports.getClasses = function (root, version) {
 
 module.exports.getLaunchOptions = function (version, forge, options) {
     return new Promise(resolve => {
-        let type = forge || version;
-        let arguments = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
+        const parseVersion = version.assetIndex.id.split('.');
+        const type = forge || version;
+        const arguments = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
+        const assetPath = parseVersion[1] < 8 && parseVersion[2] < 3 ? path.join(options.root, 'assets', 'legacy') : path.join(options.root, 'assets');
 
         const fields = {
             '${auth_access_token}': options.authorization.access_token,
@@ -230,7 +243,7 @@ module.exports.getLaunchOptions = function (version, forge, options) {
             '${version_name}': options.version.number,
             '${assets_index_name}': version.assetIndex.id,
             '${game_directory}': path.join(options.root),
-            '${assets_root}': path.join(options.root, 'assets'),
+            '${assets_root}': assetPath,
             '${version_type}': options.version.type
         };
 
