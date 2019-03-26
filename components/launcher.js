@@ -57,8 +57,7 @@ module.exports = async function (options) {
     await handler.getAssets(options.root, versionFile);
 
     // Launch options. Thank you Lyrus for the reformat <3
-    let launchOptions;
-    launchOptions = await handler.getLaunchOptions(versionFile, forge ? forge.forge : null, options);
+    const launchOptions = await handler.getLaunchOptions(versionFile, forge ? forge.forge : null, options);
 
     const launchArguments = args.concat(jvm, classPaths, launchOptions);
 

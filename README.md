@@ -26,16 +26,6 @@ launcher.authenticator.getAuth("email", "password").then(auth => {
         memory: {
             max: "3000",
             min: "1000"
-        },
-        server: {
-            host: "server.url",
-            port: "25565"
-        },
-        proxy: {
-            host: "proxy.url",
-            port: "8080",
-            username: "username",
-            password: "password"
         }
     });
 });
@@ -53,7 +43,9 @@ launcher.authenticator.getAuth("email", "password").then(auth => {
 | `options.version.number` | String | Minecraft version that is going to be launched.                                           | True     |
 | `options.version.type`   | String | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
 | `options.memory.max`     | String | Max amount of memory being used by Minectaft                                              | True     |
+| `options.memory.min`     | String | Min amount of memory being used by Minectaft                                              | True     |
 | `options.forge.path`     | String | Path to Universal Forge Jar                                                               | False    |
+| `options.customArgs`     | String | Array of custom JVM options                                                               | False    |
 | `options.server.host`    | String | Host url to the server, don't include the port                                            | False    |
 | `options.server.port`    | String | Port of the host url, will default to `25565` if not entered.                             | False    |
 | `options.proxy.host`     | String | Host url to the proxy, don't include the port                                             | False    |
@@ -130,16 +122,6 @@ launcher.core({
     memory: {
         max: "500",
         min: "100"
-    },
-    server: {
-        host: "server.url",
-        port: "25565"
-    },
-    proxy: {
-        host: "proxy.url",
-        port: "8080",
-        username: "username",
-        password: "password"
     }
 });
 ```
@@ -163,16 +145,6 @@ launcher.authenticator.getAuth("email", "password").then(auth => {
         memory: {
             max: "500",
             min: "100"
-        },
-        server: {
-            host: "server.url",
-            port: "25565"
-        },
-        proxy: {
-            host: "proxy.url",
-            port: "8080",
-            username: "username",
-            password: "password"
         }
     });
 });

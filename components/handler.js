@@ -81,7 +81,6 @@ module.exports.getAssets = function (directory, version) {
     return new Promise(async(resolve) => {
         const assetsUrl = 'https://resources.download.minecraft.net';
         const failed = [];
-        const parseVersion = version.assetIndex.id.split('.');
 
         if(!fs.existsSync(path.join(directory, 'assets', 'indexes', `${version.assetIndex.id}.json`))) {
             await downloadAsync(version.assetIndex.url, path.join(directory, 'assets', 'indexes'), `${version.assetIndex.id}.json`);
@@ -98,22 +97,32 @@ module.exports.getAssets = function (directory, version) {
                 const download = await downloadAsync(`${assetsUrl}/${subhash}/${hash}`, assetDirectory, hash);
 
                 if(download.failed) failed.push(download.asset);
-
-                if(parseVersion[1] < 8 && parseVersion[2] < 3) {
-                    let legacyAsset = asset.split('/')
-                    legacyAsset.pop()
-
-                    if(!fs.existsSync(path.join(directory, 'assets', 'legacy', legacyAsset.join('/')))) {
-                        shelljs.mkdir('-p', path.join(directory, 'assets', 'legacy', legacyAsset.join('/')));
-                        fs.copyFileSync(path.join(assetDirectory, hash), path.join(directory, 'assets', 'legacy', asset))
-                    }
-                }
             }
         }
 
         // why do we have this? B/c sometimes minecraft's resource site times out!
         if(failed) {
             for (const fail of failed) await downloadAsync(fail.url, fail.directory, fail.name);
+        }
+
+        // Seems taking it out of the initial download loop allows everything to be copied...
+        if(version.assets === "legacy") {
+            for(const asset in index.objects) {
+                const hash = index.objects[asset].hash;
+                const subhash = hash.substring(0,2);
+                const assetDirectory = path.join(directory, 'assets', 'objects', subhash);
+
+                let legacyAsset = asset.split('/');
+                legacyAsset.pop();
+
+                if(!fs.existsSync(path.join(directory, 'assets', 'legacy', legacyAsset.join('/')))) {
+                    shelljs.mkdir('-p', path.join(directory, 'assets', 'legacy', legacyAsset.join('/')));
+                }
+
+                if(!fs.existsSync(path.join(assetDirectory, hash), path.join(directory, 'assets', 'legacy', asset))) {
+                    fs.copyFileSync(path.join(assetDirectory, hash), path.join(directory, 'assets', 'legacy', asset))
+                }
+            }
         }
 
         resolve();
@@ -139,7 +148,12 @@ module.exports.getNatives = function (root, version, os) {
                 if (native) {
                     const name = native.path.split('/').pop();
                     await downloadAsync(native.url, nativeDirectory, name);
-                    new zip(path.join(nativeDirectory, name)).extractAllTo(nativeDirectory, true);
+                    try {new zip(path.join(nativeDirectory, name)).extractAllTo(nativeDirectory, true);} catch(e) {
+                        // Only doing a console.warn since a stupid error happens. You can basically ignore this.
+                        // if it says Invalid file name, just means two files were downloaded and both were deleted.
+                        // All is well.
+                        console.warn(e);
+                    }
                     shelljs.rm(path.join(nativeDirectory, name));
                 }
             });
@@ -228,10 +242,9 @@ module.exports.getClasses = function (root, version) {
 
 module.exports.getLaunchOptions = function (version, forge, options) {
     return new Promise(resolve => {
-        const parseVersion = version.assetIndex.id.split('.');
         const type = forge || version;
         const arguments = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
-        const assetPath = parseVersion[1] < 8 && parseVersion[2] < 3 ? path.join(options.root, 'assets', 'legacy') : path.join(options.root, 'assets');
+        const assetPath = version.assets === "legacy" ? path.join(options.root, 'assets', 'legacy') : path.join(options.root, 'assets');
 
         const fields = {
             '${auth_access_token}': options.authorization.access_token,
@@ -244,6 +257,7 @@ module.exports.getLaunchOptions = function (version, forge, options) {
             '${assets_index_name}': version.assetIndex.id,
             '${game_directory}': path.join(options.root),
             '${assets_root}': assetPath,
+            '${game_assets}': assetPath,
             '${version_type}': options.version.type
         };
 
