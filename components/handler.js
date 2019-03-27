@@ -106,7 +106,7 @@ module.exports.getAssets = function (directory, version) {
         }
 
         // Seems taking it out of the initial download loop allows everything to be copied...
-        if(version.assets === "legacy") {
+        if(version.assets === "legacy" || version.assets === "pre-1.6") {
             for(const asset in index.objects) {
                 const hash = index.objects[asset].hash;
                 const subhash = hash.substring(0,2);
@@ -119,7 +119,7 @@ module.exports.getAssets = function (directory, version) {
                     shelljs.mkdir('-p', path.join(directory, 'assets', 'legacy', legacyAsset.join('/')));
                 }
 
-                if(!fs.existsSync(path.join(assetDirectory, hash), path.join(directory, 'assets', 'legacy', asset))) {
+                if (!fs.existsSync(path.join(directory, 'assets', 'legacy', asset))) {
                     fs.copyFileSync(path.join(assetDirectory, hash), path.join(directory, 'assets', 'legacy', asset))
                 }
             }
@@ -244,7 +244,7 @@ module.exports.getLaunchOptions = function (version, forge, options) {
     return new Promise(resolve => {
         const type = forge || version;
         const arguments = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
-        const assetPath = version.assets === "legacy" ? path.join(options.root, 'assets', 'legacy') : path.join(options.root, 'assets');
+        const assetPath = version.assets === "legacy" || version.assets === "pre-1.6" ? path.join(options.root, 'assets', 'legacy') : path.join(options.root, 'assets');
 
         const fields = {
             '${auth_access_token}': options.authorization.access_token,
