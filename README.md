@@ -40,6 +40,7 @@ launcher.authenticator.getAuth("email", "password").then(auth => {
 | `options.clientPackage`  | String | Path to the client package zip file.                                                      | False    |
 | `options.root`           | String | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`    | True     |
 | `options.os`             | String | windows, osx or linux                                                                     | True     |
+| `options.javaPath`       | String | Path to the JRE executable file, will default to `java` if not entered.                   | False    |
 | `options.version.number` | String | Minecraft version that is going to be launched.                                           | True     |
 | `options.version.type`   | String | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
 | `options.memory.max`     | String | Max amount of memory being used by Minectaft                                              | True     |
