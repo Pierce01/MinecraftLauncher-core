@@ -256,8 +256,10 @@ module.exports.getLaunchOptions = function (version, modification, options) {
     return new Promise(resolve => {
         let type = modification || version;
 
-        const arguments = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
+        let arguments = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
         const assetPath = version.assets === "legacy" || version.assets === "pre-1.6" ? path.join(options.root, 'assets', 'legacy') : path.join(options.root, 'assets');
+
+        if(arguments.length < 9) arguments = arguments.concat(version.minecraftArguments ? version.minecraftArguments.split(' ') : version.arguments.game);
 
         const fields = {
             '${auth_access_token}': options.authorization.access_token,
