@@ -169,7 +169,7 @@ module.exports.getForgeDependencies = async function(root, version, forgeJarPath
     if(!fs.existsSync(path.join(root, 'forge'))) {
         shelljs.mkdir('-p', path.join(root, 'forge'));
     }
-    await new zip(forgeJarPath).extractEntryTo('version.json', path.join(root, 'forge', `${version.id}`), false, true)
+    await new zip(forgeJarPath).extractEntryTo('version.json', path.join(root, 'forge', `${version.id}`), false, true);
 
     const forge = require(path.join(root, 'forge', `${version.id}`, 'version.json'));
     const forgeLibs = forge.libraries;
@@ -212,16 +212,28 @@ module.exports.getForgeDependencies = async function(root, version, forgeJarPath
     return {paths, forge};
 };
 
-module.exports.getClasses = function (root, version) {
+module.exports.getClasses = function (options, version) {
     return new Promise(async (resolve) => {
         const libs = [];
+
+        if(options.version.custom) {
+            const customJarJson = require(path.join(options.root, 'versions', options.version.custom, `${options.version.custom}.json`));
+            customJarJson.libraries.map(library => {
+                const lib = library.name.split(':');
+
+                const jarPath = path.join(options.root, 'libraries', `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`);
+                const name = `${lib[1]}-${lib[2]}.jar`;
+
+                libs.push(`${jarPath}\\${name}`);
+            })
+        }
 
         const libraries = version.libraries.map(async (_lib) => {
             if(!_lib.downloads.artifact) return;
 
             const libraryPath = _lib.downloads.artifact.path;
             const libraryUrl = _lib.downloads.artifact.url;
-            const libraryDirectory = path.join(root, 'libraries', libraryPath);
+            const libraryDirectory = path.join(options.root, 'libraries', libraryPath);
 
             if(!fs.existsSync(libraryDirectory)) {
                 let directory = libraryDirectory.split('\\');
@@ -240,9 +252,10 @@ module.exports.getClasses = function (root, version) {
     });
 };
 
-module.exports.getLaunchOptions = function (version, forge, options) {
+module.exports.getLaunchOptions = function (version, modification, options) {
     return new Promise(resolve => {
-        const type = forge || version;
+        let type = modification || version;
+
         const arguments = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
         const assetPath = version.assets === "legacy" || version.assets === "pre-1.6" ? path.join(options.root, 'assets', 'legacy') : path.join(options.root, 'assets');
 

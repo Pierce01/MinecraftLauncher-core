@@ -15,7 +15,8 @@ module.exports = async function (options) {
     const directory = path.join(options.root, 'versions', options.version.number);
     options.directory = directory;
     const versionFile = await handler.getVersion(options.version.number, options.directory);
-    const mcPath = path.join(directory, `${options.version.number}.jar`);
+    const mcPath = options.version.custom ? path.join(options.root, 'versions', options.version.custom , `${options.version.custom}.jar`):
+        path.join(directory, `${options.version.number}.jar`);
     const nativePath = await handler.getNatives(options.root, versionFile, options.os);
 
     if (!fs.existsSync(mcPath)) {
@@ -23,9 +24,9 @@ module.exports = async function (options) {
     }
 
     let forge = null;
-    if(options.forge) {
-        forge = await handler.getForgeDependencies(options.root, versionFile, options.forge.path);
-    }
+    let custom = null;
+    if(options.forge) forge = await handler.getForgeDependencies(options.root, versionFile, options.forge.path);
+    if(options.version.custom) custom = require(path.join(options.root, 'versions', options.version.custom, `${options.version.custom}.json`));
 
     const args = [];
 
@@ -43,11 +44,14 @@ module.exports = async function (options) {
     jvm.push(await handler.getJVM(versionFile, options));
     if(options.customArgs) jvm = jvm.concat(options.customArgs);
 
-    const classes = await handler.getClasses(options.root, versionFile);
+    const classes = await handler.getClasses(options, versionFile);
     const classPaths = ['-cp'];
     if(forge) {
         classPaths.push(`${options.forge.path};${forge.paths.join(';')};${classes.join(';')};${mcPath}`);
         classPaths.push(forge.forge.mainClass)
+    } else if(custom) {
+        classPaths.push(`${classes.join(";")};${mcPath}`);
+        classPaths.push(custom.mainClass);
     } else {
         classPaths.push(`${mcPath};${classes.join(";")}`);
         classPaths.push(versionFile.mainClass);
@@ -57,7 +61,8 @@ module.exports = async function (options) {
     await handler.getAssets(options.root, versionFile);
 
     // Launch options. Thank you Lyrus for the reformat <3
-    const launchOptions = await handler.getLaunchOptions(versionFile, forge ? forge.forge : null, options);
+    const modification = forge ? forge.forge : null || custom ? custom : null;
+    const launchOptions = await handler.getLaunchOptions(versionFile, modification, options);
 
     const launchArguments = args.concat(jvm, classPaths, launchOptions);
 

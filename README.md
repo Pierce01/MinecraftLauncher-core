@@ -43,6 +43,7 @@ launcher.authenticator.getAuth("email", "password").then(auth => {
 | `options.javaPath`       | String | Path to the JRE executable file, will default to `java` if not entered.                   | False    |
 | `options.version.number` | String | Minecraft version that is going to be launched.                                           | True     |
 | `options.version.type`   | String | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
+| `options.version.custom` | String | Name of the jar, json, and folder of the custom client you are launching with. (Optifine) | False    |
 | `options.memory.max`     | String | Max amount of memory being used by Minectaft                                              | True     |
 | `options.memory.min`     | String | Min amount of memory being used by Minectaft                                              | True     |
 | `options.forge.path`     | String | Path to Universal Forge Jar                                                               | False    |
@@ -53,6 +54,9 @@ launcher.authenticator.getAuth("email", "password").then(auth => {
 | `options.proxy.port`     | String | Port of the host proxy, will default to `8080` if not entered.                            | False    |
 | `options.proxy.username` | String | Username for the proxy.                                                                   | False    |
 | `options.proxy.password` | String | Password for the proxy.                                                                   | False    |
+
+##### Note
+If you are loading up a client outside of vanilla Minecraft and Forge (Optifine for an example), you'll need to download the needed files yourself.
 
 #### launcher.authenticator Functions 
 
