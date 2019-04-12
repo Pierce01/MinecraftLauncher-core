@@ -13,7 +13,6 @@ function downloadAsync (url, directory, name) {
         const _request = request(url);
 
         _request.on('error', function(error) {
-            console.log(error.message);
             resolve({
                 failed: true,
                 asset: {
@@ -88,7 +87,7 @@ module.exports.getAssets = function (directory, version) {
 
         const index = require(path.join(directory, 'assets', 'indexes',`${version.assetIndex.id}.json`));
 
-        for(const asset in index.objects) {
+        const mainAssetsDownload = Object.keys(index.objects).map(async asset => {
             const hash = index.objects[asset].hash;
             const subhash = hash.substring(0,2);
             const assetDirectory = path.join(directory, 'assets', 'objects', subhash);
@@ -98,16 +97,18 @@ module.exports.getAssets = function (directory, version) {
 
                 if(download.failed) failed.push(download.asset);
             }
-        }
+        });
 
-        // why do we have this? B/c sometimes minecraft's resource site times out!
+        await Promise.all(mainAssetsDownload);
+
+        // why do we have this? B/c sometimes Minecraft's resource site times out!
         if(failed) {
             for (const fail of failed) await downloadAsync(fail.url, fail.directory, fail.name);
         }
 
-        // Seems taking it out of the initial download loop allows everything to be copied...
+        // Copy assets to legacy if it's an older Minecarft version.
         if(version.assets === "legacy" || version.assets === "pre-1.6") {
-            for(const asset in index.objects) {
+            const legacyCopy = Object.keys(index.objects).map(async asset => {
                 const hash = index.objects[asset].hash;
                 const subhash = hash.substring(0,2);
                 const assetDirectory = path.join(directory, 'assets', 'objects', subhash);
@@ -122,7 +123,9 @@ module.exports.getAssets = function (directory, version) {
                 if (!fs.existsSync(path.join(directory, 'assets', 'legacy', asset))) {
                     fs.copyFileSync(path.join(assetDirectory, hash), path.join(directory, 'assets', 'legacy', asset))
                 }
-            }
+            });
+
+            await Promise.all(legacyCopy);
         }
 
         resolve();
