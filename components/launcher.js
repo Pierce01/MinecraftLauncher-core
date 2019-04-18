@@ -38,8 +38,7 @@ module.exports = async function (options) {
         '-Dfml.ignoreInvalidMinecraftCertificates=true',
         `-Djava.library.path=${nativePath}`,
         `-Xmx${options.memory.max}M`,
-        `-Xms${options.memory.min}M`,
-        '-Xincgc'
+        `-Xms${options.memory.min}M`
     ];
     jvm.push(await handler.getJVM(versionFile, options));
     if(options.customArgs) jvm = jvm.concat(options.customArgs);

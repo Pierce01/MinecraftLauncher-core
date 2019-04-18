@@ -3,7 +3,7 @@ const uuid = require('uuid/v1');
 const api_url = "https://authserver.mojang.com";
 
 
-function getAuth(username, password) {
+module.exports.getAuth = function (username, password) {
     return new Promise(resolve => {
         if(!password) {
             const user = {
@@ -49,9 +49,9 @@ function getAuth(username, password) {
             resolve(userProfile);
         });
     });
-}
+};
 
-function validate(access_token) {
+module.exports.validate = function (access_token) {
     return new Promise(resolve => {
         const requestObject = {
             url: api_url + "/validate",
@@ -66,9 +66,9 @@ function validate(access_token) {
             if(!body) resolve(true); else resolve(false);
         });
     });
-}
+};
 
-function refreshAuth(accessToken, clientToken, selectedProfile) {
+module.exports.refreshAuth = function (accessToken, clientToken, selectedProfile) {
     return new Promise(resolve => {
         const requestObject = {
             url: api_url + "/refresh",
@@ -98,6 +98,4 @@ function refreshAuth(accessToken, clientToken, selectedProfile) {
             resolve(userProfile);
         });
     });
-}
-
-module.exports = {getAuth, validate, refreshAuth};
+};
