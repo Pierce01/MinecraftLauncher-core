@@ -3,6 +3,10 @@
 MCLC is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
 Basically a core for your Electron or script based launchers.
 
+### Getting support
+Since people seem to use this, I've created a Discord server for anyone who needs to get in contact with me or get help!
+https://discord.gg/8uYVbXP
+
 ### Installing
 
 `npm i minecraft-launcher-core`
