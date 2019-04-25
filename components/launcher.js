@@ -48,12 +48,9 @@ module.exports = async function (options) {
     if(forge) {
         classPaths.push(`${options.forge.path};${forge.paths.join(';')};${classes.join(';')};${mcPath}`);
         classPaths.push(forge.forge.mainClass)
-    } else if(custom) {
-        classPaths.push(`${classes.join(";")};${mcPath}`);
-        classPaths.push(custom.mainClass);
     } else {
         classPaths.push(`${mcPath};${classes.join(";")}`);
-        classPaths.push(versionFile.mainClass);
+        classPaths.push(versionFile.mainClass || custom.mainClass);
     }
 
     // Download version's assets
@@ -66,7 +63,6 @@ module.exports = async function (options) {
     const launchArguments = args.concat(jvm, classPaths, launchOptions);
 
     const minecraft = child.spawn(options.javaPath ? options.javaPath : 'java', launchArguments);
-    event.emit('start', null);
     minecraft.stdout.on('data', (data) => event.emit('data', data));
     minecraft.stderr.on('data', (data) => event.emit('error', data));
     minecraft.on('close', (code) => event.emit('close', code));

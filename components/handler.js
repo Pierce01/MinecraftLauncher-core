@@ -10,7 +10,7 @@ function downloadAsync (url, directory, name) {
     return new Promise(resolve => {
         shelljs.mkdir('-p', directory);
 
-        const _request = request(url);
+        const _request = request(url, {timeout: 10000});
 
         _request.on('error', function(error) {
             resolve({

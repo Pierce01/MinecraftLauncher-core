@@ -93,7 +93,6 @@ If you are loading up a client outside of vanilla Minecraft and Forge (Optifine 
 | `close`           | Integer | Code number that is returned by the Minecraft Process                                 |
 | `error`           | String  | Emitted when the Minecraft Process errors                                             |
 | `package-extract` | null    | Emitted when `clientPackage` finishes being extracted                                 |
-| `start`           | null    | Emitted after `launchArguments` are set.  THIS WILL BE DEPRECATED AS ITS NOT ACCURATE |
 | `download`        | String  | Emitted when a file successfully downloads                                            |
 | `download-status` | Object  | Emitted when data is received while downloading                                       |
 #### Client Package Function
