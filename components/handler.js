@@ -13,6 +13,7 @@ function downloadAsync (url, directory, name) {
         const _request = request(url, {timeout: 10000});
 
         _request.on('error', function(error) {
+            shelljs.rm(path.join(directory, name)); // Prevents duplicates.
             resolve({
                 failed: true,
                 asset: {
@@ -87,7 +88,7 @@ module.exports.getAssets = function (directory, version) {
 
         const index = require(path.join(directory, 'assets', 'indexes',`${version.assetIndex.id}.json`));
 
-        const mainAssetsDownload = Object.keys(index.objects).map(async asset => {
+        await Promise.all(Object.keys(index.objects).map(async asset => {
             const hash = index.objects[asset].hash;
             const subhash = hash.substring(0,2);
             const assetDirectory = path.join(directory, 'assets', 'objects', subhash);
@@ -97,9 +98,7 @@ module.exports.getAssets = function (directory, version) {
 
                 if(download.failed) failed.push(download.asset);
             }
-        });
-
-        await Promise.all(mainAssetsDownload);
+        }));
 
         // why do we have this? B/c sometimes Minecraft's resource site times out!
         if(failed) {
@@ -108,7 +107,7 @@ module.exports.getAssets = function (directory, version) {
 
         // Copy assets to legacy if it's an older Minecarft version.
         if(version.assets === "legacy" || version.assets === "pre-1.6") {
-            const legacyCopy = Object.keys(index.objects).map(async asset => {
+            await Promise.all(Object.keys(index.objects).map(async asset => {
                 const hash = index.objects[asset].hash;
                 const subhash = hash.substring(0,2);
                 const assetDirectory = path.join(directory, 'assets', 'objects', subhash);
@@ -123,9 +122,7 @@ module.exports.getAssets = function (directory, version) {
                 if (!fs.existsSync(path.join(directory, 'assets', 'legacy', asset))) {
                     fs.copyFileSync(path.join(assetDirectory, hash), path.join(directory, 'assets', 'legacy', asset))
                 }
-            });
-
-            await Promise.all(legacyCopy);
+            }));
         }
 
         resolve();
@@ -143,7 +140,7 @@ module.exports.getNatives = function (root, version, os) {
 
             shelljs.mkdir('-p', nativeDirectory);
 
-            const download = version.libraries.map(async function (lib) {
+            await Promise.all(version.libraries.map(async function (lib) {
                 if (!lib.downloads.classifiers) return;
                 const type = `natives-${os}`;
                 const native = lib.downloads.classifiers[type];
@@ -159,9 +156,7 @@ module.exports.getNatives = function (root, version, os) {
                     }
                     shelljs.rm(path.join(nativeDirectory, name));
                 }
-            });
-
-            await Promise.all(download);
+            }));
         }
 
         resolve(nativeDirectory);
@@ -175,12 +170,11 @@ module.exports.getForgeDependencies = async function(root, version, forgeJarPath
     await new zip(forgeJarPath).extractEntryTo('version.json', path.join(root, 'forge', `${version.id}`), false, true);
 
     const forge = require(path.join(root, 'forge', `${version.id}`, 'version.json'));
-    const forgeLibs = forge.libraries;
     const mavenUrl = 'http://files.minecraftforge.net/maven/';
     const defaultRepo = 'https://libraries.minecraft.net/';
     const paths = [];
 
-    const download = forgeLibs.map(async library => {
+    await Promise.all(forge.libraries.map(async library => {
         const lib = library.name.split(':');
 
         if(lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) return;
@@ -200,17 +194,15 @@ module.exports.getForgeDependencies = async function(root, version, forgeJarPath
         const downloadLink = `${url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${lib[1]}-${lib[2]}.jar`;
 
         if(fs.existsSync(path.join(jarPath, name))) {
-            paths.push(`${jarPath}\\${name}`);
+            paths.push(`${jarPath}${path.sep}${name}`);
             return;
         }
         if(!fs.existsSync(jarPath)) shelljs.mkdir('-p', jarPath);
 
         await downloadAsync(downloadLink, jarPath, name);
 
-        paths.push(`${jarPath}\\${name}`);
-    });
-
-    await Promise.all(download);
+        paths.push(`${jarPath}${path.sep}${name}`);
+    }));
 
     return {paths, forge};
 };
@@ -227,11 +219,11 @@ module.exports.getClasses = function (options, version) {
                 const jarPath = path.join(options.root, 'libraries', `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`);
                 const name = `${lib[1]}-${lib[2]}.jar`;
 
-                libs.push(`${jarPath}\\${name}`);
+                libs.push(`${jarPath}/${name}`);
             })
         }
 
-        const libraries = version.libraries.map(async (_lib) => {
+        await Promise.all(version.libraries.map(async (_lib) => {
             if(!_lib.downloads.artifact) return;
 
             const libraryPath = _lib.downloads.artifact.path;
@@ -239,17 +231,15 @@ module.exports.getClasses = function (options, version) {
             const libraryDirectory = path.join(options.root, 'libraries', libraryPath);
 
             if(!fs.existsSync(libraryDirectory)) {
-                let directory = libraryDirectory.split('\\');
+                let directory = libraryDirectory.split(path.sep);
                 const name = directory.pop();
-                directory = directory.join('\\');
+                directory = directory.join(path.sep);
 
                 await downloadAsync(libraryUrl, directory, name);
             }
 
             libs.push(libraryDirectory);
-        });
-
-        await Promise.all(libraries);
+        }));
 
         resolve(libs)
     });
