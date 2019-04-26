@@ -89,6 +89,7 @@ If you are loading up a client outside of vanilla Minecraft and Forge (Optifine 
 
 | Event Name        | Type    | Description                                                                           |
 |-------------------|---------|---------------------------------------------------------------------------------------|
+| `arguments`       | Object  | Emitted when launch arguments are set for the Minecraft Jar.                          |
 | `data`            | Buffer  | Emitted when information is returned from the Minecraft Process                       |
 | `close`           | Integer | Code number that is returned by the Minecraft Process                                 |
 | `error`           | String  | Emitted when the Minecraft Process errors                                             |

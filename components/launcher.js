@@ -61,6 +61,7 @@ module.exports = async function (options) {
     const launchOptions = await handler.getLaunchOptions(versionFile, modification, options);
 
     const launchArguments = args.concat(jvm, classPaths, launchOptions);
+    event.emit('arguments', launchArguments);
 
     const minecraft = child.spawn(options.javaPath ? options.javaPath : 'java', launchArguments);
     minecraft.stdout.on('data', (data) => event.emit('data', data));
