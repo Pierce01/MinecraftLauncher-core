@@ -62,13 +62,7 @@ module.exports = async function (options) {
 
     const launchArguments = args.concat(jvm, classPaths, launchOptions);
 
-    const cleanArguments = [];
-    for(arg in launchArguments) {
-        if (cleanArguments.includes(launchArguments[arg])) continue;
-        cleanArguments.push(launchArguments[arg]);
-    }
-
-    const minecraft = child.spawn(options.javaPath ? options.javaPath : 'java', cleanArguments);
+    const minecraft = child.spawn(options.javaPath ? options.javaPath : 'java', launchArguments);
     minecraft.stdout.on('data', (data) => event.emit('data', data));
     minecraft.stderr.on('data', (data) => event.emit('error', data));
     minecraft.on('close', (code) => event.emit('close', code));
