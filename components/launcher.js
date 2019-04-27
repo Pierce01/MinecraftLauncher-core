@@ -46,11 +46,12 @@ module.exports = async function (options) {
 
     const classes = await handler.getClasses(options, versionFile);
     const classPaths = ['-cp'];
+    const separator = options.os === "windows" ? ";" : ":";
     if(forge) {
-        classPaths.push(`${options.forge.path};${forge.paths.join(';')};${classes.join(';')};${mcPath}`);
+        classPaths.push(`${options.forge.path}${separator}${forge.paths.join(separator)}${separator}${classes.join(separator)};${mcPath}`);
         classPaths.push(forge.forge.mainClass)
     } else {
-        classPaths.push(`${mcPath};${classes.join(";")}`);
+        classPaths.push(`${mcPath}${separator}${classes.join(separator)}`);
         classPaths.push(versionFile.mainClass || custom.mainClass);
     }
 
