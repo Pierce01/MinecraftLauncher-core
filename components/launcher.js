@@ -6,7 +6,7 @@ const fs = require('fs');
 
 
 module.exports = async function (options) {
-    options.root = path.normalize(options.root);
+    options.root = path.resolve(options.root);
     if(!fs.existsSync(options.root)) fs.mkdirSync(options.root);
 
     if(options.clientPackage) {
