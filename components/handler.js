@@ -71,7 +71,7 @@ module.exports.getVersion = function (version, directory) {
                     request.get(parsed.versions[desiredVersion].url, function(error, response, body) {
                         if (error) resolve(error);
 
-                        event.emit('debug', `[MCLC Debug]: Parsed version from version manifest`);
+                        event.emit('debug', `[MCLC]: Parsed version from version manifest`);
                         resolve(JSON.parse(body));
                     });
                 }
