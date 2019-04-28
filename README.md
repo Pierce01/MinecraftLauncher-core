@@ -96,6 +96,7 @@ If you are loading up a client outside of vanilla Minecraft and Forge (Optifine 
 | `package-extract` | null    | Emitted when `clientPackage` finishes being extracted                                 |
 | `download`        | String  | Emitted when a file successfully downloads                                            |
 | `download-status` | Object  | Emitted when data is received while downloading                                       |
+| `debug`           | String  | Emitted when functions occur, made to help debug if errors occur                      |
 #### Client Package Function
 
 Client Packages allow the client to run offline on setup. This function should be used outside the actual launcher.

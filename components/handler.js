@@ -13,7 +13,6 @@ function downloadAsync (url, directory, name) {
         const _request = request(url, {timeout: 10000});
 
         _request.on('error', function(error) {
-            shelljs.rm(path.join(directory, name)); // Prevents duplicates.
             resolve({
                 failed: true,
                 asset: {
@@ -41,6 +40,19 @@ function downloadAsync (url, directory, name) {
             event.emit('download', name);
             resolve({failed: false, asset: null});
         });
+
+        file.on('error', (e) => {
+            event.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${e}`);
+            if(fs.existsSync(path.join(directory, name))) shelljs.rm(path.join(directory, name));
+            resolve({
+                failed: true,
+                asset: {
+                    url: url,
+                    directory: directory,
+                    name: name
+                }
+            });
+        });
     });
 }
 
@@ -59,6 +71,7 @@ module.exports.getVersion = function (version, directory) {
                     request.get(parsed.versions[desiredVersion].url, function(error, response, body) {
                         if (error) resolve(error);
 
+                        event.emit('debug', `[MCLC Debug]: Parsed version from version manifest`);
                         resolve(JSON.parse(body));
                     });
                 }
@@ -72,6 +85,8 @@ module.exports.getJar = function (version, number, directory) {
         await downloadAsync(version.downloads.client.url, directory, `${number}.jar`);
 
         fs.writeFileSync(path.join(directory, `${number}.json`), JSON.stringify(version, null, 4));
+
+        event.emit('debug', '[MCLC]: Downloaded version jar and wrote version json');
 
         resolve();
     });
@@ -102,7 +117,7 @@ module.exports.getAssets = function (directory, version) {
 
         // why do we have this? B/c sometimes Minecraft's resource site times out!
         if(failed) {
-            for (const fail of failed) await downloadAsync(fail.url, fail.directory, fail.name);
+            await Promise.all(failed.map(async asset => await downloadAsync(asset.url, asset.directory, asset.name)))
         }
 
         // Copy assets to legacy if it's an older Minecarft version.
@@ -125,6 +140,7 @@ module.exports.getAssets = function (directory, version) {
             }));
         }
 
+        event.emit('debug', '[MCLC]: Downloaded assets');
         resolve();
     });
 };
@@ -157,8 +173,10 @@ module.exports.getNatives = function (root, version, os) {
                     shelljs.rm(path.join(nativeDirectory, name));
                 }
             }));
+            event.emit('debug', '[MCLC]: Downloaded and extracted natives');
         }
 
+        event.emit('debug', `[MCLC]: Set native path to ${nativeDirectory}`);
         resolve(nativeDirectory);
     });
 };
@@ -204,6 +222,8 @@ module.exports.getForgeDependencies = async function(root, version, forgeJarPath
         paths.push(`${jarPath}${path.sep}${name}`);
     }));
 
+    event.emit('debug', '[MCLC]: Downloaded Forge dependencies');
+
     return {paths, forge};
 };
 
@@ -241,6 +261,7 @@ module.exports.getClasses = function (options, version) {
             libs.push(libraryDirectory);
         }));
 
+        event.emit('debug', '[MCLC]: Collected class paths');
         resolve(libs)
     });
 };
@@ -287,6 +308,7 @@ module.exports.getLaunchOptions = function (version, modification, options) {
             options.proxy.password
         );
 
+        event.emit('debug', '[MCLC]: Set launch options');
         resolve(arguments);
     });
 };

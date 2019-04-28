@@ -7,9 +7,13 @@ const fs = require('fs');
 
 module.exports = async function (options) {
     options.root = path.resolve(options.root);
-    if(!fs.existsSync(options.root)) fs.mkdirSync(options.root);
+    if(!fs.existsSync(options.root)) {
+        event.emit('debug', '[MCLC]: Attempting to create root folder');
+        fs.mkdirSync(options.root);
+    }
 
     if(options.clientPackage) {
+        event.emit('debug', `[MCLC]: Extracting client package to ${options.root}`);
         await handler.extractPackage(options.root, options.clientPackage);
     }
 
@@ -21,13 +25,20 @@ module.exports = async function (options) {
     const nativePath = await handler.getNatives(options.root, versionFile, options.os);
 
     if (!fs.existsSync(mcPath)) {
+        event.emit('debug', '[MCLC]: Attempting to download Minecraft version jar');
         await handler.getJar(versionFile, options.version.number, directory);
     }
 
     let forge = null;
     let custom = null;
-    if(options.forge) forge = await handler.getForgeDependencies(options.root, versionFile, options.forge.path);
-    if(options.version.custom) custom = require(path.join(options.root, 'versions', options.version.custom, `${options.version.custom}.json`));
+    if(options.forge) {
+        event.emit('debug', '[MCLC]: Detected Forge in options, getting dependencies');
+        forge = await handler.getForgeDependencies(options.root, versionFile, options.forge.path);
+    }
+    if(options.version.custom) {
+        event.emit('debug', '[MCLC]: Detected custom in options, setting custom version file');
+        custom = require(path.join(options.root, 'versions', options.version.custom, `${options.version.custom}.json`));
+    }
 
     const args = [];
 
@@ -47,7 +58,9 @@ module.exports = async function (options) {
     const classes = await handler.getClasses(options, versionFile);
     const classPaths = ['-cp'];
     const separator = options.os === "windows" ? ";" : ":";
+    event.emit('debug', `[MCLC]: Using ${separator} to separate class paths`);
     if(forge) {
+        event.emit('debug', '[MCLC]: Setting Forge class paths');
         classPaths.push(`${options.forge.path}${separator}${forge.paths.join(separator)}${separator}${classes.join(separator)};${mcPath}`);
         classPaths.push(forge.forge.mainClass)
     } else {
@@ -56,6 +69,7 @@ module.exports = async function (options) {
     }
 
     // Download version's assets
+    event.emit('debug', '[MCLC]: Attempting to download assets');
     await handler.getAssets(options.root, versionFile);
 
     // Launch options. Thank you Lyrus for the reformat <3
@@ -64,6 +78,7 @@ module.exports = async function (options) {
 
     const launchArguments = args.concat(jvm, classPaths, launchOptions);
     event.emit('arguments', launchArguments);
+    event.emit('debug', launchArguments.join(' '));
 
     const minecraft = child.spawn(options.javaPath ? options.javaPath : 'java', launchArguments);
     minecraft.stdout.on('data', (data) => event.emit('data', data));
