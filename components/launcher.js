@@ -32,7 +32,7 @@ module.exports = async function (options) {
     let forge = null;
     let custom = null;
     if(options.forge) {
-        if(options.forge.path) process.emitWarning('\'options.forge.path\' will be deprecated. Use \'options.forge\' instead');
+        if(options.forge.path) process.emitWarning('\'options.forge.path\' is deprecated and will be removed. Use \'options.forge\' instead');
         event.emit('debug', '[MCLC]: Detected Forge in options, getting dependencies');
         forge = await handler.getForgeDependencies(options.root, versionFile, options.forge.path || options.forge);
     }
