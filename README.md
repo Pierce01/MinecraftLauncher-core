@@ -50,7 +50,7 @@ launcher.authenticator.getAuth("email", "password").then(auth => {
 | `options.version.custom` | String | Name of the jar, json, and folder of the custom client you are launching with. (Optifine) | False    |
 | `options.memory.max`     | String | Max amount of memory being used by Minectaft                                              | True     |
 | `options.memory.min`     | String | Min amount of memory being used by Minectaft                                              | True     |
-| `options.forge.path`     | String | Path to Universal Forge Jar                                                               | False    |
+| `options.forge`          | String | Path to Universal Forge Jar                                                               | False    |
 | `options.customArgs`     | String | Array of custom JVM options                                                               | False    |
 | `options.server.host`    | String | Host url to the server, don't include the port                                            | False    |
 | `options.server.port`    | String | Port of the host url, will default to `25565` if not entered.                             | False    |
@@ -144,9 +144,7 @@ launcher.authenticator.getAuth("email", "password").then(auth => {
         authorization: auth,
         clientPackage: null,
         root: "C:/Users/user/AppData/Roaming/.mc",
-        forge: {
-            path: "C:/Users/user/Desktop/forge.jar"
-        },
+        forge: "C:/Users/user/Desktop/forge.jar",
         os: "windows",
         version: {
             number: "1.12.2", // needs to be the same as the Forge version

@@ -266,6 +266,17 @@ module.exports.getClasses = function (options, version) {
     });
 };
 
+module.exports.cleanUp = async function(array) {
+    const newArray = [];
+
+    for(let argument in array) {
+        if(newArray.includes(array[argument])) continue;
+        newArray.push(array[argument]);
+    }
+
+    return newArray;
+};
+
 module.exports.getLaunchOptions = function (version, modification, options) {
     return new Promise(resolve => {
         let type = modification || version;

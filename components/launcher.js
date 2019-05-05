@@ -32,8 +32,9 @@ module.exports = async function (options) {
     let forge = null;
     let custom = null;
     if(options.forge) {
+        if(options.forge.path) process.emitWarning('\'options.forge.path\' will be deprecated. Use \'options.forge\' instead');
         event.emit('debug', '[MCLC]: Detected Forge in options, getting dependencies');
-        forge = await handler.getForgeDependencies(options.root, versionFile, options.forge.path);
+        forge = await handler.getForgeDependencies(options.root, versionFile, options.forge.path || options.forge);
     }
     if(options.version.custom) {
         event.emit('debug', '[MCLC]: Detected custom in options, setting custom version file');
@@ -56,17 +57,18 @@ module.exports = async function (options) {
     if(options.customArgs) jvm = jvm.concat(options.customArgs);
 
     const classes = await handler.getClasses(options, versionFile);
-    const classPaths = ['-cp'];
+    let classPaths = ['-cp'];
     const separator = options.os === "windows" ? ";" : ":";
     event.emit('debug', `[MCLC]: Using ${separator} to separate class paths`);
     if(forge) {
         event.emit('debug', '[MCLC]: Setting Forge class paths');
-        classPaths.push(`${options.forge.path}${separator}${forge.paths.join(separator)}${separator}${classes.join(separator)};${mcPath}`);
+        classPaths.push(`${options.forge.path || options.forge}${separator}${forge.paths.join(separator)}${separator}${classes.join(separator)};${mcPath}`);
         classPaths.push(forge.forge.mainClass)
     } else {
         classPaths.push(`${mcPath}${separator}${classes.join(separator)}`);
         classPaths.push(versionFile.mainClass || custom.mainClass);
     }
+    classPaths = await handler.cleanUp(classPaths);
 
     // Download version's assets
     event.emit('debug', '[MCLC]: Attempting to download assets');
