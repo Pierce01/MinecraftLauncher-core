@@ -2,6 +2,7 @@ const fs =  require('fs');
 const shelljs = require('shelljs');
 const path = require('path');
 const request = require('request');
+const checksum = require('checksum');
 const zip = require('adm-zip');
 const event = require('./events');
 
@@ -56,9 +57,18 @@ function downloadAsync (url, directory, name) {
     });
 }
 
+function checkSum(hash, file, size) {
+    return new Promise(resolve => {
+        checksum.file(file, (err, sum) => resolve(hash === sum));
+    });
+}
+
 module.exports.getVersion = function (version, directory) {
     return new Promise(resolve => {
-        if(fs.existsSync(path.join(directory, `${version}.json`))) resolve(require(path.join(directory, `${version}.json`)));
+        if(fs.existsSync(path.join(directory, `${version}.json`))) {
+            resolve(require(path.join(directory, `${version}.json`)));
+            return;
+        }
 
         const manifest = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
         request.get(manifest, function(error, response, body) {
@@ -108,7 +118,7 @@ module.exports.getAssets = function (directory, version) {
             const subhash = hash.substring(0,2);
             const assetDirectory = path.join(directory, 'assets', 'objects', subhash);
 
-            if(!fs.existsSync(path.join(assetDirectory, hash))) {
+            if(!fs.existsSync(path.join(assetDirectory, hash)) || !await checkSum(hash, path.join(assetDirectory, hash))) {
                 const download = await downloadAsync(`${assetsUrl}/${subhash}/${hash}`, assetDirectory, hash);
 
                 if(download.failed) failed.push(download.asset);
@@ -164,6 +174,9 @@ module.exports.getNatives = function (root, version, os) {
                 if (native) {
                     const name = native.path.split('/').pop();
                     await downloadAsync(native.url, nativeDirectory, name);
+                    if(!await checkSum(native.sha1, path.join(nativeDirectory, name))) {
+                        await downloadAsync(native.url, nativeDirectory, name);
+                    }
                     try {new zip(path.join(nativeDirectory, name)).extractAllTo(nativeDirectory, true);} catch(e) {
                         // Only doing a console.warn since a stupid error happens. You can basically ignore this.
                         // if it says Invalid file name, just means two files were downloaded and both were deleted.
@@ -248,9 +261,10 @@ module.exports.getClasses = function (options, version) {
 
             const libraryPath = _lib.downloads.artifact.path;
             const libraryUrl = _lib.downloads.artifact.url;
+            const libraryHash = _lib.downloads.artifact.sha1;
             const libraryDirectory = path.join(options.root, 'libraries', libraryPath);
 
-            if(!fs.existsSync(libraryDirectory)) {
+            if(!fs.existsSync(libraryDirectory) || !await checkSum(libraryHash, libraryDirectory)) {
                 let directory = libraryDirectory.split(path.sep);
                 const name = directory.pop();
                 directory = directory.join(path.sep);

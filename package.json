@@ -1,11 +1,11 @@
 {
   "name": "minecraft-launcher-core",
-  "version": "2.6.2",
+  "version": "2.7.0",
   "description": "Module that downloads Minecraft assets and runs Minecraft. Also Supports Forge",
   "main": "index.js",
   "dependencies": {
     "adm-zip": "^0.4.13",
-    "node-fetch": "^2.2.0",
+    "checksum": "^0.1.1",
     "request": "^2.88.0",
     "shelljs": "^0.8.2",
     "uuid": "^3.3.2"
