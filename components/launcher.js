@@ -65,8 +65,9 @@ module.exports = async function (options) {
         classPaths.push(`${options.forge.path || options.forge}${separator}${forge.paths.join(separator)}${separator}${classes.join(separator)};${mcPath}`);
         classPaths.push(forge.forge.mainClass)
     } else {
+        const file = custom || versionFile;
         classPaths.push(`${mcPath}${separator}${classes.join(separator)}`);
-        classPaths.push(versionFile.mainClass || custom.mainClass);
+        classPaths.push(file.mainClass);
     }
     classPaths = await handler.cleanUp(classPaths);
 

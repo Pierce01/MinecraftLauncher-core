@@ -246,14 +246,20 @@ module.exports.getClasses = function (options, version) {
 
         if(options.version.custom) {
             const customJarJson = require(path.join(options.root, 'versions', options.version.custom, `${options.version.custom}.json`));
-            customJarJson.libraries.map(library => {
+            await Promise.all(customJarJson.libraries.map(async library => {
                 const lib = library.name.split(':');
 
                 const jarPath = path.join(options.root, 'libraries', `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`);
                 const name = `${lib[1]}-${lib[2]}.jar`;
 
+                if(!fs.existsSync(path.join(jarPath, name))) {
+                    if(library.url) {
+                        const url = `${library.url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${lib[1]}-${lib[2]}.jar`;
+                        await downloadAsync(url, jarPath, name);
+                    }
+                }
                 libs.push(`${jarPath}/${name}`);
-            })
+            }));
         }
 
         await Promise.all(version.libraries.map(async (_lib) => {

@@ -60,7 +60,8 @@ launcher.authenticator.getAuth("email", "password").then(auth => {
 | `options.proxy.password` | String | Password for the proxy.                                                                   | False    |
 
 ##### Note
-If you are loading up a client outside of vanilla Minecraft and Forge (Optifine for an example), you'll need to download the needed files yourself.
+If you are loading up a client outside of vanilla Minecraft or Forge (Optifine and for an example), you'll need to download the needed files yourself
+if you don't provide downloads url downloads like Forge and Fabric. Still need to provide the version jar.
 
 #### launcher.authenticator Functions 
 
