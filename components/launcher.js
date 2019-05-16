@@ -62,7 +62,7 @@ module.exports = async function (options) {
     event.emit('debug', `[MCLC]: Using ${separator} to separate class paths`);
     if(forge) {
         event.emit('debug', '[MCLC]: Setting Forge class paths');
-        classPaths.push(`${options.forge.path || options.forge}${separator}${forge.paths.join(separator)}${separator}${classes.join(separator)};${mcPath}`);
+        classPaths.push(`${options.forge.path || options.forge}${separator}${forge.paths.join(separator)}${separator}${classes.join(separator)}${separator}${mcPath}`);
         classPaths.push(forge.forge.mainClass)
     } else {
         const file = custom || versionFile;
