@@ -52,17 +52,26 @@ launcher.on('error', (e) => console.log(e));
 | `options.version.number` | String   | Minecraft version that is going to be launched.                                           | True     |
 | `options.version.type`   | String   | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
 | `options.memory.max`     | String   | Max amount of memory being used by Minectaft.                                             | True     |
-| `options.forge.path`     | String   | Path to Universal Forge Jar.                                                              | False    |
+| `options.memory.min`     | String   | Min amount of memory being used by Minectaft.                                             | True     |
+| `options.forge`          | String   | Path to Universal Forge Jar.                                                              | False    |
 | `options.server.host`    | String   | Host url to the server, don't include the port.                                           | False    |
 | `options.server.port`    | String   | Port of the host url, will default to `25565` if not entered.                             | False    |
 | `options.proxy.host`     | String   | Host url to the proxy, don't include the port.                                            | False    |
 | `options.proxy.port`     | String   | Port of the host proxy, will default to `8080` if not entered.                            | False    |
 | `options.proxy.username` | String   | Username for the proxy.                                                                   | False    |
 | `options.proxy.password` | String   | Password for the proxy.                                                                   | False    |
-| `options.timeout`        | Interger | Timeout on download requests.                                                             | False    |
+| `options.timeout`        | Integer | Timeout on download requests.                                                              | False    |
 ##### Note
 If you are loading up a client outside of vanilla Minecraft or Forge (Optifine and for an example), you'll need to download the needed files yourself
 if you don't provide downloads url downloads like Forge and Fabric. Still need to provide the version jar.
+
+#### Client Functions
+
+| Function | Type    | Description                                                                             |
+|----------|---------|-----------------------------------------------------------------------------------------|
+| `launch` | Promise | Launches the client with the specified `options`                                        |
+| `close`  | Promise | Closes current client                                                                   |
+| `restart`| Promise | Restarts by closing the current client then relaunching it with the specified `options` |
 
 #### Authenticator Functions 
 
@@ -70,8 +79,8 @@ if you don't provide downloads url downloads like Forge and Fabric. Still need t
 
 | Parameter | Type   | Description                                                  | Required |
 |-----------|--------|--------------------------------------------------------------|----------|
-| `email`     | String | Email or username                                            | True     |
-| `password`  | String | Password for the Mojang account   being used if online mode. | False    |
+| `username`| String | Email or username                                            | True     |
+| `password`| String | Password for the Mojang account   being used if online mode. | False    |
 
 ##### validate
 

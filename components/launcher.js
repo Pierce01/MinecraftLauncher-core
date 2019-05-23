@@ -1,5 +1,4 @@
 const child = require('child_process');
-const event = require('./events');
 const path = require('path');
 const handler = require('./handler');
 const packager = require('./package');
@@ -12,6 +11,7 @@ class MCLCore extends EventEmitter {
 
         this.options = options;
         this.handler = new handler(this);
+        this.pid = null;
     }
 
     async launch() {
@@ -90,13 +90,24 @@ class MCLCore extends EventEmitter {
         const launchOptions = await this.handler.getLaunchOptions(modification);
 
         const launchArguments = args.concat(jvm, classPaths, launchOptions);
-        event.emit('arguments', launchArguments);
-        event.emit('debug', launchArguments.join(' '));
+        this.emit('arguments', launchArguments);
+        this.emit('debug', launchArguments.join(' '));
 
         const minecraft = child.spawn(this.options.javaPath ? this.options.javaPath : 'java', launchArguments);
         minecraft.stdout.on('data', (data) => this.emit('data', data));
         minecraft.stderr.on('data', (data) => this.emit('error', data));
         minecraft.on('close', (code) => this.emit('close', code));
+
+        this.pid = minecraft.pid;
+    }
+
+    async close() {
+        child.exec(`taskkill /PID ${this.pid}`, (err, out, error) => {return {err, out, error}})
+    }
+
+    async restart() {
+        await this.close();
+        await this.launch()
     }
 }
 
