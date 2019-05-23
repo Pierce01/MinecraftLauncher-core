@@ -81,7 +81,6 @@ module.exports.refreshAuth = function (accessToken, clientToken, selectedProfile
 
         request.post(requestObject, function(error, response, body) {
             if (error) resolve(error);
-            console.log(body);
             if(!body.selectedProfile) {
                 throw new Error("Validation error: " + response.statusMessage);
             }
