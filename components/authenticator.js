@@ -2,7 +2,6 @@ const request = require('request');
 const uuid = require('uuid/v1');
 const api_url = "https://authserver.mojang.com";
 
-
 module.exports.getAuth = function (username, password) {
     return new Promise(resolve => {
         if(!password) {
@@ -82,7 +81,6 @@ module.exports.refreshAuth = function (accessToken, clientToken, selectedProfile
 
         request.post(requestObject, function(error, response, body) {
             if (error) resolve(error);
-            console.log(body);
             if(!body.selectedProfile) {
                 throw new Error("Validation error: " + response.statusMessage);
             }
@@ -96,6 +94,42 @@ module.exports.refreshAuth = function (accessToken, clientToken, selectedProfile
             };
 
             resolve(userProfile);
+        });
+    });
+};
+
+module.exports.invalidate = function(accessToken, clientToken) {
+    return new Promise(resolve => {
+        const requestObject = {
+            url: api_url + "/invalidate",
+            json: {
+                "accessToken": accessToken,
+                "clientToken": clientToken
+            }
+        };
+
+        request.post(requestObject, function(error, response, body) {
+            if (error) resolve(error);
+
+            if(!body) resolve(true); else resolve(false);
+        });
+    });
+};
+
+module.exports.signOut = function(username, password) {
+    return new Promise(resolve => {
+        const requestObject = {
+            url: api_url + "/invalidate",
+            json: {
+                "username": username,
+                "password": password
+            }
+        };
+
+        request.post(requestObject, function(error, response, body) {
+            if (error) resolve(error);
+
+            if(!body) resolve(true); else resolve(false);
         });
     });
 };
