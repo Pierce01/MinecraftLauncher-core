@@ -18,7 +18,6 @@ https://discord.gg/8uYVbXP
 const { Client, Authenticator } = require('minecraft-launcher-core');
 
 let opts = {
-    authorization: async () => { return await Authenticator.getAuth(username, password) },
     clientPackage: null,
     root: "./minecraft",
     os: "windows",
@@ -33,7 +32,7 @@ let opts = {
 }
 
 const launcher = new Client(opts);
-launcher.launch();
+launcher.launch(Authenticator.getAuth(username, password));
 
 launcher.on('debug', (e) => console.log(e));
 launcher.on('data', (e) => console.log(e));
@@ -45,7 +44,6 @@ launcher.on('error', (e) => console.log(e));
 
 | Parameter                | Type     | Description                                                                               | Required |
 |--------------------------|----------|-------------------------------------------------------------------------------------------|----------|
-| `options.authorization`  | Object   | The result from `getAuth` function, allows the client to login in online or offline mode. | True     |
 | `options.clientPackage`  | String   | Path to the client package zip file.                                                      | False    |
 | `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`,   | True     |
 | `options.os`             | String   | windows, osx or linux,                                                                    | True     |
@@ -72,6 +70,11 @@ if you don't provide downloads url downloads like Forge and Fabric. Still need t
 | `launch` | Promise | Launches the client with the specified `options`                                        |
 | `close`  | Promise | Closes current client                                                                   |
 | `restart`| Promise | Restarts by closing the current client then relaunching it with the specified `options` |
+
+##### launch
+| Parameter | Type   | Description                                                  | Required |
+|-----------|--------|--------------------------------------------------------------|----------|
+| `authentication` | Object | Result from `getAuth` or the getAuth function itself. | True     |
 
 #### Authenticator Functions 
 

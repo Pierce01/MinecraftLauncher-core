@@ -14,7 +14,15 @@ class MCLCore extends EventEmitter {
         this.pid = null;
     }
 
-    async launch() {
+    async launch(authorization) {
+        if(!authorization) throw Error('No authorization to launch the client with!');
+
+        if({}.toString.call(authorization) === "[object Promise]") {
+            this.options.authorization = await authorization;
+        } else {
+            this.options.authorization = authorization
+        }
+
         this.options.root = path.resolve(this.options.root);
         if(!fs.existsSync(this.options.root)) {
             this.emit('debug', '[MCLC]: Attempting to create root folder');
