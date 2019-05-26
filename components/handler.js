@@ -99,9 +99,9 @@ class Handler {
 
     getJar() {
         return new Promise(async (resolve)=> {
-            await this.downloadAsync(this.version.downloads.client.url, directory, `${this.options.version.number}.jar`);
+            await this.downloadAsync(this.version.downloads.client.url, this.options.directory, `${this.options.version.number}.jar`);
 
-            fs.writeFileSync(path.join(directory, `${this.options.version.number}.json`), JSON.stringify(this.options.version, null, 4));
+            fs.writeFileSync(path.join(this.options.directory, `${this.options.version.number}.json`), JSON.stringify(this.options.version, null, 4));
 
             this.client.emit('debug', '[MCLC]: Downloaded version jar and wrote version json');
 
@@ -114,16 +114,16 @@ class Handler {
             const assetsUrl = 'https://resources.download.minecraft.net';
             const failed = [];
 
-            if(!fs.existsSync(path.join(this.options.directory, 'assets', 'indexes', `${this.version.assetIndex.id}.json`))) {
-                await this.downloadAsync(this.version.assetIndex.url, path.join(this.options.directory, 'assets', 'indexes'), `${this.version.assetIndex.id}.json`);
+            if(!fs.existsSync(path.join(this.options.root, 'assets', 'indexes', `${this.version.assetIndex.id}.json`))) {
+                await this.downloadAsync(this.version.assetIndex.url, path.join(this.options.root, 'assets', 'indexes'), `${this.version.assetIndex.id}.json`);
             }
 
-            const index = require(path.join(this.options.directory, 'assets', 'indexes',`${this.version.assetIndex.id}.json`));
+            const index = require(path.join(this.options.root, 'assets', 'indexes',`${this.version.assetIndex.id}.json`));
 
             await Promise.all(Object.keys(index.objects).map(async asset => {
                 const hash = index.objects[asset].hash;
                 const subhash = hash.substring(0,2);
-                const assetDirectory = path.join(this.options.directory, 'assets', 'objects', subhash);
+                const assetDirectory = path.join(this.options.root, 'assets', 'objects', subhash);
 
                 if(!fs.existsSync(path.join(assetDirectory, hash)) || !await this.checkSum(hash, path.join(assetDirectory, hash))) {
                     const download = await this.downloadAsync(`${assetsUrl}/${subhash}/${hash}`, assetDirectory, hash);
@@ -142,17 +142,17 @@ class Handler {
                 await Promise.all(Object.keys(index.objects).map(async asset => {
                     const hash = index.objects[asset].hash;
                     const subhash = hash.substring(0,2);
-                    const assetDirectory = path.join(this.options.directory, 'assets', 'objects', subhash);
+                    const assetDirectory = path.join(this.options.root, 'assets', 'objects', subhash);
 
                     let legacyAsset = asset.split('/');
                     legacyAsset.pop();
 
-                    if(!fs.existsSync(path.join(this.options.directory, 'assets', 'legacy', legacyAsset.join('/')))) {
-                        shelljs.mkdir('-p', path.join(this.options.directory, 'assets', 'legacy', legacyAsset.join('/')));
+                    if(!fs.existsSync(path.join(this.options.root, 'assets', 'legacy', legacyAsset.join('/')))) {
+                        shelljs.mkdir('-p', path.join(this.options.root, 'assets', 'legacy', legacyAsset.join('/')));
                     }
 
-                    if (!fs.existsSync(path.join(this.options.directory, 'assets', 'legacy', asset))) {
-                        fs.copyFileSync(path.join(assetDirectory, hash), path.join(this.options.directory, 'assets', 'legacy', asset))
+                    if (!fs.existsSync(path.join(this.options.root, 'assets', 'legacy', asset))) {
+                        fs.copyFileSync(path.join(assetDirectory, hash), path.join(this.options.root, 'assets', 'legacy', asset))
                     }
                 }));
             }
@@ -173,7 +173,7 @@ class Handler {
 
                 shelljs.mkdir('-p', nativeDirectory);
 
-                await Promise.all(version.libraries.map(async (lib) => {
+                await Promise.all(this.version.libraries.map(async (lib) => {
                     if (!lib.downloads.classifiers) return;
                     const type = `natives-${this.options.os}`;
                     const native = lib.downloads.classifiers[type];
@@ -202,8 +202,8 @@ class Handler {
     }
 
     async getForgeDependencies() {
-        if(!fs.existsSync(path.join(root, 'forge'))) {
-            shelljs.mkdir('-p', path.join(root, 'forge'));
+        if(!fs.existsSync(path.join(this.options.root, 'forge'))) {
+            shelljs.mkdir('-p', path.join(this.options.root, 'forge'));
         }
         await new zip(this.options.forge).extractEntryTo('version.json', path.join(this.options.root, 'forge', `${this.version.id}`), false, true);
 
@@ -218,7 +218,7 @@ class Handler {
             if(lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) return;
 
             let url = mavenUrl;
-            const jarPath = path.join(root, 'libraries', `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`);
+            const jarPath = path.join(this.options.root, 'libraries', `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`);
             const name = `${lib[1]}-${lib[2]}.jar`;
 
             if(!library.url) {
