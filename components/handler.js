@@ -344,7 +344,6 @@ class Handler {
                 this.options.proxy.password
             );
 
-            console.log(args)
             this.client.emit('debug', '[MCLC]: Set launch options');
             resolve(args);
         });
