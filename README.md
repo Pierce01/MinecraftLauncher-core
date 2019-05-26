@@ -58,7 +58,10 @@ launcher.on('error', (e) => console.log(e));
 | `options.proxy.port`     | String   | Port of the host proxy, will default to `8080` if not entered.                            | False    |
 | `options.proxy.username` | String   | Username for the proxy.                                                                   | False    |
 | `options.proxy.password` | String   | Password for the proxy.                                                                   | False    |
-| `options.timeout`        | Integer | Timeout on download requests.                                                              | False    |
+| `options.timeout`        | Integer  | Timeout on download requests.                                                             | False    |
+| `options.window.width`   | String   | Width of the Minecraft Client                                                             | False    |
+| `options.window.height`  | String   | Height of the Minecraft Client.                                                           | False    |
+
 ##### Note
 If you are loading up a client outside of vanilla Minecraft or Forge (Optifine and for an example), you'll need to download the needed files yourself
 if you don't provide downloads url downloads like Forge and Fabric. Still need to provide the version jar.

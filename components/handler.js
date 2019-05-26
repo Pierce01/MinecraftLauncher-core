@@ -70,8 +70,8 @@ class Handler {
 
     getVersion() {
         return new Promise(resolve => {
-            if(fs.existsSync(path.join(this.options.directory, `${this.options.version}.json`))) {
-                this.version = require(path.join(this.options.directory, `${this.options.version}.json`));
+            if(fs.existsSync(path.join(this.options.directory, 'versions', this.options.version.number, `${this.options.version.number}.json`))) {
+                this.version = require(path.join(this.options.directory, 'versions', this.options.version.number, `${this.options.version.number}.json`));
                 resolve(this.version);
                 return;
             }
@@ -101,7 +101,7 @@ class Handler {
         return new Promise(async (resolve)=> {
             await this.downloadAsync(this.version.downloads.client.url, this.options.directory, `${this.options.version.number}.jar`);
 
-            fs.writeFileSync(path.join(this.options.directory, `${this.options.version.number}.json`), JSON.stringify(this.options.version, null, 4));
+            fs.writeFileSync(path.join(this.options.directory, `${this.options.version.number}.json`), JSON.stringify(this.version, null, 4));
 
             this.client.emit('debug', '[MCLC]: Downloaded version jar and wrote version json');
 
@@ -164,13 +164,9 @@ class Handler {
 
     getNatives() {
         return new Promise(async(resolve) => {
-            let nativeDirectory;
+            const nativeDirectory = path.join(this.options.root, 'natives', this.version.id);
 
-            if(fs.existsSync(path.join(this.options.root, 'natives', this.version.id))) {
-                nativeDirectory = path.join(this.options.root, 'natives', this.version.id);
-            } else {
-                nativeDirectory = path.join(this.options.root, "natives", this.version.id);
-
+            if(!fs.existsSync(nativeDirectory) || !fs.readdirSync(nativeDirectory).length) {
                 shelljs.mkdir('-p', nativeDirectory);
 
                 await Promise.all(this.version.libraries.map(async (lib) => {
@@ -322,18 +318,20 @@ class Handler {
                 '${user_type}': 'mojang',
                 '${version_name}': this.options.version.number,
                 '${assets_index_name}': this.version.assetIndex.id,
-                '${game_directory}': path.join(this.options.root),
+                '${game_directory}': this.options.root,
                 '${assets_root}': assetPath,
                 '${game_assets}': assetPath,
                 '${version_type}': this.options.version.type
             };
 
             for (let index = 0; index < args.length; index++) {
+                if(typeof args[index] === 'object') args.splice(index, 2);
                 if (Object.keys(fields).includes(args[index])) {
                     args[index] = fields[args[index]];
                 }
             }
 
+            if(this.options.window) args.push('--width', this.options.window.width, '--height', this.options.window.height);
             if(this.options.server) args.push('--server', this.options.server.host, '--port', this.options.server.port || "25565");
             if(this.options.proxy) args.push(
                 '--proxyHost',
@@ -346,6 +344,7 @@ class Handler {
                 this.options.proxy.password
             );
 
+            console.log(args)
             this.client.emit('debug', '[MCLC]: Set launch options');
             resolve(args);
         });
