@@ -19,6 +19,7 @@ const { Client, Authenticator } = require('minecraft-launcher-core');
 
 let opts = {
     clientPackage: null,
+    authorization: Authenticator.getAuth("username", "password"),
     root: "./minecraft",
     os: "windows",
     version: {
@@ -31,16 +32,23 @@ let opts = {
     }
 }
 
-const launcher = new Client(opts);
-launcher.launch(Authenticator.getAuth(username, password));
+const launcher = new Client();
+launcher.launch(opts);
 
 launcher.on('debug', (e) => console.log(e));
 launcher.on('data', (e) => console.log(e));
 launcher.on('error', (e) => console.log(e));
 ```
-### Usage
+### Documentation
 
-##### Client Options
+#### Client Functions
+
+| Function | Type    | Description                                                                             |
+|----------|---------|-----------------------------------------------------------------------------------------|
+| `launch` | Promise | Launches the client with the specified `options`  as a parameter                        |
+| `getPid` | Integer | Returns the Minecraft client's PID                                                      |
+
+##### launch
 
 | Parameter                | Type     | Description                                                                               | Required |
 |--------------------------|----------|-------------------------------------------------------------------------------------------|----------|
@@ -52,6 +60,7 @@ launcher.on('error', (e) => console.log(e));
 | `options.memory.max`     | String   | Max amount of memory being used by Minectaft.                                             | True     |
 | `options.memory.min`     | String   | Min amount of memory being used by Minectaft.                                             | True     |
 | `options.forge`          | String   | Path to Universal Forge Jar.                                                              | False    |
+| `options.javaPath`       | String   | Path to the JRE executable file, will default to `java` if not entered.                   | False    |
 | `options.server.host`    | String   | Host url to the server, don't include the port.                                           | False    |
 | `options.server.port`    | String   | Port of the host url, will default to `25565` if not entered.                             | False    |
 | `options.proxy.host`     | String   | Host url to the proxy, don't include the port.                                            | False    |
@@ -65,19 +74,6 @@ launcher.on('error', (e) => console.log(e));
 ##### Note
 If you are loading up a client outside of vanilla Minecraft or Forge (Optifine and for an example), you'll need to download the needed files yourself
 if you don't provide downloads url downloads like Forge and Fabric. Still need to provide the version jar.
-
-#### Client Functions
-
-| Function | Type    | Description                                                                             |
-|----------|---------|-----------------------------------------------------------------------------------------|
-| `launch` | Promise | Launches the client with the specified `options`                                        |
-| `close`  | Promise | Closes current client                                                                   |
-| `restart`| Promise | Restarts by closing the current client then relaunching it with the specified `options` |
-
-##### launch
-| Parameter | Type   | Description                                                  | Required |
-|-----------|--------|--------------------------------------------------------------|----------|
-| `authentication` | Object | Result from `getAuth` or the getAuth function itself. | True     |
 
 #### Authenticator Functions 
 
@@ -131,5 +127,5 @@ if you don't provide downloads url downloads like Forge and Fabric. Still need t
 
 
 #### What should it look like running from console?
-
-![gif](https://pierce.is-serious.business/7d91a7.gif)
+Showing the emitted information from debug and data, also using `getPid` after the process has been created.
+![gif](https://pierce.is-serious.business/3N3PMC4.gif)

@@ -301,13 +301,17 @@ class Handler {
     }
 
     getLaunchOptions(modification) {
-        return new Promise(resolve => {
+        return new Promise(async resolve => {
             let type = modification || this.version;
 
             let args = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
             const assetPath = this.version.assets === "legacy" || this.version.assets === "pre-1.6" ? path.join(this.options.root, 'assets', 'legacy') : path.join(this.options.root, 'assets');
 
             if(args.length < 5) args = args.concat(this.version.minecraftArguments ? this.version.minecraftArguments.split(' ') : this.version.arguments.game);
+
+            if({}.toString.call(this.options.authorization) === "[object Promise]") {
+                this.options.authorization = await this.options.authorization;
+            }
 
             const fields = {
                 '${auth_access_token}': this.options.authorization.access_token,

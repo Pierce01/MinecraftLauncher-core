@@ -6,24 +6,17 @@ const fs = require('fs');
 const EventEmitter = require('events').EventEmitter;
 
 class MCLCore extends EventEmitter {
-    constructor(options) {
+    constructor() {
         super();
 
-        this.options = options;
-        this.handler = new handler(this);
         this.pid = null;
     }
 
-    async launch(authorization) {
-        if(!authorization) throw Error('No authorization to launch the client with!');
-
-        if({}.toString.call(authorization) === "[object Promise]") {
-            this.options.authorization = await authorization;
-        } else {
-            this.options.authorization = authorization
-        }
-
+    async launch(options) {
+        this.options = options;
         this.options.root = path.resolve(this.options.root);
+        this.handler = new handler(this);
+
         if(!fs.existsSync(this.options.root)) {
             this.emit('debug', '[MCLC]: Attempting to create root folder');
             fs.mkdirSync(this.options.root);
@@ -109,13 +102,8 @@ class MCLCore extends EventEmitter {
         this.pid = minecraft.pid;
     }
 
-    async close() {
-        child.exec(`taskkill /PID ${this.pid}`, (err, out, error) => {return {err, out, error}})
-    }
-
-    async restart() {
-        await this.close();
-        await this.launch()
+    getPid() {
+        return this.pid;
     }
 }
 
