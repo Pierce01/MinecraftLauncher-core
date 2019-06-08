@@ -45,8 +45,7 @@ launcher.on('error', (e) => console.log(e));
 
 | Function | Type    | Description                                                                             |
 |----------|---------|-----------------------------------------------------------------------------------------|
-| `launch` | Promise | Launches the client with the specified `options`  as a parameter                        |
-| `getPid` | Integer | Returns the Minecraft client's PID                                                      |
+| `launch` | Promise | Launches the client with the specified `options`  as a parameter. Returns child the process |
 
 ##### launch
 
@@ -54,7 +53,7 @@ launcher.on('error', (e) => console.log(e));
 |--------------------------|----------|-------------------------------------------------------------------------------------------|----------|
 | `options.clientPackage`  | String   | Path to the client package zip file.                                                      | False    |
 | `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`,   | True     |
-| `options.os`             | String   | windows, osx or linux,                                                                    | True     |
+| `options.os`             | String   | windows, osx or linux. MCLC with auto determine the OS if this field isn't provided.      | False    |
 | `options.version.number` | String   | Minecraft version that is going to be launched.                                           | True     |
 | `options.version.type`   | String   | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
 | `options.memory.max`     | String   | Max amount of memory being used by Minectaft.                                             | True     |

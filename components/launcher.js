@@ -8,8 +8,6 @@ const EventEmitter = require('events').EventEmitter;
 class MCLCore extends EventEmitter {
     constructor() {
         super();
-
-        this.pid = null;
     }
 
     async launch(options) {
@@ -69,7 +67,7 @@ class MCLCore extends EventEmitter {
 
         const classes = await this.handler.getClasses();
         let classPaths = ['-cp'];
-        const separator = this.options.os === "windows" ? ";" : ":";
+        const separator = this.handler.getOS() === "windows" ? ";" : ":";
         this.emit('debug', `[MCLC]: Using ${separator} to separate class paths`);
         if(forge) {
             this.emit('debug', '[MCLC]: Setting Forge class paths');
@@ -99,11 +97,7 @@ class MCLCore extends EventEmitter {
         minecraft.stderr.on('data', (data) => this.emit('error', data));
         minecraft.on('close', (code) => this.emit('close', code));
 
-        this.pid = minecraft.pid;
-    }
-
-    getPid() {
-        return this.pid;
+        return minecraft;
     }
 }
 

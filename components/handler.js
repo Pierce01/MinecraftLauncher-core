@@ -171,7 +171,7 @@ class Handler {
 
                 await Promise.all(this.version.libraries.map(async (lib) => {
                     if (!lib.downloads.classifiers) return;
-                    const type = `natives-${this.options.os}`;
+                    const type = `natives-${this.getOS()}`;
                     const native = lib.downloads.classifiers[type];
 
                     if (native) {
@@ -354,15 +354,24 @@ class Handler {
     }
 
     async getJVM() {
-        switch(this.options.os) {
-            case "windows": {
-                return "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump"
-            }
-            case "osx": {
-                return "-XstartOnFirstThread"
-            }
-            case "linux": {
-                return "-Xss1M"
+        const opts = {
+            "windows": "-XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump",
+            "osx": "-XstartOnFirstThread",
+            "linux": "-Xss1M"
+        };
+        return opts[this.getOS()]
+    }
+
+    getOS() {
+        if(this.options.os) {
+            return this.options.os;
+        } else {
+            switch(process.platform) {
+                case "win32": return "windows";
+                case "darwin": return "osx";
+                case "freebsd": return "linux";
+                case "sunos": return "linux";
+                default: throw Error("[MCLC Error] Couldn't set OS specific JVM argument!")
             }
         }
     }
