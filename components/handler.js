@@ -369,9 +369,7 @@ class Handler {
             switch(process.platform) {
                 case "win32": return "windows";
                 case "darwin": return "osx";
-                case "freebsd": return "linux";
-                case "sunos": return "linux";
-                default: throw Error("[MCLC Error] Couldn't set OS specific JVM argument!")
+                default: return "linux";
             }
         }
     }
