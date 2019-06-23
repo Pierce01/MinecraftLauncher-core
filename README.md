@@ -56,7 +56,7 @@ launcher.on('error', (e) => console.log(e.toString('utf-8')));
 | `options.os`             | String   | windows, osx or linux. MCLC with auto determine the OS if this field isn't provided.      | False    |
 | `options.version.number` | String   | Minecraft version that is going to be launched.                                           | True     |
 | `options.version.type`   | String   | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
-| `options.version.custom` | String   | The name of the folder, jar file, and version json in the version folder.                 | True     |
+| `options.version.custom` | String   | The name of the folder, jar file, and version json in the version folder.                 | False    |
 | `options.memory.max`     | String   | Max amount of memory being used by Minectaft.                                             | True     |
 | `options.memory.min`     | String   | Min amount of memory being used by Minectaft.                                             | True     |
 | `options.forge`          | String   | Path to Universal Forge Jar.                                                              | False    |
