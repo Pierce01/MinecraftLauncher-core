@@ -65,20 +65,19 @@ class MCLCore extends EventEmitter {
         jvm.push(await this.handler.getJVM());
         if(this.options.customArgs) jvm = jvm.concat(this.options.customArgs);
 
-        const classes = await this.handler.getClasses();
+        const classes = await handler.cleanUp(await this.handler.getClasses());
         let classPaths = ['-cp'];
         const separator = this.handler.getOS() === "windows" ? ";" : ":";
         this.emit('debug', `[MCLC]: Using ${separator} to separate class paths`);
         if(forge) {
             this.emit('debug', '[MCLC]: Setting Forge class paths');
-            classPaths.push(`${this.options.forge.path || this.options.forge}${separator}${forge.paths.join(separator)}${separator}${classes.join(separator)}${separator}${mcPath}`);
+            classPaths.push(`${path.resolve(this.options.forge)}${separator}${forge.paths.join(separator)}${separator}${classes.join(separator)}${separator}${mcPath}`);
             classPaths.push(forge.forge.mainClass)
         } else {
             const file = custom || versionFile;
             classPaths.push(`${mcPath}${separator}${classes.join(separator)}`);
             classPaths.push(file.mainClass);
         }
-        classPaths = await handler.cleanUp(classPaths);
 
         // Download version's assets
         this.emit('debug', '[MCLC]: Attempting to download assets');

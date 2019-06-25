@@ -261,7 +261,7 @@ class Handler {
                             await this.downloadAsync(url, jarPath, name);
                         }
                     }
-                    libs.push(`${jarPath}/${name}`);
+                    libs.push(`${jarPath}${path.sep}${name}`);
                 }));
             }
 
@@ -290,14 +290,15 @@ class Handler {
     }
 
     static cleanUp(array) {
-        const newArray = [];
+        return new Promise(resolve => {
+            const newArray = [];
 
-        for(let argument in array) {
-            if(newArray.includes(array[argument])) continue;
-            newArray.push(array[argument]);
-        }
-
-        return newArray;
+            for(let classPath in array) {
+                if(newArray.includes(array[classPath])) continue;
+                newArray.push(array[classPath]);
+            }
+            resolve(newArray);
+        })
     }
 
     getLaunchOptions(modification) {
