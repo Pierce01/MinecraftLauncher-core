@@ -70,8 +70,8 @@ class Handler {
 
     getVersion() {
         return new Promise(resolve => {
-            if(fs.existsSync(path.join(this.options.directory, 'versions', this.options.version.number, `${this.options.version.number}.json`))) {
-                this.version = require(path.join(this.options.directory, 'versions', this.options.version.number, `${this.options.version.number}.json`));
+            if(fs.existsSync(path.join(this.options.directory, `${this.options.version.number}.json`))) {
+                this.version = require(path.join(this.options.directory, `${this.options.version.number}.json`));
                 resolve(this.version);
                 return;
             }
