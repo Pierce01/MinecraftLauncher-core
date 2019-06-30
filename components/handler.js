@@ -18,7 +18,8 @@ class Handler {
 
             const _request = request(url, {timeout: this.options.timeout || 10000});
 
-            _request.on('error', function(error) {
+            _request.on('error', (e) => {
+                this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${e}`);
                 resolve({
                     failed: true,
                     asset: {
