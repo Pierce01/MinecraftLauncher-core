@@ -52,14 +52,15 @@ launcher.on('error', (e) => console.log(e.toString('utf-8')));
 | Parameter                | Type     | Description                                                                               | Required |
 |--------------------------|----------|-------------------------------------------------------------------------------------------|----------|
 | `options.clientPackage`  | String   | Path to the client package zip file.                                                      | False    |
+| `options.installer`      | String   | Path to installer being executed.                                                         | False    |
 | `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`,   | True     |
 | `options.os`             | String   | windows, osx or linux. MCLC with auto determine the OS if this field isn't provided.      | False    |
 | `options.version.number` | String   | Minecraft version that is going to be launched.                                           | True     |
 | `options.version.type`   | String   | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
 | `options.version.custom` | String   | The name of the folder, jar file, and version json in the version folder.                 | False    |
-| `options.memory.max`     | String   | Max amount of memory being used by Minectaft.                                             | True     |
-| `options.memory.min`     | String   | Min amount of memory being used by Minectaft.                                             | True     |
-| `options.forge`          | String   | Path to Universal Forge Jar.                                                              | False    |
+| `options.memory.max`     | String   | Max amount of memory being used by Minecraft.                                             | True     |
+| `options.memory.min`     | String   | Min amount of memory being used by Minecraft.                                             | True     |
+| `options.forge`          | String   | Path to Universal Forge Jar. (Only for versions below 1.13+                               | False    |
 | `options.javaPath`       | String   | Path to the JRE executable file, will default to `java` if not entered.                   | False    |
 | `options.server.host`    | String   | Host url to the server, don't include the port.                                           | False    |
 | `options.server.port`    | String   | Port of the host url, will default to `25565` if not entered.                             | False    |
@@ -71,10 +72,22 @@ launcher.on('error', (e) => console.log(e.toString('utf-8')));
 | `options.window.width`   | String   | Width of the Minecraft Client                                                             | False    |
 | `options.window.height`  | String   | Height of the Minecraft Client.                                                           | False    |
 
-##### Note
+#### Notes
+##### Custom
 If you are loading up a client outside of vanilla Minecraft or Forge (Optifine and for an example), you'll need to download the needed files yourself
 if you don't provide downloads url downloads like Forge and Fabric. Still need to provide the version jar.
-
+##### Installer
+You'll need to provide the folder created in the versions if you're running the new forge like so
+```json
+{
+    "version": {
+        "number": "1.14.2",
+        "type": "release",
+        "custom": "1.14.2-forge-26.0.63"
+    },
+    "installer": "forge-1.14.2-26.0.63-installer.jar"
+}
+```
 #### Authenticator Functions 
 
 ##### getAuth
@@ -96,7 +109,7 @@ if you don't provide downloads url downloads like Forge and Fabric. Still need t
 |--------------------|--------|-------------------------------------------------------------------------------------|----------|
 | `access_token`     | String | Token being checked if it can be used to login with (online mode).                  | True     |
 | `client_token`     | String | Token being checked if it's the same client that the access_token was created from. | True     |
-| `selected_profile` | Object | Json Object that was returned from Mojangs auth api.                                | True     |
+| `selected_profile` | Object | Json Object that was returned from Mojang's auth api.                                | True     |
 
 ##### invalidate
 
