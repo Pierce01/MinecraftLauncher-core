@@ -25,6 +25,12 @@ class MCLCore extends EventEmitter {
             await packager.extractPackage(this.options.root, this.options.clientPackage);
         }
 
+        if(this.options.installer) {
+            // So the forge installer can run without breaking :)
+            fs.writeFileSync(path.join(this.options.root, 'launcher_profiles.json'), JSON.stringify({}, null, 4));
+            await this.handler.runInstaller(this.options.installer)
+        }
+
         const directory = path.join(this.options.root, 'versions', this.options.version.number);
         this.options.directory = directory;
 
@@ -43,7 +49,7 @@ class MCLCore extends EventEmitter {
         let custom = null;
         if(this.options.forge) {
             this.emit('debug', '[MCLC]: Detected Forge in options, getting dependencies');
-            forge = await this.handler.getForgeDependencies();
+            forge = await this.handler.getForgeDependenciesLegacy();
         }
         if(this.options.version.custom) {
             this.emit('debug', '[MCLC]: Detected custom in options, setting custom version file');
@@ -75,7 +81,8 @@ class MCLCore extends EventEmitter {
             classPaths.push(forge.forge.mainClass)
         } else {
             const file = custom || versionFile;
-            classPaths.push(`${mcPath}${separator}${classes.join(separator)}`);
+            const jar = fs.existsSync(mcPath) ? `${mcPath}${separator}` : '';
+            classPaths.push(`${jar}${classes.join(separator)}`);
             classPaths.push(file.mainClass);
         }
 

@@ -4,6 +4,7 @@ const path = require('path');
 const request = require('request');
 const checksum = require('checksum');
 const zip = require('adm-zip');
+const child = require('child_process');
 
 class Handler {
     constructor(client) {
@@ -19,6 +20,7 @@ class Handler {
             const _request = request(url, {timeout: this.options.timeout || 10000});
 
             _request.on('error', function(error) {
+                this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${e}`);
                 resolve({
                     failed: true,
                     asset: {
@@ -70,8 +72,8 @@ class Handler {
 
     getVersion() {
         return new Promise(resolve => {
-            if(fs.existsSync(path.join(this.options.directory, 'versions', this.options.version.number, `${this.options.version.number}.json`))) {
-                this.version = require(path.join(this.options.directory, 'versions', this.options.version.number, `${this.options.version.number}.json`));
+            if(fs.existsSync(path.join(this.options.directory, `${this.options.version.number}.json`))) {
+                this.version = require(path.join(this.options.directory, `${this.options.version.number}.json`));
                 resolve(this.version);
                 return;
             }
@@ -197,7 +199,7 @@ class Handler {
         });
     }
 
-    async getForgeDependencies() {
+    async getForgeDependenciesLegacy() {
         if(!fs.existsSync(path.join(this.options.root, 'forge'))) {
             shelljs.mkdir('-p', path.join(this.options.root, 'forge'));
         }
@@ -241,6 +243,13 @@ class Handler {
         this.client.emit('debug', '[MCLC]: Downloaded Forge dependencies');
 
         return {paths, forge};
+    }
+
+    runInstaller(path) {
+        return new Promise(resolve => {
+            const installer = child.exec(path);
+            installer.on('close', (code) => resolve());
+        })
     }
 
     getClasses() {
@@ -308,7 +317,7 @@ class Handler {
             let args = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
             const assetPath = this.version.assets === "legacy" || this.version.assets === "pre-1.6" ? path.join(this.options.root, 'assets', 'legacy') : path.join(this.options.root, 'assets');
 
-            if(args.length < 5) args = args.concat(this.version.minecraftArguments ? this.version.minecraftArguments.split(' ') : this.version.arguments.game);
+            if(args.length < 11) args = args.concat(this.version.minecraftArguments ? this.version.minecraftArguments.split(' ') : this.version.arguments.game);
 
             if({}.toString.call(this.options.authorization) === "[object Promise]") {
                 this.options.authorization = await this.options.authorization;
