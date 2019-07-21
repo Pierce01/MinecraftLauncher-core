@@ -19,8 +19,8 @@ class Handler {
 
             const _request = request(url, {timeout: this.options.timeout || 10000});
 
-            _request.on('error', function(error) {
-                this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${e}`);
+            _request.on('error', (error) => {
+                this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${error}`);
                 resolve({
                     failed: true,
                     asset: {
@@ -136,6 +136,7 @@ class Handler {
 
             // why do we have this? B/c sometimes Minecraft's resource site times out!
             if(failed) {
+                this.client.emit('debug', '[MCLC]: Attempting to download failed assets');
                 await Promise.all(failed.map(async asset => await this.downloadAsync(asset.url, asset.directory, asset.name)))
             }
 
