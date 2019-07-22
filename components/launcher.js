@@ -13,7 +13,17 @@ class MCLCore extends EventEmitter {
     async launch(options) {
         this.options = options;
         this.options.root = path.resolve(this.options.root);
+        if(!this.options.overrides) this.options.overrides = {};
+        this.options.overrides = {
+            minecraftJar: this.options.overrides.minecraftJar ? path.join(this.options.root, this.options.overrides.minecraftJar): null,
+            versionJson: this.options.overrides.versionJson ? path.join(this.options.root, this.options.overrides.versionJson): null,
+            directory: this.options.overrides.directory ? path.join(this.options.root, this.options.overrides.directory): null,
+            libraries: this.options.overrides.libraries ? path.join(this.options.root, this.options.overrides.libraries): null,
+            natives: this.options.overrides.natives ? path.join(this.options.root, this.options.overrides.natives): null,
+            assetRoot: this.options.overrides.assetRoot ? path.join(this.options.root, this.options.overrides.assetRoot): null,
+        };
         this.handler = new handler(this);
+        const override = this.options.overrides;
 
         if(!fs.existsSync(this.options.root)) {
             this.emit('debug', '[MCLC]: Attempting to create root folder');
@@ -31,13 +41,13 @@ class MCLCore extends EventEmitter {
             await this.handler.runInstaller(this.options.installer)
         }
 
-        const directory = path.join(this.options.root, 'versions', this.options.version.number);
+        const directory = override.directory || path.join(this.options.root, 'versions', this.options.version.number);
         this.options.directory = directory;
 
         // Version JSON for the main launcher folder
         const versionFile = await this.handler.getVersion();
-        const mcPath = this.options.version.custom ? path.join(this.options.root, 'versions', this.options.version.custom , `${this.options.version.custom}.jar`):
-            path.join(directory, `${this.options.version.number}.jar`);
+        const mcPath = override.minecraftJar || (this.options.version.custom ? path.join(this.options.root, 'versions', this.options.version.custom , `${this.options.version.custom}.jar`):
+            path.join(directory, `${this.options.version.number}.jar`));
         const nativePath = await this.handler.getNatives();
 
         if (!fs.existsSync(mcPath)) {

@@ -72,8 +72,9 @@ class Handler {
 
     getVersion() {
         return new Promise(resolve => {
-            if(fs.existsSync(path.join(this.options.directory, `${this.options.version.number}.json`))) {
-                this.version = require(path.join(this.options.directory, `${this.options.version.number}.json`));
+            const versionJsonPath = this.options.overrides.versionJson || path.join(this.options.directory, `${this.options.version.number}.json`);
+            if(fs.existsSync(versionJsonPath)) {
+                this.version = require(versionJsonPath);
                 resolve(this.version);
                 return;
             }
@@ -125,10 +126,11 @@ class Handler {
             await Promise.all(Object.keys(index.objects).map(async asset => {
                 const hash = index.objects[asset].hash;
                 const subhash = hash.substring(0,2);
-                const assetDirectory = path.join(this.options.root, 'assets', 'objects', subhash);
+                const assetDirectory = this.options.overrides.assetRoot || path.join(this.options.root, 'assets');
+                const subAsset = path.join(assetDirectory, 'objects', subhash);
 
-                if(!fs.existsSync(path.join(assetDirectory, hash)) || !await this.checkSum(hash, path.join(assetDirectory, hash))) {
-                    const download = await this.downloadAsync(`${assetsUrl}/${subhash}/${hash}`, assetDirectory, hash);
+                if(!fs.existsSync(path.join(subAsset, hash)) || !await this.checkSum(hash, path.join(subAsset, hash))) {
+                    const download = await this.downloadAsync(`${assetsUrl}/${subhash}/${hash}`, subAsset, hash);
 
                     if(download.failed) failed.push(download.asset);
                 }
@@ -140,12 +142,13 @@ class Handler {
                 await Promise.all(failed.map(async asset => await this.downloadAsync(asset.url, asset.directory, asset.name)))
             }
 
-            // Copy assets to legacy if it's an older Minecarft version.
+            // Copy assets to legacy if it's an older Minecraft version.
             if(this.version.assets === "legacy" || this.version.assets === "pre-1.6") {
                 await Promise.all(Object.keys(index.objects).map(async asset => {
                     const hash = index.objects[asset].hash;
                     const subhash = hash.substring(0,2);
-                    const assetDirectory = path.join(this.options.root, 'assets', 'objects', subhash);
+                    const assetDirectory = this.options.overrides.assetRoot || path.join(this.options.root, 'assets');
+                    const subAsset = path.join(assetDirectory, 'objects', subhash);
 
                     let legacyAsset = asset.split('/');
                     legacyAsset.pop();
@@ -155,7 +158,7 @@ class Handler {
                     }
 
                     if (!fs.existsSync(path.join(this.options.root, 'assets', 'legacy', asset))) {
-                        fs.copyFileSync(path.join(assetDirectory, hash), path.join(this.options.root, 'assets', 'legacy', asset))
+                        fs.copyFileSync(path.join(subAsset, hash), path.join(assetDirectory, 'legacy', asset))
                     }
                 }));
             }
@@ -167,7 +170,7 @@ class Handler {
 
     getNatives() {
         return new Promise(async(resolve) => {
-            const nativeDirectory = path.join(this.options.root, 'natives', this.version.id);
+            const nativeDirectory = this.options.overrides.natives || path.join(this.options.root, 'natives', this.version.id);
 
             if(!fs.existsSync(nativeDirectory) || !fs.readdirSync(nativeDirectory).length) {
                 shelljs.mkdir('-p', nativeDirectory);
@@ -281,7 +284,7 @@ class Handler {
                 const libraryPath = _lib.downloads.artifact.path;
                 const libraryUrl = _lib.downloads.artifact.url;
                 const libraryHash = _lib.downloads.artifact.sha1;
-                const libraryDirectory = path.join(this.options.root, 'libraries', libraryPath);
+                const libraryDirectory = this.options.overrides.libraries || path.join(this.options.root, 'libraries', libraryPath);
 
                 if(!fs.existsSync(libraryDirectory) || !await this.checkSum(libraryHash, libraryDirectory)) {
                     let directory = libraryDirectory.split(path.sep);
@@ -316,7 +319,8 @@ class Handler {
             let type = modification || this.version;
 
             let args = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
-            const assetPath = this.version.assets === "legacy" || this.version.assets === "pre-1.6" ? path.join(this.options.root, 'assets', 'legacy') : path.join(this.options.root, 'assets');
+            const assetRoot = this.options.overrides.assetRoot || path.join(this.options.root, 'assets');
+            const assetPath = this.version.assets === "legacy" || this.version.assets === "pre-1.6" ? path.join(assetRoot, 'legacy') : path.join(assetRoot);
 
             if(args.length < 11) args = args.concat(this.version.minecraftArguments ? this.version.minecraftArguments.split(' ') : this.version.arguments.game);
 

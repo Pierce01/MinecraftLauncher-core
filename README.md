@@ -55,6 +55,7 @@ launcher.on('error', (e) => console.log(e.toString('utf-8')));
 | `options.installer`      | String   | Path to installer being executed.                                                         | False    |
 | `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`,   | True     |
 | `options.os`             | String   | windows, osx or linux. MCLC with auto determine the OS if this field isn't provided.      | False    |
+| `options.customArgs`     | Array    | Array of custom java arguments you want to add.                                           | False    |
 | `options.version.number` | String   | Minecraft version that is going to be launched.                                           | True     |
 | `options.version.type`   | String   | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
 | `options.version.custom` | String   | The name of the folder, jar file, and version json in the version folder.                 | False    |
@@ -71,6 +72,20 @@ launcher.on('error', (e) => console.log(e.toString('utf-8')));
 | `options.timeout`        | Integer  | Timeout on download requests.                                                             | False    |
 | `options.window.width`   | String   | Width of the Minecraft Client                                                             | False    |
 | `options.window.height`  | String   | Height of the Minecraft Client.                                                           | False    |
+| `options.overrides`      | Object   | Json object redefining paths for better customization. Example below.                     | False    |
+```js
+let opts = {
+   otherOps...,
+   overrides: {
+       minecraftJar: "",
+       versionJson: "",
+       directory: "",
+       libraries: "",
+       natives: "",
+       assetRoot: ""
+   }
+}
+```
 
 #### Notes
 ##### Custom

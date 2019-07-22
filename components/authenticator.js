@@ -119,7 +119,7 @@ module.exports.invalidate = function(accessToken, clientToken) {
 module.exports.signOut = function(username, password) {
     return new Promise(resolve => {
         const requestObject = {
-            url: api_url + "/invalidate",
+            url: api_url + "/signout",
             json: {
                 "username": username,
                 "password": password
