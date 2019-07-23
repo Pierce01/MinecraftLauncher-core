@@ -177,8 +177,9 @@ class Handler {
 
                 await Promise.all(this.version.libraries.map(async (lib) => {
                     if (!lib.downloads.classifiers) return;
-                    const type = `natives-${this.getOS()}`;
-                    const native = lib.downloads.classifiers[type];
+                    const native = this.getOS() === 'osx'
+                        ? lib.downloads.classifiers['natives-osx'] || lib.downloads.classifiers['natives-macos']
+                        : lib.downloads.classifiers[`natives-${this.getOS()}`];
 
                     if (native) {
                         const name = native.path.split('/').pop();

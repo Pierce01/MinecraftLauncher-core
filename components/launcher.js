@@ -78,7 +78,10 @@ class MCLCore extends EventEmitter {
             `-Xmx${this.options.memory.max}M`,
             `-Xms${this.options.memory.min}M`
         ];
-        jvm.push(await this.handler.getJVM());
+        if(this.handler.getOS() === 'osx') {
+            if(parseInt(versionFile.id.split('.')[1]) > 12) jvm.push(await this.handler.getJVM());
+        } else jvm.push(await this.handler.getJVM());
+
         if(this.options.customArgs) jvm = jvm.concat(this.options.customArgs);
 
         const classes = await handler.cleanUp(await this.handler.getClasses());
