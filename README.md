@@ -51,7 +51,7 @@ launcher.on('error', (e) => console.log(e.toString('utf-8')));
 
 | Parameter                | Type     | Description                                                                               | Required |
 |--------------------------|----------|-------------------------------------------------------------------------------------------|----------|
-| `options.clientPackage`  | String   | Path to the client package zip file.                                                      | False    |
+| `options.clientPackage`  | String   | Path or URL to the client package zip file.                                               | False    |
 | `options.installer`      | String   | Path to installer being executed.                                                         | False    |
 | `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`,   | True     |
 | `options.os`             | String   | windows, osx or linux. MCLC with auto determine the OS if this field isn't provided.      | False    |

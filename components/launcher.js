@@ -32,12 +32,14 @@ class MCLCore extends EventEmitter {
 
         if(this.options.clientPackage) {
             this.emit('debug', `[MCLC]: Extracting client package to ${this.options.root}`);
-            await packager.extractPackage(this.options.root, this.options.clientPackage);
+            await packager.extractPackage(this);
         }
 
         if(this.options.installer) {
             // So the forge installer can run without breaking :)
-            fs.writeFileSync(path.join(this.options.root, 'launcher_profiles.json'), JSON.stringify({}, null, 4));
+            const profilePath = path.join(this.options.root, 'launcher_profiles.json');
+            if(!fs.existsSync(profilePath))
+                fs.writeFileSync(profilePath, JSON.stringify({}, null, 4));
             await this.handler.runInstaller(this.options.installer)
         }
 
