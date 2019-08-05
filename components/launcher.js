@@ -86,7 +86,7 @@ class MCLCore extends EventEmitter {
 
         if(this.options.customArgs) jvm = jvm.concat(this.options.customArgs);
 
-        const classes = await handler.cleanUp(await this.handler.getClasses());
+        const classes = this.options.overrides.classes || await handler.cleanUp(await this.handler.getClasses());
         let classPaths = ['-cp'];
         const separator = this.handler.getOS() === "windows" ? ";" : ":";
         this.emit('debug', `[MCLC]: Using ${separator} to separate class paths`);
@@ -115,7 +115,7 @@ class MCLCore extends EventEmitter {
 
         const minecraft = child.spawn(this.options.javaPath ? this.options.javaPath : 'java', launchArguments);
         minecraft.stdout.on('data', (data) => this.emit('data', data));
-        minecraft.stderr.on('data', (data) => this.emit('error', data));
+        minecraft.stderr.on('data', (data) => this.emit('data', data));
         minecraft.on('close', (code) => this.emit('close', code));
 
         return minecraft;

@@ -323,7 +323,8 @@ class Handler {
             const assetRoot = this.options.overrides.assetRoot || path.join(this.options.root, 'assets');
             const assetPath = this.version.assets === "legacy" || this.version.assets === "pre-1.6" ? path.join(assetRoot, 'legacy') : path.join(assetRoot);
 
-            if(args.length < 11) args = args.concat(this.version.minecraftArguments ? this.version.minecraftArguments.split(' ') : this.version.arguments.game);
+            const minArgs = this.options.overrides.minArgs || 5;
+            if(args.length < minArgs) args = args.concat(this.version.minecraftArguments ? this.version.minecraftArguments.split(' ') : this.version.arguments.game);
 
             if({}.toString.call(this.options.authorization) === "[object Promise]") {
                 this.options.authorization = await this.options.authorization;

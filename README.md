@@ -73,16 +73,20 @@ launcher.on('error', (e) => console.log(e.toString('utf-8')));
 | `options.window.width`   | String   | Width of the Minecraft Client                                                             | False    |
 | `options.window.height`  | String   | Height of the Minecraft Client.                                                           | False    |
 | `options.overrides`      | Object   | Json object redefining paths for better customization. Example below.                     | False    |
+| `options.overrides`      | Object   | Json object redefining paths for better customization. Example below.                     | False    |
+| `options.overrides.minArgs`| Integer| The amount of launch arguments specified in the version file before it adds the default again| False    |
 ```js
 let opts = {
    otherOps...,
    overrides: {
        minecraftJar: "",
        versionJson: "",
-       directory: "",
+       directory: "", // where the minecraft jar and version json are located.
        libraries: "",
        natives: "",
-       assetRoot: ""
+       assetRoot: "",
+       classes: [], // all class paths are required if you use this.
+       minArgs: 11,
    }
 }
 ```
@@ -147,7 +151,6 @@ You'll need to provide the folder created in the versions if you're running the 
 | `arguments`       | Object  | Emitted when launch arguments are set for the Minecraft Jar.                          |
 | `data`            | Buffer  | Emitted when information is returned from the Minecraft Process                       |
 | `close`           | Integer | Code number that is returned by the Minecraft Process                                 |
-| `error`           | String  | Emitted when the Minecraft Process errors                                             |
 | `package-extract` | null    | Emitted when `clientPackage` finishes being extracted                                 |
 | `download`        | String  | Emitted when a file successfully downloads                                            |
 | `download-status` | Object  | Emitted when data is received while downloading                                       |
