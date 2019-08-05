@@ -113,7 +113,8 @@ class MCLCore extends EventEmitter {
         this.emit('arguments', launchArguments);
         this.emit('debug', launchArguments.join(' '));
 
-        const minecraft = child.spawn(this.options.javaPath ? this.options.javaPath : 'java', launchArguments);
+        const minecraft = child.spawn(this.options.javaPath ? this.options.javaPath : 'java', launchArguments,
+            {cwd: this.options.overrides.cwd || this.options.root});
         minecraft.stdout.on('data', (data) => this.emit('data', data));
         minecraft.stderr.on('data', (data) => this.emit('data', data));
         minecraft.on('close', (code) => this.emit('close', code));

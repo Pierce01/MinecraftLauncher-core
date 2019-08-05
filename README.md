@@ -81,10 +81,11 @@ let opts = {
    overrides: {
        minecraftJar: "",
        versionJson: "",
-       directory: "", // where the minecraft jar and version json are located.
+       directory: "", // where the Minecraft jar and version json are located.
        libraries: "",
        natives: "",
        assetRoot: "",
+       cwd: "", // working directory of the java process
        classes: [], // all class paths are required if you use this.
        minArgs: 11,
    }
