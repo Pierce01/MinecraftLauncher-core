@@ -11,13 +11,17 @@ class Handler {
         this.client = client;
         this.options = client.options;
         this.version = undefined;
+        this.baseRequest = request.defaults({
+            pool: {maxSockets: this.options.overrides.maxSockets || 2},
+            timeout: this.options.timeout || 10000
+        });
     }
 
     downloadAsync(url, directory, name) {
         return new Promise(resolve => {
             shelljs.mkdir('-p', directory);
 
-            const _request = request(url, {timeout: this.options.timeout || 10000});
+            const _request = this.baseRequest(url);
 
             _request.on('error', (error) => {
                 this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${error}`);
@@ -285,7 +289,7 @@ class Handler {
                 const libraryPath = _lib.downloads.artifact.path;
                 const libraryUrl = _lib.downloads.artifact.url;
                 const libraryHash = _lib.downloads.artifact.sha1;
-                const libraryDirectory = this.options.overrides.libraries || path.join(this.options.root, 'libraries', libraryPath);
+                const libraryDirectory = path.join(this.options.root, 'libraries', libraryPath);
 
                 if(!fs.existsSync(libraryDirectory) || !await this.checkSum(libraryHash, libraryDirectory)) {
                     let directory = libraryDirectory.split(path.sep);

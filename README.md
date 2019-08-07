@@ -82,12 +82,12 @@ let opts = {
        minecraftJar: "",
        versionJson: "",
        directory: "", // where the Minecraft jar and version json are located.
-       libraries: "",
-       natives: "",
+       natives: "", // all native paths are required if you use this.
        assetRoot: "",
        cwd: "", // working directory of the java process
        classes: [], // all class paths are required if you use this.
        minArgs: 11,
+       maxSockets: 2 // max sockets for downloadAsync.
    }
 }
 ```
