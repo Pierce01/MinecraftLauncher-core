@@ -122,6 +122,7 @@ You'll need to provide the folder created in the versions if you're running the 
 | Parameter    | Type   | Description                                                       | Required |
 |--------------|--------|-------------------------------------------------------------------|----------|
 | `access_token` | String | Token being checked if it can be used to login with (online mode). | True     |
+| `client_token` | String | Client token being checked to see if there was a change of client (online mode). | True     |
 
 ##### refreshAuth 
 
@@ -161,3 +162,10 @@ You'll need to provide the folder created in the versions if you're running the 
 #### What should it look like running from console?
 Showing the emitted information from debug and data, also using `getPid` after the process has been created.
 ![gif](https://pierce.is-serious.business/3N3PMC4.gif)
+
+## Contributors
+These are the people that helped out that aren't listed [here](https://github.com/Pierce01/MinecraftLauncher-core/graphs/contributors)!
+* [Pyker](https://github.com/Pyker) - Forge dependency parsing.
+* [Khionu](https://github.com/khionu) - Research on how Minecraft's`natives` are handled.
+* [Coding-Kiwi](https://github.com/Coding-Kiwi) - Pointed out I didn't pass `clientToken` in initial authentication function.
+* maxbsoft - Pointed out that a certain JVM option causes OSX Minecraft to bug out.

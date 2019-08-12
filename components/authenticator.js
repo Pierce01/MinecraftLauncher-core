@@ -26,6 +26,7 @@ module.exports.getAuth = function (username, password) {
                 },
                 username: username,
                 password: password,
+                clientToken: uuid(),
                 requestUser: true
             }
         };
@@ -38,7 +39,7 @@ module.exports.getAuth = function (username, password) {
 
             const userProfile = {
                 access_token: body.accessToken,
-                client_token: uuid(),
+                client_token: body.clientToken,
                 uuid: body.selectedProfile.id,
                 name: body.selectedProfile.name,
                 selected_profile: body.selectedProfile,
@@ -50,12 +51,13 @@ module.exports.getAuth = function (username, password) {
     });
 };
 
-module.exports.validate = function (access_token) {
+module.exports.validate = function (access_token, client_token) {
     return new Promise(resolve => {
         const requestObject = {
             url: api_url + "/validate",
             json: {
-                "accessToken": access_token
+                "accessToken": access_token,
+                "clientToken": client_token
             }
         };
 
