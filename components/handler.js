@@ -83,7 +83,7 @@ class Handler {
                 return;
             }
 
-            const manifest = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
+            const manifest = `${this.options.overrides.url.meta}/mc/game/version_manifest.json`;
             request.get(manifest, (error, response, body) => {
                 if (error) resolve(error);
 
@@ -118,7 +118,6 @@ class Handler {
 
     getAssets() {
         return new Promise(async(resolve) => {
-            const assetsUrl = 'https://resources.download.minecraft.net';
             const failed = [];
 
             if(!fs.existsSync(path.join(this.options.root, 'assets', 'indexes', `${this.version.assetIndex.id}.json`))) {
@@ -134,7 +133,7 @@ class Handler {
                 const subAsset = path.join(assetDirectory, 'objects', subhash);
 
                 if(!fs.existsSync(path.join(subAsset, hash)) || !await this.checkSum(hash, path.join(subAsset, hash))) {
-                    const download = await this.downloadAsync(`${assetsUrl}/${subhash}/${hash}`, subAsset, hash);
+                    const download = await this.downloadAsync(`${this.options.overrides.url.resource}/${subhash}/${hash}`, subAsset, hash);
 
                     if(download.failed) failed.push(download.asset);
                 }
@@ -148,20 +147,21 @@ class Handler {
 
             // Copy assets to legacy if it's an older Minecraft version.
             if(this.version.assets === "legacy" || this.version.assets === "pre-1.6") {
+                const assetDirectory = this.options.overrides.assetRoot || path.join(this.options.root, 'assets');
+                this.client.emit('debug', `[MCLC]: Copying assets over to ${path.join(assetDirectory, 'legacy')}`);
                 await Promise.all(Object.keys(index.objects).map(async asset => {
                     const hash = index.objects[asset].hash;
                     const subhash = hash.substring(0,2);
-                    const assetDirectory = this.options.overrides.assetRoot || path.join(this.options.root, 'assets');
                     const subAsset = path.join(assetDirectory, 'objects', subhash);
 
                     let legacyAsset = asset.split('/');
                     legacyAsset.pop();
 
-                    if(!fs.existsSync(path.join(this.options.root, 'assets', 'legacy', legacyAsset.join('/')))) {
-                        shelljs.mkdir('-p', path.join(this.options.root, 'assets', 'legacy', legacyAsset.join('/')));
+                    if(!fs.existsSync(path.join(assetDirectory, 'legacy', legacyAsset.join('/')))) {
+                        shelljs.mkdir('-p', path.join(assetDirectory, 'legacy', legacyAsset.join('/')));
                     }
 
-                    if (!fs.existsSync(path.join(this.options.root, 'assets', 'legacy', asset))) {
+                    if (!fs.existsSync(path.join(assetDirectory, 'legacy', asset))) {
                         fs.copyFileSync(path.join(subAsset, hash), path.join(assetDirectory, 'legacy', asset))
                     }
                 }));
@@ -215,8 +215,6 @@ class Handler {
         await new zip(this.options.forge).extractEntryTo('version.json', path.join(this.options.root, 'forge', `${this.version.id}`), false, true);
 
         const forge = require(path.join(this.options.root, 'forge', `${this.version.id}`, 'version.json'));
-        const mavenUrl = 'http://files.minecraftforge.net/maven/';
-        const defaultRepo = 'https://libraries.minecraft.net/';
         const paths = [];
 
         await Promise.all(forge.libraries.map(async library => {
@@ -224,13 +222,13 @@ class Handler {
 
             if(lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) return;
 
-            let url = mavenUrl;
+            let url = this.options.overrides.url.mavenForge;
             const jarPath = path.join(this.options.root, 'libraries', `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`);
             const name = `${lib[1]}-${lib[2]}.jar`;
 
             if(!library.url) {
                 if(library.serverreq || library.clientreq) {
-                    url = defaultRepo;
+                    url = this.options.overrides.url.defaultRepoForge;
                 } else {
                     return
                 }

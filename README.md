@@ -73,7 +73,6 @@ launcher.on('error', (e) => console.log(e.toString('utf-8')));
 | `options.window.width`   | String   | Width of the Minecraft Client                                                             | False    |
 | `options.window.height`  | String   | Height of the Minecraft Client.                                                           | False    |
 | `options.overrides`      | Object   | Json object redefining paths for better customization. Example below.                     | False    |
-| `options.overrides`      | Object   | Json object redefining paths for better customization. Example below.                     | False    |
 | `options.overrides.minArgs`| Integer| The amount of launch arguments specified in the version file before it adds the default again| False    |
 ```js
 let opts = {
@@ -87,7 +86,16 @@ let opts = {
        cwd: "", // working directory of the java process
        classes: [], // all class paths are required if you use this.
        minArgs: 11,
-       maxSockets: 2 // max sockets for downloadAsync.
+       maxSockets: 2, // max sockets for downloadAsync.
+       // The following is for launcher developers located in countries that have the Minecraft and Forge resource servers
+       // blocked for what ever reason. They obviously need to mirror the formatting of the original JSONs / file structures.
+       url: {
+           meta: "https://launchermeta.mojang.com", // List of versions.
+           resource: "https://resources.download.minecraft.net", // Minecraft resources.
+           mavenForge: "http://files.minecraftforge.net/maven/", // Forge resources.
+           defaultRepoForge: "https://libraries.minecraft.net/" // for Forge only, you need to redefine the library url
+                                                                // in the version json.
+       }
    }
 }
 ```
