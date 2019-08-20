@@ -29,7 +29,10 @@ class MCLCore extends EventEmitter {
             }
         };
         this.handler = new handler(this);
-        const override = this.options.overrides;
+        // Lets the events register. our magic switch!
+        await void(0);
+
+        this.emit('debug', `[MCLC]: MCLC version ${require(path.join(__dirname,'..', 'package.json')).version}`);
 
         if(!fs.existsSync(this.options.root)) {
             this.emit('debug', '[MCLC]: Attempting to create root folder');
@@ -49,12 +52,12 @@ class MCLCore extends EventEmitter {
             await this.handler.runInstaller(this.options.installer)
         }
 
-        const directory = override.directory || path.join(this.options.root, 'versions', this.options.version.number);
+        const directory = this.options.overrides.directory || path.join(this.options.root, 'versions', this.options.version.number);
         this.options.directory = directory;
 
         // Version JSON for the main launcher folder
         const versionFile = await this.handler.getVersion();
-        const mcPath = override.minecraftJar || (this.options.version.custom ? path.join(this.options.root, 'versions', this.options.version.custom , `${this.options.version.custom}.jar`):
+        const mcPath = this.options.overrides.minecraftJar || (this.options.version.custom ? path.join(this.options.root, 'versions', this.options.version.custom , `${this.options.version.custom}.jar`):
             path.join(directory, `${this.options.version.number}.jar`));
         const nativePath = await this.handler.getNatives();
 
@@ -121,8 +124,8 @@ class MCLCore extends EventEmitter {
 
         const minecraft = child.spawn(this.options.javaPath ? this.options.javaPath : 'java', launchArguments,
             {cwd: this.options.overrides.cwd || this.options.root});
-        minecraft.stdout.on('data', (data) => this.emit('data', data));
-        minecraft.stderr.on('data', (data) => this.emit('data', data));
+        minecraft.stdout.on('data', (data) => this.emit('data', data.toString('utf-8')));
+        minecraft.stderr.on('data', (data) => this.emit('data', data.toString('utf-8')));
         minecraft.on('close', (code) => this.emit('close', code));
 
         return minecraft;

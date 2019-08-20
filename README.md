@@ -16,6 +16,7 @@ https://discord.gg/8uYVbXP
 ### Standard Example
 ```javascript
 const { Client, Authenticator } = require('minecraft-launcher-core');
+const launcher = new Client();
 
 let opts = {
     clientPackage: null,
@@ -32,12 +33,10 @@ let opts = {
     }
 }
 
-const launcher = new Client();
 launcher.launch(opts);
 
 launcher.on('debug', (e) => console.log(e));
-launcher.on('data', (e) => console.log(e.toString('utf-8')));
-launcher.on('error', (e) => console.log(e.toString('utf-8')));
+launcher.on('data', (e) => console.log(e));
 ```
 ### Documentation
 
@@ -159,7 +158,7 @@ You'll need to provide the folder created in the versions if you're running the 
 | Event Name        | Type    | Description                                                                           |
 |-------------------|---------|---------------------------------------------------------------------------------------|
 | `arguments`       | Object  | Emitted when launch arguments are set for the Minecraft Jar.                          |
-| `data`            | Buffer  | Emitted when information is returned from the Minecraft Process                       |
+| `data`            | String  | Emitted when information is returned from the Minecraft Process                       |
 | `close`           | Integer | Code number that is returned by the Minecraft Process                                 |
 | `package-extract` | null    | Emitted when `clientPackage` finishes being extracted                                 |
 | `download`        | String  | Emitted when a file successfully downloads                                            |
