@@ -13,20 +13,15 @@ class MCLCore extends EventEmitter {
     async launch(options) {
         this.options = options;
         this.options.root = path.resolve(this.options.root);
+
+        // Simplified overrides so launcher devs can set the paths to what ever they want. see docs for variable names.
         if(!this.options.overrides) this.options.overrides = { url: {} };
-        this.options.overrides = {
-            minecraftJar: this.options.overrides.minecraftJar ? path.join(this.options.root, this.options.overrides.minecraftJar): null,
-            versionJson: this.options.overrides.versionJson ? path.join(this.options.root, this.options.overrides.versionJson): null,
-            directory: this.options.overrides.directory ? path.join(this.options.root, this.options.overrides.directory): null,
-            libraries: this.options.overrides.libraries ? path.join(this.options.root, this.options.overrides.libraries): null,
-            natives: this.options.overrides.natives ? path.join(this.options.root, this.options.overrides.natives): null,
-            assetRoot: this.options.overrides.assetRoot ? path.join(this.options.root, this.options.overrides.assetRoot): null,
-            url: {
-                meta: this.options.overrides.url.meta || "https://launchermeta.mojang.com",
-                resource: this.options.overrides.url.resource || "https://resources.download.minecraft.net",
-                mavenForge: this.options.overrides.url.mavenForge || "http://files.minecraftforge.net/maven/",
-                defaultRepoForge: this.options.overrides.url.defaultRepoForge || "https://libraries.minecraft.net/"
-            }
+        if(!this.options.overrides.url) this.options.overrides.url = {};
+        this.options.overrides.url = {
+            meta: this.options.overrides.url.meta || "https://launchermeta.mojang.com",
+            resource: this.options.overrides.url.resource || "https://resources.download.minecraft.net",
+            mavenForge: this.options.overrides.url.mavenForge || "http://files.minecraftforge.net/maven/",
+            defaultRepoForge: this.options.overrides.url.defaultRepoForge || "https://libraries.minecraft.net/"
         };
         this.handler = new handler(this);
         // Lets the events register. our magic switch!
