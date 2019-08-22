@@ -172,6 +172,24 @@ class Handler {
         });
     }
 
+    parseRule(lib) {
+        if(lib.rules) {
+            if (lib.rules.length > 1) {
+                if (lib.rules[0].action === 'allow' &&
+                    lib.rules[1].action === 'disallow' &&
+                    lib.rules[1].os.name === 'osx') {
+                    return this.getOS() === 'osx';
+                } else {
+                    return true;
+                }
+            } else {
+                if (lib.rules[0].action === 'allow' && lib.rules[0].os) return this.getOS() !== 'osx';
+            }
+        } else {
+            return false
+        }
+    }
+
     getNatives() {
         return new Promise(async(resolve) => {
             const nativeDirectory = this.options.overrides.natives || path.join(this.options.root, 'natives', this.version.id);
@@ -181,6 +199,8 @@ class Handler {
 
                 await Promise.all(this.version.libraries.map(async (lib) => {
                     if (!lib.downloads.classifiers) return;
+                    if (this.parseRule(lib)) return;
+
                     const native = this.getOS() === 'osx'
                         ? lib.downloads.classifiers['natives-osx'] || lib.downloads.classifiers['natives-macos']
                         : lib.downloads.classifiers[`natives-${this.getOS()}`];
@@ -283,6 +303,7 @@ class Handler {
 
             await Promise.all(this.version.libraries.map(async (_lib) => {
                 if(!_lib.downloads.artifact) return;
+                if(this.parseRule(_lib)) return;
 
                 const libraryPath = _lib.downloads.artifact.path;
                 const libraryUrl = _lib.downloads.artifact.url;
