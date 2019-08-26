@@ -5,6 +5,7 @@ const request = require('request');
 const checksum = require('checksum');
 const zip = require('adm-zip');
 const child = require('child_process');
+let counter = 0;
 
 class Handler {
     constructor(client) {
@@ -17,27 +18,43 @@ class Handler {
         });
     }
 
-    downloadAsync(url, directory, name) {
+    checkJava(java) {
+        return new Promise(resolve => {
+            let spawned = false;
+            const javaVer = child.spawn(java, ["-version"]);
+            javaVer.stderr.on('data', (data) => {
+                if (spawned) return;
+                spawned = true;
+                this.client.emit('debug', `[MCLC]: Using Java version ${data.toString().match(/"(.*?)"/).pop()}`);
+                resolve({
+                    run: true
+                });
+            });
+            javaVer.on('error', (e) => {
+                resolve({
+                    run: false,
+                    message: e
+                })
+            });
+        });
+    }
+
+    downloadAsync(url, directory, name, retry = true) {
         return new Promise(resolve => {
             shelljs.mkdir('-p', directory);
 
             const _request = this.baseRequest(url);
 
-            _request.on('error', (error) => {
-                this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${error}`);
-                resolve({
-                    failed: true,
-                    asset: {
-                        url: url,
-                        directory: directory,
-                        name: name
-                    }
-                });
+            _request.on('error', async (error) => {
+                this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${error}.` +
+                    ` Retrying... ${retry}`);
+                if (retry) await this.downloadAsync(url, directory, name, false);
+                resolve();
             });
 
             _request.on('data', (data) => {
                 let size = 0;
-                if(fs.existsSync(path.join(directory, name))) size = fs.statSync(path.join(directory, name))["size"];
+                if (fs.existsSync(path.join(directory, name))) size = fs.statSync(path.join(directory, name))["size"];
                 this.client.emit('download-status', {
                     "name": name,
                     "current": Math.round(size / 10000),
@@ -50,20 +67,18 @@ class Handler {
 
             file.once('finish', () => {
                 this.client.emit('download', name);
-                resolve({failed: false, asset: null});
+                resolve({
+                    failed: false,
+                    asset: null
+                });
             });
 
-            file.on('error', (e) => {
-                this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${e}`);
-                if(fs.existsSync(path.join(directory, name))) shelljs.rm(path.join(directory, name));
-                resolve({
-                    failed: true,
-                    asset: {
-                        url: url,
-                        directory: directory,
-                        name: name
-                    }
-                });
+            file.on('error', async (e) => {
+                this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${e}.` +
+                    ` Retrying... ${retry}`);
+                if (fs.existsSync(path.join(directory, name))) shelljs.rm(path.join(directory, name));
+                if (retry) await this.downloadAsync(url, directory, name, false);
+                resolve();
             });
         });
     }
@@ -77,7 +92,7 @@ class Handler {
     getVersion() {
         return new Promise(resolve => {
             const versionJsonPath = this.options.overrides.versionJson || path.join(this.options.directory, `${this.options.version.number}.json`);
-            if(fs.existsSync(versionJsonPath)) {
+            if (fs.existsSync(versionJsonPath)) {
                 this.version = require(versionJsonPath);
                 resolve(this.version);
                 return;
@@ -90,7 +105,7 @@ class Handler {
                 const parsed = JSON.parse(body);
 
                 for (const desiredVersion in parsed.versions) {
-                    if(parsed.versions[desiredVersion].id === this.options.version.number) {
+                    if (parsed.versions[desiredVersion].id === this.options.version.number) {
                         request.get(parsed.versions[desiredVersion].url, (error, response, body) => {
                             if (error) resolve(error);
 
@@ -105,7 +120,7 @@ class Handler {
     }
 
     getJar() {
-        return new Promise(async (resolve)=> {
+        return new Promise(async (resolve) => {
             await this.downloadAsync(this.version.downloads.client.url, this.options.directory, `${this.options.version.number}.jar`);
 
             fs.writeFileSync(path.join(this.options.directory, `${this.options.version.number}.json`), JSON.stringify(this.version, null, 4));
@@ -118,8 +133,6 @@ class Handler {
 
     getAssets() {
         return new Promise(async(resolve) => {
-            const failed = [];
-
             if(!fs.existsSync(path.join(this.options.root, 'assets', 'indexes', `${this.version.assetIndex.id}.json`))) {
                 await this.downloadAsync(this.version.assetIndex.url, path.join(this.options.root, 'assets', 'indexes'), `${this.version.assetIndex.id}.json`);
             }
@@ -133,17 +146,16 @@ class Handler {
                 const subAsset = path.join(assetDirectory, 'objects', subhash);
 
                 if(!fs.existsSync(path.join(subAsset, hash)) || !await this.checkSum(hash, path.join(subAsset, hash))) {
-                    const download = await this.downloadAsync(`${this.options.overrides.url.resource}/${subhash}/${hash}`, subAsset, hash);
-
-                    if(download.failed) failed.push(download.asset);
+                    await this.downloadAsync(`${this.options.overrides.url.resource}/${subhash}/${hash}`, subAsset, hash);
+                    counter = counter + 1;
+                    this.client.emit('progress', {
+                        type: 'assets',
+                        task: counter,
+                        total: Object.keys(index.objects).length
+                    })
                 }
             }));
-
-            // why do we have this? B/c sometimes Minecraft's resource site times out!
-            if(failed) {
-                this.client.emit('debug', '[MCLC]: Attempting to download failed assets');
-                await Promise.all(failed.map(async asset => await this.downloadAsync(asset.url, asset.directory, asset.name)))
-            }
+            counter = 0;
 
             // Copy assets to legacy if it's an older Minecraft version.
             if(this.version.assets === "legacy" || this.version.assets === "pre-1.6") {
@@ -164,8 +176,15 @@ class Handler {
                     if (!fs.existsSync(path.join(assetDirectory, 'legacy', asset))) {
                         fs.copyFileSync(path.join(subAsset, hash), path.join(assetDirectory, 'legacy', asset))
                     }
+                    counter = counter + 1;
+                    this.client.emit('progress', {
+                        type: 'assets-copy',
+                        task: counter,
+                        total: Object.keys(index.objects).length
+                    })
                 }));
             }
+            counter = 0;
 
             this.client.emit('debug', '[MCLC]: Downloaded assets');
             resolve();
@@ -197,32 +216,49 @@ class Handler {
             if(!fs.existsSync(nativeDirectory) || !fs.readdirSync(nativeDirectory).length) {
                 shelljs.mkdir('-p', nativeDirectory);
 
-                await Promise.all(this.version.libraries.map(async (lib) => {
-                    if (!lib.downloads.classifiers) return;
-                    if (this.parseRule(lib)) return;
+                const natives = () => {
+                    return new Promise(async resolve => {
+                        const natives = [];
+                        await Promise.all(this.version.libraries.map(async (lib) => {
+                            if (!lib.downloads.classifiers) return;
+                            if (this.parseRule(lib)) return;
 
-                    const native = this.getOS() === 'osx'
-                        ? lib.downloads.classifiers['natives-osx'] || lib.downloads.classifiers['natives-macos']
-                        : lib.downloads.classifiers[`natives-${this.getOS()}`];
+                            const native = this.getOS() === 'osx' ?
+                                lib.downloads.classifiers['natives-osx'] || lib.downloads.classifiers['natives-macos'] :
+                                lib.downloads.classifiers[`natives-${this.getOS()}`];
 
-                    if (native) {
-                        const name = native.path.split('/').pop();
+                            natives.push(native);
+                        }));
+                        resolve (natives);
+                    })
+                };
+                const stat = await natives();
+                await Promise.all(stat.map(async (native) => {
+                    const name = native.path.split('/').pop();
+                    await this.downloadAsync(native.url, nativeDirectory, name);
+                    if (!await this.checkSum(native.sha1, path.join(nativeDirectory, name))) {
                         await this.downloadAsync(native.url, nativeDirectory, name);
-                        if(!await this.checkSum(native.sha1, path.join(nativeDirectory, name))) {
-                            await this.downloadAsync(native.url, nativeDirectory, name);
-                        }
-                        try {new zip(path.join(nativeDirectory, name)).extractAllTo(nativeDirectory, true);} catch(e) {
-                            // Only doing a console.warn since a stupid error happens. You can basically ignore this.
-                            // if it says Invalid file name, just means two files were downloaded and both were deleted.
-                            // All is well.
-                            console.warn(e);
-                        }
-                        shelljs.rm(path.join(nativeDirectory, name));
                     }
+                    try {
+                        new zip(path.join(nativeDirectory, name)).extractAllTo(nativeDirectory, true);
+                    } catch (e) {
+                        // Only doing a console.warn since a stupid error happens. You can basically ignore this.
+                        // if it says Invalid file name, just means two files were downloaded and both were deleted.
+                        // All is well.
+                        console.warn(e);
+                    }
+                    shelljs.rm(path.join(nativeDirectory, name));
+                    counter = counter + 1;
+                    this.client.emit('progress', {
+                        type: 'natives',
+                        task: counter,
+                        total: stat.length
+                    })
                 }));
                 this.client.emit('debug', '[MCLC]: Downloaded and extracted natives');
             }
 
+            counter = 0;
             this.client.emit('debug', `[MCLC]: Set native path to ${nativeDirectory}`);
             resolve(nativeDirectory);
         });
@@ -258,6 +294,8 @@ class Handler {
 
             if(fs.existsSync(path.join(jarPath, name))) {
                 paths.push(`${jarPath}${path.sep}${name}`);
+                counter = counter + 1;
+                this.client.emit('progress', { type: 'forge', task: counter, total: forge.libraries.length});
                 return;
             }
             if(!fs.existsSync(jarPath)) shelljs.mkdir('-p', jarPath);
@@ -265,8 +303,15 @@ class Handler {
             await this.downloadAsync(downloadLink, jarPath, name);
 
             paths.push(`${jarPath}${path.sep}${name}`);
+            counter = counter + 1;
+            this.client.emit('progress', {
+                type: 'natives-forge',
+                task: counter,
+                total: forge.libraries.length
+            })
         }));
 
+        counter = 0;
         this.client.emit('debug', '[MCLC]: Downloaded Forge dependencies');
 
         return {paths, forge};
@@ -297,14 +342,31 @@ class Handler {
                             await this.downloadAsync(url, jarPath, name);
                         }
                     }
+                    counter = counter + 1;
+                    this.client.emit('progress', {
+                        type: 'classes-custom',
+                        task: counter,
+                        total: customJarJson.libraries.length
+                    });
                     libs.push(`${jarPath}${path.sep}${name}`);
                 }));
+                counter = 0;
             }
 
-            await Promise.all(this.version.libraries.map(async (_lib) => {
-                if(!_lib.downloads.artifact) return;
-                if(this.parseRule(_lib)) return;
+            const parsedClasses = () => {
+                return new Promise(async resolve => {
+                    const classes = [];
+                    await Promise.all(this.version.libraries.map(async (_lib) => {
+                        if(!_lib.downloads.artifact) return;
+                        if(this.parseRule(_lib)) return;
 
+                        classes.push(_lib);
+                    }));
+                    resolve(classes);
+                })
+            };
+            const parsed = await parsedClasses();
+            await Promise.all(parsed.map(async (_lib) => {
                 const libraryPath = _lib.downloads.artifact.path;
                 const libraryUrl = _lib.downloads.artifact.url;
                 const libraryHash = _lib.downloads.artifact.sha1;
@@ -317,9 +379,15 @@ class Handler {
 
                     await this.downloadAsync(libraryUrl, directory, name);
                 }
-
+                counter = counter + 1;
+                this.client.emit('progress', {
+                    type: 'classes',
+                    task: counter,
+                    total: parsed.length
+                });
                 libs.push(libraryDirectory);
             }));
+            counter = 0;
 
             this.client.emit('debug', '[MCLC]: Collected class paths');
             resolve(libs)

@@ -28,6 +28,12 @@ class MCLCore extends EventEmitter {
         await void(0);
 
         this.emit('debug', `[MCLC]: MCLC version ${require(path.join(__dirname,'..', 'package.json')).version}`);
+        const java = await this.handler.checkJava(this.options.javaPath || 'java');
+        if(!java.run) {
+            this.emit('debug', `[MCLC]: Couldn't start Minecraft due to: ${java.message}`);
+            this.emit('close', 1);
+            return null;
+        }
 
         if(!fs.existsSync(this.options.root)) {
             this.emit('debug', '[MCLC]: Attempting to create root folder');
