@@ -417,9 +417,7 @@ class Handler {
             const minArgs = this.options.overrides.minArgs || 5;
             if(args.length < minArgs) args = args.concat(this.version.minecraftArguments ? this.version.minecraftArguments.split(' ') : this.version.arguments.game);
 
-            if({}.toString.call(this.options.authorization) === "[object Promise]") {
-                this.options.authorization = await this.options.authorization;
-            }
+            this.options.authorization = await Promise.resolve(this.options.authorization);
 
             const fields = {
                 '${auth_access_token}': this.options.authorization.access_token,
