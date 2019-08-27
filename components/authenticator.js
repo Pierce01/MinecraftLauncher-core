@@ -3,8 +3,8 @@ const uuid = require('uuid/v1');
 const api_url = "https://authserver.mojang.com";
 
 module.exports.getAuth = function (username, password) {
-    return new Promise(resolve => {
-        if(!password) {
+    return new Promise((resolve, reject) => {
+        if (!password) {
             const user = {
                 access_token: uuid(),
                 client_token: uuid(),
@@ -31,10 +31,10 @@ module.exports.getAuth = function (username, password) {
             }
         };
 
-        request.post(requestObject, function(error, response, body) {
-            if (error) resolve(error);
-            if(!body.selectedProfile) {
-                throw new Error("Validation error: " + response.statusMessage);
+        request.post(requestObject, function (error, response, body) {
+            if (error) return reject(error);
+            if (!body || !body.selectedProfile) {
+                return reject("Validation error: " + response.statusMessage);
             }
 
             const userProfile = {
@@ -52,7 +52,7 @@ module.exports.getAuth = function (username, password) {
 };
 
 module.exports.validate = function (access_token, client_token) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         const requestObject = {
             url: api_url + "/validate",
             json: {
@@ -61,16 +61,17 @@ module.exports.validate = function (access_token, client_token) {
             }
         };
 
-        request.post(requestObject, async function(error, response, body) {
-            if (error) resolve(error);
+        request.post(requestObject, async function (error, response, body) {
+            if (error) return reject(error);
 
-            if(!body) resolve(true); else resolve(false);
+            if (!body) resolve(true);
+            else reject(body);
         });
     });
 };
 
 module.exports.refreshAuth = function (accessToken, clientToken, selectedProfile) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
         const requestObject = {
             url: api_url + "/refresh",
             json: {
@@ -81,10 +82,10 @@ module.exports.refreshAuth = function (accessToken, clientToken, selectedProfile
             }
         };
 
-        request.post(requestObject, function(error, response, body) {
-            if (error) resolve(error);
-            if(!body.selectedProfile) {
-                throw new Error("Validation error: " + response.statusMessage);
+        request.post(requestObject, function (error, response, body) {
+            if (error) return reject(error);
+            if (!body || !body.selectedProfile) {
+                return reject("Validation error: " + response.statusMessage);
             }
 
             const userProfile = {
@@ -100,8 +101,8 @@ module.exports.refreshAuth = function (accessToken, clientToken, selectedProfile
     });
 };
 
-module.exports.invalidate = function(accessToken, clientToken) {
-    return new Promise(resolve => {
+module.exports.invalidate = function (accessToken, clientToken) {
+    return new Promise((resolve, reject) => {
         const requestObject = {
             url: api_url + "/invalidate",
             json: {
@@ -110,16 +111,17 @@ module.exports.invalidate = function(accessToken, clientToken) {
             }
         };
 
-        request.post(requestObject, function(error, response, body) {
-            if (error) resolve(error);
+        request.post(requestObject, function (error, response, body) {
+            if (error) return reject(error);
 
-            if(!body) resolve(true); else resolve(false);
+            if (!body) resolve(true);
+            else reject(body);
         });
     });
 };
 
-module.exports.signOut = function(username, password) {
-    return new Promise(resolve => {
+module.exports.signOut = function (username, password) {
+    return new Promise((resolve, reject) => {
         const requestObject = {
             url: api_url + "/signout",
             json: {
@@ -128,10 +130,11 @@ module.exports.signOut = function(username, password) {
             }
         };
 
-        request.post(requestObject, function(error, response, body) {
-            if (error) resolve(error);
+        request.post(requestObject, function (error, response, body) {
+            if (error) return reject(error);
 
-            if(!body) resolve(true); else resolve(false);
+            if (!body) resolve(true);
+            else reject(body);
         });
     });
 };
