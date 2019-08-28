@@ -145,6 +145,12 @@ class Handler {
 
             const index = require(path.join(this.options.root, 'assets', 'indexes',`${this.version.assetIndex.id}.json`));
 
+            this.client.emit('progress', {
+                type: 'assets',
+                task: 0,
+                total: Object.keys(index.objects).length
+            });
+
             await Promise.all(Object.keys(index.objects).map(async asset => {
                 const hash = index.objects[asset].hash;
                 const subhash = hash.substring(0,2);
@@ -167,6 +173,13 @@ class Handler {
             if(this.version.assets === "legacy" || this.version.assets === "pre-1.6") {
                 const assetDirectory = this.options.overrides.assetRoot || path.join(this.options.root, 'assets');
                 this.client.emit('debug', `[MCLC]: Copying assets over to ${path.join(assetDirectory, 'legacy')}`);
+
+                this.client.emit('progress', {
+                    type: 'assets-copy',
+                    task: 0,
+                    total: Object.keys(index.objects).length
+                });
+
                 await Promise.all(Object.keys(index.objects).map(async asset => {
                     const hash = index.objects[asset].hash;
                     const subhash = hash.substring(0,2);
@@ -239,6 +252,13 @@ class Handler {
                     })
                 };
                 const stat = await natives();
+
+                this.client.emit('progress', {
+                    type: 'natives',
+                    task: 0,
+                    total: stat.length
+                });
+
                 await Promise.all(stat.map(async (native) => {
                     const name = native.path.split('/').pop();
                     await this.downloadAsync(native.url, nativeDirectory, name);
@@ -279,6 +299,12 @@ class Handler {
         const forge = require(path.join(this.options.root, 'forge', `${this.version.id}`, 'version.json'));
         const paths = [];
 
+        this.client.emit('progress', {
+            type: 'forge',
+            task: 0,
+            total: forge.libraries.length
+        });
+
         await Promise.all(forge.libraries.map(async library => {
             const lib = library.name.split(':');
 
@@ -311,7 +337,7 @@ class Handler {
             paths.push(`${jarPath}${path.sep}${name}`);
             counter = counter + 1;
             this.client.emit('progress', {
-                type: 'natives-forge',
+                type: 'forge',
                 task: counter,
                 total: forge.libraries.length
             })
@@ -336,6 +362,13 @@ class Handler {
 
             if(this.options.version.custom) {
                 const customJarJson = require(path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.json`));
+                
+                this.client.emit('progress', {
+                    type: 'classes-custom',
+                    task: 0,
+                    total: customJarJson.libraries.length
+                });
+
                 await Promise.all(customJarJson.libraries.map(async library => {
                     const lib = library.name.split(':');
 
@@ -372,6 +405,13 @@ class Handler {
                 })
             };
             const parsed = await parsedClasses();
+            
+            this.client.emit('progress', {
+                type: 'classes',
+                task: 0,
+                total: parsed.length
+            });
+
             await Promise.all(parsed.map(async (_lib) => {
                 const libraryPath = _lib.downloads.artifact.path;
                 const libraryUrl = _lib.downloads.artifact.url;
