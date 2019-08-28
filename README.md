@@ -166,7 +166,7 @@ You'll need to provide the folder created in the versions if you're running the 
 | `download`        | String  | Emitted when a file successfully downloads                                            |
 | `download-status` | Object  | Emitted when data is received while downloading                                       |
 | `debug`           | String  | Emitted when functions occur, made to help debug if errors occur                      |
-| `progress`        | Object  | Emitted when files are being downloaded in order. (Assets, Forge Deps, Natives, Classes)|
+| `progress`        | Object  | Emitted when files are being downloaded in order. (Assets, Forge, Natives, Classes)   |
 
 
 #### What should it look like running from console?

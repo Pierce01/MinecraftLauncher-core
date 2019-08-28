@@ -5,7 +5,7 @@ const shelljs = require('shelljs');
 module.exports.extractPackage = function(e) {
     return new Promise(async resolve => {
         if(e.options.clientPackage.startsWith('http')) {
-            await e.handler.downloadAsync(e.options.clientPackage, e.options.root, "clientPackage.zip");
+            await e.handler.downloadAsync(e.options.clientPackage, e.options.root, "clientPackage.zip", true, 'client-package');
             e.options.clientPackage = path.join(e.options.root, "clientPackage.zip")
         }
         new zip(e.options.clientPackage).extractAllTo(e.options.root, true);

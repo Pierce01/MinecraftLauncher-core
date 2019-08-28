@@ -39,7 +39,7 @@ class Handler {
         });
     }
 
-    downloadAsync(url, directory, name, retry = true) {
+    downloadAsync(url, directory, name, retry, type) {
         return new Promise(resolve => {
             shelljs.mkdir('-p', directory);
 
@@ -55,7 +55,7 @@ class Handler {
             _request.on('error', async (error) => {
                 this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${error}.` +
                     ` Retrying... ${retry}`);
-                if (retry) await this.downloadAsync(url, directory, name, false);
+                if (retry) await this.downloadAsync(url, directory, name, false, type);
                 resolve();
             });
 
@@ -63,6 +63,7 @@ class Handler {
                 received_bytes += data.length;
                 this.client.emit('download-status', {
                     "name": name,
+                    "type": type,
                     "current": received_bytes,
                     "total": total_bytes
                 })
@@ -83,7 +84,7 @@ class Handler {
                 this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${e}.` +
                     ` Retrying... ${retry}`);
                 if (fs.existsSync(path.join(directory, name))) shelljs.rm(path.join(directory, name));
-                if (retry) await this.downloadAsync(url, directory, name, false);
+                if (retry) await this.downloadAsync(url, directory, name, false, type);
                 resolve();
             });
         });
@@ -127,7 +128,7 @@ class Handler {
 
     getJar() {
         return new Promise(async (resolve) => {
-            await this.downloadAsync(this.version.downloads.client.url, this.options.directory, `${this.options.version.number}.jar`);
+            await this.downloadAsync(this.version.downloads.client.url, this.options.directory, `${this.options.version.number}.jar`, true, 'version-jar');
 
             fs.writeFileSync(path.join(this.options.directory, `${this.options.version.number}.json`), JSON.stringify(this.version, null, 4));
 
@@ -140,7 +141,8 @@ class Handler {
     getAssets() {
         return new Promise(async(resolve) => {
             if(!fs.existsSync(path.join(this.options.root, 'assets', 'indexes', `${this.version.assetIndex.id}.json`))) {
-                await this.downloadAsync(this.version.assetIndex.url, path.join(this.options.root, 'assets', 'indexes'), `${this.version.assetIndex.id}.json`);
+                await this.downloadAsync(this.version.assetIndex.url, path.join(this.options.root, 'assets', 'indexes'),
+                    `${this.version.assetIndex.id}.json`, true, 'asset-json');
             }
 
             const index = require(path.join(this.options.root, 'assets', 'indexes',`${this.version.assetIndex.id}.json`));
@@ -158,7 +160,8 @@ class Handler {
                 const subAsset = path.join(assetDirectory, 'objects', subhash);
 
                 if(!fs.existsSync(path.join(subAsset, hash)) || !await this.checkSum(hash, path.join(subAsset, hash))) {
-                    await this.downloadAsync(`${this.options.overrides.url.resource}/${subhash}/${hash}`, subAsset, hash);
+                    await this.downloadAsync(`${this.options.overrides.url.resource}/${subhash}/${hash}`, subAsset, hash,
+                        true, 'assets');
                     counter = counter + 1;
                     this.client.emit('progress', {
                         type: 'assets',
@@ -261,9 +264,9 @@ class Handler {
 
                 await Promise.all(stat.map(async (native) => {
                     const name = native.path.split('/').pop();
-                    await this.downloadAsync(native.url, nativeDirectory, name);
+                    await this.downloadAsync(native.url, nativeDirectory, name, true, 'natives');
                     if (!await this.checkSum(native.sha1, path.join(nativeDirectory, name))) {
-                        await this.downloadAsync(native.url, nativeDirectory, name);
+                        await this.downloadAsync(native.url, nativeDirectory, name, true, 'natives');
                     }
                     try {
                         new zip(path.join(nativeDirectory, name)).extractAllTo(nativeDirectory, true);
@@ -332,7 +335,7 @@ class Handler {
             }
             if(!fs.existsSync(jarPath)) shelljs.mkdir('-p', jarPath);
 
-            await this.downloadAsync(downloadLink, jarPath, name);
+            await this.downloadAsync(downloadLink, jarPath, name, true, 'forge');
 
             paths.push(`${jarPath}${path.sep}${name}`);
             counter = counter + 1;
@@ -362,7 +365,7 @@ class Handler {
 
             if(this.options.version.custom) {
                 const customJarJson = require(path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.json`));
-                
+
                 this.client.emit('progress', {
                     type: 'classes-custom',
                     task: 0,
@@ -378,7 +381,7 @@ class Handler {
                     if(!fs.existsSync(path.join(jarPath, name))) {
                         if(library.url) {
                             const url = `${library.url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${lib[1]}-${lib[2]}.jar`;
-                            await this.downloadAsync(url, jarPath, name);
+                            await this.downloadAsync(url, jarPath, name, true, 'classes-custom');
                         }
                     }
                     counter = counter + 1;
@@ -405,7 +408,7 @@ class Handler {
                 })
             };
             const parsed = await parsedClasses();
-            
+
             this.client.emit('progress', {
                 type: 'classes',
                 task: 0,
@@ -423,7 +426,7 @@ class Handler {
                     const name = directory.pop();
                     directory = directory.join(path.sep);
 
-                    await this.downloadAsync(libraryUrl, directory, name);
+                    await this.downloadAsync(libraryUrl, directory, name, true, 'classes');
                 }
                 counter = counter + 1;
                 this.client.emit('progress', {
