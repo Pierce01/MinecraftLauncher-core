@@ -45,6 +45,13 @@ class Handler {
 
             const _request = this.baseRequest(url);
 
+            var received_bytes = 0;
+            var total_bytes = 0;
+
+            _request.on('response', function (data) {
+                total_bytes = parseInt(data.headers['content-length']);
+            });
+
             _request.on('error', async (error) => {
                 this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${error}.` +
                     ` Retrying... ${retry}`);
@@ -53,12 +60,11 @@ class Handler {
             });
 
             _request.on('data', (data) => {
-                let size = 0;
-                if (fs.existsSync(path.join(directory, name))) size = fs.statSync(path.join(directory, name))["size"];
+                received_bytes += data.length;
                 this.client.emit('download-status', {
                     "name": name,
-                    "current": Math.round(size / 10000),
-                    "total": data.length
+                    "current": received_bytes,
+                    "total": total_bytes
                 })
             });
 
@@ -417,7 +423,9 @@ class Handler {
             const minArgs = this.options.overrides.minArgs || 5;
             if(args.length < minArgs) args = args.concat(this.version.minecraftArguments ? this.version.minecraftArguments.split(' ') : this.version.arguments.game);
 
-            this.options.authorization = await Promise.resolve(this.options.authorization);
+            if({}.toString.call(this.options.authorization) === "[object Promise]") {
+                this.options.authorization = await this.options.authorization;
+            }
 
             const fields = {
                 '${auth_access_token}': this.options.authorization.access_token,
