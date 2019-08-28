@@ -45,10 +45,10 @@ class Handler {
 
             const _request = this.baseRequest(url);
 
-            var received_bytes = 0;
-            var total_bytes = 0;
+            let received_bytes = 0;
+            let total_bytes = 0;
 
-            _request.on('response', function (data) {
+            _request.on('response', (data) => {
                 total_bytes = parseInt(data.headers['content-length']);
             });
 
@@ -463,9 +463,7 @@ class Handler {
             const minArgs = this.options.overrides.minArgs || 5;
             if(args.length < minArgs) args = args.concat(this.version.minecraftArguments ? this.version.minecraftArguments.split(' ') : this.version.arguments.game);
 
-            if({}.toString.call(this.options.authorization) === "[object Promise]") {
-                this.options.authorization = await this.options.authorization;
-            }
+            this.options.authorization = await Promise.resolve(this.options.authorization);
 
             const fields = {
                 '${auth_access_token}': this.options.authorization.access_token,
