@@ -1,7 +1,6 @@
 const child = require('child_process');
 const path = require('path');
 const handler = require('./handler');
-const packager = require('./package');
 const fs = require('fs');
 const EventEmitter = require('events').EventEmitter;
 
@@ -42,7 +41,7 @@ class MCLCore extends EventEmitter {
 
         if(this.options.clientPackage) {
             this.emit('debug', `[MCLC]: Extracting client package to ${this.options.root}`);
-            await packager.extractPackage(this);
+            await this.handler.extractPackage();
         }
 
         if(this.options.installer) {

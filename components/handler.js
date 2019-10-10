@@ -20,21 +20,17 @@ class Handler {
 
     checkJava(java) {
         return new Promise(resolve => {
-            let spawned = false;
-            const javaVer = child.spawn(java, ["-version"]);
-            javaVer.stderr.on('data', (data) => {
-                if (spawned) return;
-                spawned = true;
-                this.client.emit('debug', `[MCLC]: Using Java version ${data.toString().match(/"(.*?)"/).pop()}`);
+            child.exec(`${java} -version`, (error, stdout, stderr) => {
+                if(error) {
+                    resolve({
+                        run: false,
+                        message: e
+                    })
+                }
+                this.client.emit('debug', `[MCLC]: Using Java version ${stderr.match(/"(.*?)"/).pop()} ${stderr.includes('64-Bit') ? '64-bit': '32-Bit'}`);
                 resolve({
                     run: true
                 });
-            });
-            javaVer.on('error', (e) => {
-                resolve({
-                    run: false,
-                    message: e
-                })
             });
         });
     }
@@ -297,7 +293,13 @@ class Handler {
         if(!fs.existsSync(path.join(this.options.root, 'forge'))) {
             shelljs.mkdir('-p', path.join(this.options.root, 'forge'));
         }
-        await new zip(this.options.forge).extractEntryTo('version.json', path.join(this.options.root, 'forge', `${this.version.id}`), false, true);
+
+        try {
+            await new zip(this.options.forge).extractEntryTo('version.json', path.join(this.options.root, 'forge', `${this.version.id}`), false, true);
+        } catch(e) {
+            this.client.emit('debug', `[MCLC]: Unable to extract version.json from the forge jar due to ${e}`);
+            return null;
+        }
 
         const forge = require(path.join(this.options.root, 'forge', `${this.version.id}`, 'version.json'));
         const paths = [];
@@ -527,6 +529,19 @@ class Handler {
                 default: return "linux";
             }
         }
+    }
+
+    extractPackage(options = this.options) {
+        return new Promise(async resolve => {
+            if(options.clientPackage.startsWith('http')) {
+                await this.downloadAsync(options.clientPackage, options.root, "clientPackage.zip", true, 'client-package');
+                options.clientPackage = path.join(options.root, "clientPackage.zip")
+            }
+            new zip(options.clientPackage).extractAllTo(options.root, true);
+            this.client.emit('package-extract', true);
+            if(options.removePackage) shelljs.rm(options.clientPackage);
+            resolve();
+        });
     }
 }
 

@@ -60,9 +60,10 @@ launcher.on('data', (e) => console.log(e));
 | Parameter                | Type     | Description                                                                               | Required |
 |--------------------------|----------|-------------------------------------------------------------------------------------------|----------|
 | `options.clientPackage`  | String   | Path or URL to the client package zip file.                                               | False    |
+| `options.removePackage`  | Boolean  | Option to remove the client package zip file after its finished extracting.                | False    |
 | `options.installer`      | String   | Path to installer being executed.                                                         | False    |
 | `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`,   | True     |
-| `options.os`             | String   | windows, osx or linux. MCLC with auto determine the OS if this field isn't provided.      | False    |
+| `options.os`             | String   | windows, osx or linux. MCLC will auto determine the OS if this field isn't provided.      | False    |
 | `options.customArgs`     | Array    | Array of custom java arguments you want to add.                                           | False    |
 | `options.version.number` | String   | Minecraft version that is going to be launched.                                           | True     |
 | `options.version.type`   | String   | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
