@@ -24,7 +24,7 @@ class Handler {
                 if(error) {
                     resolve({
                         run: false,
-                        message: e
+                        message: error
                     })
                 }
                 this.client.emit('debug', `[MCLC]: Using Java version ${stderr.match(/"(.*?)"/).pop()} ${stderr.includes('64-Bit') ? '64-bit': '32-Bit'}`);

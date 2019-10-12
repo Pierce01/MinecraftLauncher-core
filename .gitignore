@@ -62,3 +62,6 @@ typings/
 
 # VSCode Files (https://code.visualstudio.com)
 .vscode/
+
+# IntelliJ Files
+.idea/
