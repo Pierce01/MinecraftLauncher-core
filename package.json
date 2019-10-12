@@ -2,7 +2,7 @@
   "name": "minecraft-launcher-core",
   "version": "3.11.1",
   "description": "Lightweight module that downloads and runs Minecraft using javascript / NodeJS",
-  "main": "index.js",
+  "main": "dist/index.js",
   "dependencies": {
     "adm-zip": "^0.4.13",
     "checksum": "^0.1.1",
@@ -10,9 +10,23 @@
     "shelljs": "^0.8.2",
     "uuid": "^3.3.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/adm-zip": "^0.4.32",
+    "@types/checksum": "^0.1.30",
+    "@types/node": "^12.7.12",
+    "@types/request": "^2.48.3",
+    "@types/shelljs": "^0.8.5",
+    "@types/uuid": "^3.4.5",
+    "@typescript-eslint/eslint-plugin": "^2.3.3",
+    "@typescript-eslint/parser": "^2.3.3",
+    "eslint": "^6.5.1",
+    "typescript": "^3.6.4"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "npm run lint && yarn run build:code",
+    "build:code": "tsc",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint --fix src"
   },
   "repository": {
     "type": "git",

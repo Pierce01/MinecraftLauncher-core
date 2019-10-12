@@ -39,6 +39,10 @@ build/Release
 node_modules/
 jspm_packages/
 
+# Package Manager files
+package-lock.json
+yarn.lock
+
 # Typescript v1 declaration files
 typings/
 
@@ -62,3 +66,8 @@ typings/
 
 # VSCode Files (https://code.visualstudio.com)
 .vscode/
+
+# IntelliJ Files
+.idea/
+MinecraftLauncher-core.iml
+/tsconfig.tsbuildinfo
