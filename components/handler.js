@@ -365,18 +365,16 @@ class Handler {
                 this.client.emit('debug', `[MCLC]: Downloading packed file '${downloadLink}.pack.xz'`)
                 await this.downloadAsync(`${downloadLink}.pack.xz`, jarPath, `${name}.pack.xz`, true, forge)
 
-                const tmpDir = path.join(os.tmpdir(), "mclc/")
-                if (!await fs.pathExists(tmpDir)) {
-                    await fs.mkdirp(tmpDir)
-                }
-
-                const pack200Loc = path.join(tmpDir, "Pack200.jar")
-
                 // if we didn't fail at this point, we need to run our bundled jar file so we're
                 // able to extract it
                 // NOTE: We're copying this from the source code directory to a tmpDir so that
                 // compat with nexe exists and other node.js bundlers
-                await fs.copy(path.join(__dirname, '../java/Pack200.jar'), pack200Loc)
+                const tmpDir = path.join(os.tmpdir(), "mclc/")
+                const pack200Loc = path.join(tmpDir, "Pack200.jar")
+                if (!await fs.pathExists(tmpDir)) {
+                    await fs.mkdirp(tmpDir)
+                    await fs.copy(path.join(__dirname, '../java/Pack200.jar'), pack200Loc)
+                }
 
                 // now we run java against the packed file
                 this.client.emit('debug', `[MCLC]: Extracting packed library '${path.join(jarPath, `${name}.pack.xz`)}'`)
