@@ -1,5 +1,4 @@
 const fs =  require('fs-extra');
-const shelljs = require('shelljs');
 const os = require('os')
 const path = require('path');
 const request = require('request');
@@ -597,7 +596,7 @@ class Handler {
             }
             new zip(options.clientPackage).extractAllTo(options.root, true);
             this.client.emit('package-extract', true);
-            if(options.removePackage) shelljs.rm(options.clientPackage);
+            if(options.removePackage) await fs.remove(options.clientPackage);
             resolve();
         });
     }
