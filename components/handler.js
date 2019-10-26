@@ -373,7 +373,9 @@ class Handler {
                 const pack200Loc = path.join(tmpDir, "Pack200.jar")
                 if (!await fs.pathExists(tmpDir)) {
                     await fs.mkdirp(tmpDir)
-                    await fs.copy(path.join(__dirname, '../java/Pack200.jar'), pack200Loc)
+                    
+                    // NOTE: We're using fs.readFileSync here plus fs.writeFile because these are patched by nexe, so this is for interop
+                    await fs.writeFile(pack200Loc, fs.readFileSync(path.join(__dirname, '../java/Pack200.jar')))
                 }
 
                 // now we run java against the packed file
