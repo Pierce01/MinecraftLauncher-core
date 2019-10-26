@@ -45,6 +45,11 @@ class Handler {
             let total_bytes = 0;
 
             _request.on('response', (data) => {
+                if (data.statusCode === 404) {
+                    this.client.emit('debug', `[MCLC]: Failed to download ${url} due to: File not found...`);
+                    resolve(false);
+                }
+
                 total_bytes = parseInt(data.headers['content-length']);
             });
 
@@ -327,7 +332,7 @@ class Handler {
                 }
             }
 
-            const downloadLink = `${url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${lib[1]}-${lib[2]}.jar`;
+            const downloadLink = `${url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`;
 
             if(fs.existsSync(path.join(jarPath, name))) {
                 paths.push(`${jarPath}${path.sep}${name}`);
@@ -337,7 +342,8 @@ class Handler {
             }
             if(!fs.existsSync(jarPath)) shelljs.mkdir('-p', jarPath);
 
-            await this.downloadAsync(downloadLink, jarPath, name, true, 'forge');
+            const download = await this.downloadAsync(downloadLink, jarPath, name, true, 'forge');
+            if(!download) await this.downloadAsync(`https://search.maven.org/remotecontent?filepath=${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`, jarPath, name, true, 'forge');
 
             paths.push(`${jarPath}${path.sep}${name}`);
             counter = counter + 1;
