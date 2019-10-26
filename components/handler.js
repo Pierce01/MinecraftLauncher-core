@@ -1,5 +1,6 @@
-const fs =  require('fs');
+const fs =  require('fs-extra');
 const shelljs = require('shelljs');
+const os = require('os')
 const path = require('path');
 const request = require('request');
 const checksum = require('checksum');
@@ -36,8 +37,8 @@ class Handler {
     }
 
     downloadAsync(url, directory, name, retry, type) {
-        return new Promise(resolve => {
-            shelljs.mkdir('-p', directory);
+        return new Promise((resolve, reject) => {
+            fs.mkdirpSync(directory);
 
             const _request = this.baseRequest(url);
 
@@ -45,6 +46,9 @@ class Handler {
             let total_bytes = 0;
 
             _request.on('response', (data) => {
+                if (data.statusCode === 404) {
+                    return reject(new Error('File not found'))
+                }
                 total_bytes = parseInt(data.headers['content-length']);
             });
 
@@ -76,10 +80,10 @@ class Handler {
                 });
             });
 
-            file.on('error', async (e) => {
+            file.on('error', async e => {
                 this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${e}.` +
                     ` Retrying... ${retry}`);
-                if (fs.existsSync(path.join(directory, name))) shelljs.rm(path.join(directory, name));
+                if (await fs.pathExists(path.join(directory, name))) await fs.remove(path.join(directory, name));
                 if (retry) await this.downloadAsync(url, directory, name, false, type);
                 resolve();
             });
@@ -149,7 +153,7 @@ class Handler {
                 total: Object.keys(index.objects).length
             });
 
-            await Promise.all(Object.keys(index.objects).map(async asset => {
+            for (const asset of Object.keys(index.objects)) {
                 const hash = index.objects[asset].hash;
                 const subhash = hash.substring(0,2);
                 const assetDirectory = this.options.overrides.assetRoot || path.join(this.options.root, 'assets');
@@ -164,8 +168,8 @@ class Handler {
                         task: counter,
                         total: Object.keys(index.objects).length
                     })
-                }
-            }));
+                }   
+            }
             counter = 0;
 
             // Copy assets to legacy if it's an older Minecraft version.
@@ -179,7 +183,7 @@ class Handler {
                     total: Object.keys(index.objects).length
                 });
 
-                await Promise.all(Object.keys(index.objects).map(async asset => {
+                for (const asset of Object.keys(index.objects)) {
                     const hash = index.objects[asset].hash;
                     const subhash = hash.substring(0,2);
                     const subAsset = path.join(assetDirectory, 'objects', subhash);
@@ -188,7 +192,7 @@ class Handler {
                     legacyAsset.pop();
 
                     if(!fs.existsSync(path.join(assetDirectory, 'legacy', legacyAsset.join('/')))) {
-                        shelljs.mkdir('-p', path.join(assetDirectory, 'legacy', legacyAsset.join('/')));
+                        await fs.mkdirp(path.join(assetDirectory, 'legacy', legacyAsset.join('/')));
                     }
 
                     if (!fs.existsSync(path.join(assetDirectory, 'legacy', asset))) {
@@ -200,7 +204,7 @@ class Handler {
                         task: counter,
                         total: Object.keys(index.objects).length
                     })
-                }));
+                }
             }
             counter = 0;
 
@@ -232,7 +236,7 @@ class Handler {
             const nativeDirectory = this.options.overrides.natives || path.join(this.options.root, 'natives', this.version.id);
 
             if(!fs.existsSync(nativeDirectory) || !fs.readdirSync(nativeDirectory).length) {
-                shelljs.mkdir('-p', nativeDirectory);
+                await fs.mkdirp(nativeDirectory);
 
                 const natives = () => {
                     return new Promise(async resolve => {
@@ -272,7 +276,7 @@ class Handler {
                         // All is well.
                         console.warn(e);
                     }
-                    shelljs.rm(path.join(nativeDirectory, name));
+                    await fs.remove(path.join(nativeDirectory, name));
                     counter = counter + 1;
                     this.client.emit('progress', {
                         type: 'natives',
@@ -289,9 +293,27 @@ class Handler {
         });
     }
 
+    /**
+     * execPromise executes a process, waits until it finishes, and then
+     * returns the output from stdout. All errors are ignored.
+     *
+     * @param {String} exec process to execute
+     * @param {String[]} args args to exec with
+     * @returns {String} output from the process, empty string if failed
+     */
+    async execPromise(exec, args) {
+        return new Promise(resolve => {
+            let resp = ''
+            
+            const proc = child.spawn(exec, args)
+            proc.stdout.on('data', out => resp += out)
+            proc.on('close', () => resolve(resp))
+        })
+    }
+
     async getForgeDependenciesLegacy() {
-        if(!fs.existsSync(path.join(this.options.root, 'forge'))) {
-            shelljs.mkdir('-p', path.join(this.options.root, 'forge'));
+        if(!await fs.pathExists(path.join(this.options.root, 'forge'))) {
+            await fs.mkdirp(path.join(this.options.root, 'forge'));
         }
 
         try {
@@ -310,10 +332,10 @@ class Handler {
             total: forge.libraries.length
         });
 
-        await Promise.all(forge.libraries.map(async library => {
+        for (const library of forge.libraries) {
             const lib = library.name.split(':');
 
-            if(lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) return;
+            if(lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) continue
 
             let url = this.options.overrides.url.mavenForge;
             const jarPath = path.join(this.options.root, 'libraries', `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`);
@@ -323,21 +345,57 @@ class Handler {
                 if(library.serverreq || library.clientreq) {
                     url = this.options.overrides.url.defaultRepoForge;
                 } else {
-                    return
+                    continue
                 }
             }
 
             const downloadLink = `${url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${lib[1]}-${lib[2]}.jar`;
 
-            if(fs.existsSync(path.join(jarPath, name))) {
+            if(await fs.pathExists(path.join(jarPath, name))) {
                 paths.push(`${jarPath}${path.sep}${name}`);
                 counter = counter + 1;
                 this.client.emit('progress', { type: 'forge', task: counter, total: forge.libraries.length});
-                return;
+                continue
             }
-            if(!fs.existsSync(jarPath)) shelljs.mkdir('-p', jarPath);
+            if(!await fs.pathExists(jarPath)) await fs.mkdirp(jarPath);
 
-            await this.downloadAsync(downloadLink, jarPath, name, true, 'forge');
+            // first we attempt to download the file as a .pack.xz, if that fails then we'll
+            // try and see if we can download a .jar, this is inline with the forge installer's
+            // actual behaviour
+            try {
+                this.client.emit('debug', `[MCLC]: Downloading packed file '${downloadLink}.pack.xz'`)
+                await this.downloadAsync(`${downloadLink}.pack.xz`, jarPath, `${name}.pack.xz`, true, forge)
+
+                const tmpDir = path.join(os.tmpdir(), "mclc/")
+                if (!await fs.pathExists(tmpDir)) {
+                    await fs.mkdirp(tmpDir)
+                }
+
+                const pack200Loc = path.join(tmpDir, "Pack200.jar")
+
+                // if we didn't fail at this point, we need to run our bundled jar file so we're
+                // able to extract it
+                // NOTE: We're copying this from the source code directory to a tmpDir so that
+                // compat with nexe exists and other node.js bundlers
+                await fs.copy(path.join(__dirname, '../java/Pack200.jar'), pack200Loc)
+
+                // now we run java against the packed file
+                this.client.emit('debug', `[MCLC]: Extracting packed library '${path.join(jarPath, `${name}.pack.xz`)}'`)
+                const resp = await this.execPromise(this.options.javaPath ? this.options.javaPath : 'java', [
+                    '-cp', 
+                    pack200Loc, 
+                    'ru.dedepete.forgefier.LibraryUnpacker',
+                    path.join(jarPath, `${name}.pack.xz`),
+                    path.join(jarPath, name)
+                ])
+                
+                // this.client.emit('debug', `[MCLC]: Extract logs: ${resp}`)
+
+                await fs.unlink(path.join(jarPath, `${name}.pack.xz`))
+            } catch (err) {
+                this.client.emit('debug', `[MCLC]: Downloading un-packed '${downloadLink}' (reason: ${err.message || err})`)
+                await this.downloadAsync(downloadLink, jarPath, name, true, 'forge');
+            }
 
             paths.push(`${jarPath}${path.sep}${name}`);
             counter = counter + 1;
@@ -346,7 +404,7 @@ class Handler {
                 task: counter,
                 total: forge.libraries.length
             })
-        }));
+        }
 
         counter = 0;
         this.client.emit('debug', '[MCLC]: Downloaded Forge dependencies');

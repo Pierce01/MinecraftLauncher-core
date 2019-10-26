@@ -19,7 +19,7 @@ class MCLCore extends EventEmitter {
         this.options.overrides.url = {
             meta: this.options.overrides.url.meta || "https://launchermeta.mojang.com",
             resource: this.options.overrides.url.resource || "https://resources.download.minecraft.net",
-            mavenForge: this.options.overrides.url.mavenForge || "http://files.minecraftforge.net/maven/",
+            mavenForge: this.options.overrides.url.mavenForge || "https://files.minecraftforge.net/maven/",
             defaultRepoForge: this.options.overrides.url.defaultRepoForge || "https://libraries.minecraft.net/"
         };
         this.handler = new handler(this);

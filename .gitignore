@@ -65,3 +65,6 @@ typings/
 
 # IntelliJ Files
 .idea/
+
+# java stuff
+java/build
