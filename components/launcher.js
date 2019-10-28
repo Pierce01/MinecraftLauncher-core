@@ -20,7 +20,8 @@ class MCLCore extends EventEmitter {
             meta: this.options.overrides.url.meta || "https://launchermeta.mojang.com",
             resource: this.options.overrides.url.resource || "https://resources.download.minecraft.net",
             mavenForge: this.options.overrides.url.mavenForge || "http://files.minecraftforge.net/maven/",
-            defaultRepoForge: this.options.overrides.url.defaultRepoForge || "https://libraries.minecraft.net/"
+            defaultRepoForge: this.options.overrides.url.defaultRepoForge || "https://libraries.minecraft.net/",
+            fallbackMaven: this.options.overrides.url.fallbackMaven || "https://search.maven.org/remotecontent?filepath="
         };
         this.handler = new handler(this);
         // Lets the events register. our magic switch!

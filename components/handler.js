@@ -334,6 +334,7 @@ class Handler {
 
             const downloadLink = `${url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`;
 
+
             if(fs.existsSync(path.join(jarPath, name))) {
                 paths.push(`${jarPath}${path.sep}${name}`);
                 counter = counter + 1;
@@ -343,7 +344,7 @@ class Handler {
             if(!fs.existsSync(jarPath)) shelljs.mkdir('-p', jarPath);
 
             const download = await this.downloadAsync(downloadLink, jarPath, name, true, 'forge');
-            if(!download) await this.downloadAsync(`https://search.maven.org/remotecontent?filepath=${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`, jarPath, name, true, 'forge');
+            if(!download) await this.downloadAsync(`${this.options.overrides.url.fallbackMaven}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`, jarPath, name, true, 'forge');
 
             paths.push(`${jarPath}${path.sep}${name}`);
             counter = counter + 1;

@@ -2,7 +2,7 @@
 ##### This project is complete for now.
 [![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![version](https://img.shields.io/badge/stable_version-3.11.2-blue)
+![version](https://img.shields.io/badge/stable_version-3.11.3-blue)
 ![badge](https://img.shields.io/badge/ncurses-not_supported-purple)
 
 MCLC is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
@@ -102,8 +102,9 @@ let opts = {
            meta: "https://launchermeta.mojang.com", // List of versions.
            resource: "https://resources.download.minecraft.net", // Minecraft resources.
            mavenForge: "http://files.minecraftforge.net/maven/", // Forge resources.
-           defaultRepoForge: "https://libraries.minecraft.net/" // for Forge only, you need to redefine the library url
+           defaultRepoForge: "https://libraries.minecraft.net/", // for Forge only, you need to redefine the library url
                                                                 // in the version json.
+           fallbackMaven: "https://search.maven.org/remotecontent?filepath="
        }
    }
 }
