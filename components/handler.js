@@ -101,7 +101,7 @@ class Handler {
         return new Promise(resolve => {
             const versionJsonPath = this.options.overrides.versionJson || path.join(this.options.directory, `${this.options.version.number}.json`);
             if (fs.existsSync(versionJsonPath)) {
-                this.version = require(versionJsonPath);
+                this.version = JSON.parse(fs.readFileSync(versionJsonPath));
                 resolve(this.version);
                 return;
             }
