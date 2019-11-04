@@ -81,6 +81,7 @@ launcher.on('data', (e) => console.log(e));
 | `options.timeout`        | Integer  | Timeout on download requests.                                                             | False    |
 | `options.window.width`   | String   | Width of the Minecraft Client                                                             | False    |
 | `options.window.height`  | String   | Height of the Minecraft Client.                                                           | False    |
+| `options.window.fullscreen`  | Boolean| Fullscreen of the Minecraft Client.                                                     | False    |
 | `options.overrides`      | Object   | Json object redefining paths for better customization. Example below.                     | False    |
 | `options.overrides.minArgs`| Integer| The amount of launch arguments specified in the version file before it adds the default again| False    |
 ```js

@@ -498,8 +498,8 @@ class Handler {
                     args[index] = fields[args[index]];
                 }
             }
-
-            if(this.options.window) args.push('--width', this.options.window.width, '--height', this.options.window.height);
+            
+            if(this.options.window) this.options.window.fullscreen ? args.push('--fullscreen') : args.push('--width', this.options.window.width, '--height', this.options.window.height);           
             if(this.options.server) args.push('--server', this.options.server.host, '--port', this.options.server.port || "25565");
             if(this.options.proxy) args.push(
                 '--proxyHost',
