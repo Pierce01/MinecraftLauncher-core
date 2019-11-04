@@ -468,7 +468,7 @@ class Handler {
         return new Promise(async resolve => {
             let type = modification || this.version;
 
-            let . = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
+            let args = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
             const assetRoot = this.options.overrides.assetRoot || path.join(this.options.root, 'assets');
             const assetPath = this.version.assets === "legacy" || this.version.assets === "pre-1.6" ? path.join(assetRoot, 'legacy') : path.join(assetRoot);
 
