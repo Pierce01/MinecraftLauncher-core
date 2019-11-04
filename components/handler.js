@@ -468,7 +468,7 @@ class Handler {
         return new Promise(async resolve => {
             let type = modification || this.version;
 
-            let args = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
+            let . = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
             const assetRoot = this.options.overrides.assetRoot || path.join(this.options.root, 'assets');
             const assetPath = this.version.assets === "legacy" || this.version.assets === "pre-1.6" ? path.join(assetRoot, 'legacy') : path.join(assetRoot);
 
@@ -498,8 +498,8 @@ class Handler {
                     args[index] = fields[args[index]];
                 }
             }
-
-            if(this.options.window) args.push('--width', this.options.window.width, '--height', this.options.window.height);
+            
+            if(this.options.window) this.options.window.fullscreen ? args.push('--fullscreen') : args.push('--width', this.options.window.width, '--height', this.options.window.height);           
             if(this.options.server) args.push('--server', this.options.server.host, '--port', this.options.server.port || "25565");
             if(this.options.proxy) args.push(
                 '--proxyHost',
