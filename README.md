@@ -81,7 +81,7 @@ launcher.on('data', (e) => console.log(e));
 | `options.timeout`        | Integer  | Timeout on download requests.                                                             | False    |
 | `options.window.width`   | String   | Width of the Minecraft Client                                                             | False    |
 | `options.window.height`  | String   | Height of the Minecraft Client.                                                           | False    |
-| `options.window.fullscreen`  | Boolean| Fullscreen of the Minecraft Client.                                                     | False    |
+| `options.window.fullscreen`  | Boolean| Fullscreen the Minecraft Client.                                                     | False    |
 | `options.overrides`      | Object   | Json object redefining paths for better customization. Example below.                     | False    |
 | `options.overrides.minArgs`| Integer| The amount of launch arguments specified in the version file before it adds the default again| False    |
 ```js
@@ -180,7 +180,7 @@ You'll need to provide the folder created in the versions if you're running the 
 
 
 #### What should it look like running from console?
-Showing the emitted information from debug and data, also using `getPid` after the process has been created.
+The `pid` is printed in console after the process is launched. 
 ![gif](https://pierce.is-serious.business/3N3PMC4.gif)
 
 ## Contributors
