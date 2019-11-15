@@ -21,16 +21,17 @@ class Handler {
     checkJava(java) {
         return new Promise(resolve => {
             child.exec(`${java} -version`, (error, stdout, stderr) => {
-                if(error) {
+                if (error) {
                     resolve({
                         run: false,
                         message: error
                     })
+                } else {
+                    this.client.emit('debug', `[MCLC]: Using Java version ${stderr.match(/"(.*?)"/).pop()} ${stderr.includes('64-Bit') ? '64-bit': '32-Bit'}`);
+                    resolve({
+                        run: true
+                    });
                 }
-                this.client.emit('debug', `[MCLC]: Using Java version ${stderr.match(/"(.*?)"/).pop()} ${stderr.includes('64-Bit') ? '64-bit': '32-Bit'}`);
-                resolve({
-                    run: true
-                });
             });
         });
     }
