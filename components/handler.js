@@ -20,7 +20,7 @@ class Handler {
 
     checkJava(java) {
         return new Promise(resolve => {
-            child.exec(`${java} -version`, (error, stdout, stderr) => {
+            child.exec(`"${java}" -version`, (error, stdout, stderr) => {
                 if (error) {
                     resolve({
                         run: false,
