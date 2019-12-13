@@ -1,11 +1,11 @@
-![logo](https://pierce.is-serious.business/44U1xXh.png)
+![logo](https://pierce.is-serious.business/9jcT9mF.png)
 ##### This project is complete for now.
 [![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![version](https://img.shields.io/badge/stable_version-3.11.3-blue)
 ![badge](https://img.shields.io/badge/ncurses-not_supported-purple)
 
-MCLC is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
+MCLC (Minecraft Launcher Core) is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
 Basically a core for your Electron or script based launchers.
 
 ### Getting support
@@ -27,8 +27,10 @@ const launcher = new Client();
 
 let opts = {
     clientPackage: null,
-    // For production launchers, I recommend not passing the getAuth function through the authorization field and instead
-    // handling authentication outside before you initialize MCLC so you can handle auth based errors and validation!
+    // For production launchers, I recommend not passing 
+    // the getAuth function through the authorization field and instead
+    // handling authentication outside before you initialize
+    // MCLC so you can handle auth based errors and validation!
     authorization: Authenticator.getAuth("username", "password"),
     root: "./minecraft",
     os: "windows",
@@ -91,7 +93,7 @@ let opts = {
        minecraftJar: "",
        versionJson: "",
        directory: "", // where the Minecraft jar and version json are located.
-       natives: "", // all native paths are required if you use this.
+       natives: "", // native directory path.
        assetRoot: "",
        cwd: "", // working directory of the java process
        classes: [], // all class paths are required if you use this.
