@@ -1,4 +1,4 @@
-![logo](https://pierce.is-serious.business/9jcT9mF.png)
+![logo](https://pierce.is-serious.business/8mT5kxc.png)
 ##### This project is complete for now.
 [![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
