@@ -2,7 +2,7 @@
 ##### This project is complete for now.
 [![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![version](https://img.shields.io/badge/stable_version-3.11.3-blue)
+![version](https://img.shields.io/badge/stable_version-3.11.5-blue)
 ![badge](https://img.shields.io/badge/ncurses-not_supported-purple)
 
 MCLC (Minecraft Launcher Core) is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
@@ -115,8 +115,7 @@ let opts = {
 
 #### Notes
 ##### Custom
-If you are loading up a client outside of vanilla Minecraft or Forge (Optifine and for an example), you'll need to download the needed files yourself
-if you don't provide downloads url downloads like Forge and Fabric. Still need to provide the version jar.
+If you are loading up a client outside of vanilla Minecraft or Forge (Optifine and for an example), you'll need to download the needed files yourself if you don't provide downloads url downloads like Forge and Fabric. If no version jar is specified, MCLC will default back to the normal MC jar so mods like Fabric work.
 ##### Installer
 You'll need to provide the folder created in the versions if you're running the new forge like so
 ```json

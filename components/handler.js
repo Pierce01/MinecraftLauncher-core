@@ -265,6 +265,8 @@ class Handler {
                 });
 
                 await Promise.all(stat.map(async (native) => {
+                    // Edge case on some systems where native is undefined and throws an error, this should fix it.
+                    if(!native) return;
                     const name = native.path.split('/').pop();
                     await this.downloadAsync(native.url, nativeDirectory, name, true, 'natives');
                     if (!await this.checkSum(native.sha1, path.join(nativeDirectory, name))) {

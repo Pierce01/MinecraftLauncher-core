@@ -106,7 +106,8 @@ class MCLCore extends EventEmitter {
             classPaths.push(forge.forge.mainClass)
         } else {
             const file = custom || versionFile;
-            const jar = fs.existsSync(mcPath) ? `${mcPath}${separator}` : '';
+            // So mods like fabric work.
+            const jar = fs.existsSync(mcPath) ? `${mcPath}${separator}` : `${path.join(directory, `${this.options.version.number}.jar`)}${separator}`;
             classPaths.push(`${jar}${classes.join(separator)}`);
             classPaths.push(file.mainClass);
         }
