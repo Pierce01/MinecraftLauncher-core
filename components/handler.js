@@ -147,7 +147,7 @@ class Handler {
                     `${this.version.assetIndex.id}.json`, true, 'asset-json');
             }
 
-            const index = require(path.join(this.options.root, 'assets', 'indexes',`${this.version.assetIndex.id}.json`));
+            const index = JSON.parse(fs.readFileSync(path.join(this.options.root, 'assets', 'indexes',`${this.version.assetIndex.id}.json`), { encoding: 'utf8' }));
 
             this.client.emit('progress', {
                 type: 'assets',
@@ -309,7 +309,7 @@ class Handler {
             return null;
         }
 
-        const forge = require(path.join(this.options.root, 'forge', `${this.version.id}`, 'version.json'));
+        const forge = JSON.parse(fs.readFileSync(path.join(this.options.root, 'forge', `${this.version.id}`, 'version.json'), { encoding: 'utf8' }));
         const paths = [];
 
         this.client.emit('progress', {
@@ -376,7 +376,7 @@ class Handler {
             const libs = [];
 
             if(this.options.version.custom) {
-                const customJarJson = require(path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.json`));
+                const customJarJson = JSON.parse(fs.readFileSync(path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.json`), { encoding: 'utf9'}));
 
                 this.client.emit('progress', {
                     type: 'classes-custom',
