@@ -376,7 +376,7 @@ class Handler {
             const libs = [];
 
             if(this.options.version.custom) {
-                const customJarJson = JSON.parse(fs.readFileSync(path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.json`), { encoding: 'utf9'}));
+                const customJarJson = JSON.parse(fs.readFileSync(path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.json`), { encoding: 'utf8'}));
 
                 this.client.emit('progress', {
                     type: 'classes-custom',
