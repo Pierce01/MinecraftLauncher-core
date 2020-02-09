@@ -107,8 +107,8 @@ class MCLCore extends EventEmitter {
         } else {
             const file = custom || versionFile;
             // So mods like fabric work.
-            const jar = fs.existsSync(mcPath) ? `${mcPath}${separator}` : `${path.join(directory, `${this.options.version.number}.jar`)}${separator}`;
-            classPaths.push(`${jar}${classes.join(separator)}`);
+            const jar = fs.existsSync(mcPath) ? `${separator}${mcPath}` : `${separator}${path.join(directory, `${this.options.version.number}.jar`)}`;
+            classPaths.push(`${classes.join(separator)}${jar}`);
             classPaths.push(file.mainClass);
         }
 
