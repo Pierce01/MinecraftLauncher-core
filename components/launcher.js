@@ -12,17 +12,18 @@ class MCLCore extends EventEmitter {
     async launch(options) {
         this.options = options;
         this.options.root = path.resolve(this.options.root);
-
-        // Simplified overrides so launcher devs can set the paths to what ever they want. see docs for variable names.
-        if(!this.options.overrides) this.options.overrides = { url: {} };
-        if(!this.options.overrides.url) this.options.overrides.url = {};
-        this.options.overrides.url = {
-            meta: this.options.overrides.url.meta || "https://launchermeta.mojang.com",
-            resource: this.options.overrides.url.resource || "https://resources.download.minecraft.net",
-            mavenForge: this.options.overrides.url.mavenForge || "http://files.minecraftforge.net/maven/",
-            defaultRepoForge: this.options.overrides.url.defaultRepoForge || "https://libraries.minecraft.net/",
-            fallbackMaven: this.options.overrides.url.fallbackMaven || "https://search.maven.org/remotecontent?filepath="
+        this.options.overrides = {
+            ...this.options.overrides,
+            url: {
+                meta: "https://launchermeta.mojang.com",
+                resource: "https://resources.download.minecraft.net",
+                mavenForge: "http://files.minecraftforge.net/maven/",
+                defaultRepoForge: "https://libraries.minecraft.net/",
+                fallbackMaven: "https://search.maven.org/remotecontent?filepath=",
+                ...this.options.overrides ? this.options.overrides.url : undefined
+            }
         };
+
         this.handler = new handler(this);
         // Lets the events register. our magic switch!
         await void(0);
@@ -122,7 +123,7 @@ class MCLCore extends EventEmitter {
 
         const launchArguments = args.concat(jvm, classPaths, launchOptions);
         this.emit('arguments', launchArguments);
-        this.emit('debug', launchArguments.join(' '));
+        this.emit('debug', `[MCLC]: Launching with arguments ${launchArguments.join(' ')}`);
 
         const minecraft = child.spawn(this.options.javaPath ? this.options.javaPath : 'java', launchArguments,
             {cwd: this.options.overrides.cwd || this.options.root});

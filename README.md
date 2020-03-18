@@ -1,4 +1,4 @@
-![logo](https://pierce.is-serious.business/8mT5kxc.png)
+![logo](https://owo.whats-th.is/8mT5kxc.png)
 ##### This project is complete for now.
 [![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -182,7 +182,7 @@ You'll need to provide the folder created in the versions if you're running the 
 
 #### What should it look like running from console?
 The `pid` is printed in console after the process is launched. 
-![gif](https://pierce.is-serious.business/3N3PMC4.gif)
+![gif](https://owo.whats-th.is/8mT5kxc.png/3N3PMC4.gif)
 
 ## Contributors
 These are the people that helped out that aren't listed [here](https://github.com/Pierce01/MinecraftLauncher-core/graphs/contributors)!
