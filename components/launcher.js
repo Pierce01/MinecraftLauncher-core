@@ -28,7 +28,9 @@ class MCLCore extends EventEmitter {
         // Lets the events register. our magic switch!
         await void(0);
 
-        this.emit('debug', `[MCLC]: MCLC version ${JSON.parse(fs.readFileSync(path.join(__dirname,'..', 'package.json'), { encoding: 'utf8' })).version}`);
+        if(fs.existsSync(path.join(__dirname,'..', 'package.json'))) {
+            this.emit('debug', `[MCLC]: MCLC version ${JSON.parse(fs.readFileSync(path.join(__dirname,'..', 'package.json'), { encoding: 'utf8' })).version}`);
+        } else { this.emit('debug', `[MCLC]: Package JSON not found, skipping MCLC version check.`); }
         const java = await this.handler.checkJava(this.options.javaPath || 'java');
         if(!java.run) {
             this.emit('debug', `[MCLC]: Couldn't start Minecraft due to: ${java.message}`);
