@@ -2,7 +2,7 @@
 ##### This project is complete for now.
 [![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![version](https://img.shields.io/badge/stable_version-3.12.0-blue)
+![version](https://img.shields.io/badge/stable_version-3.12.3-blue)
 ![badge](https://img.shields.io/badge/ncurses-not_supported-purple)
 
 MCLC (Minecraft Launcher Core) is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
@@ -61,7 +61,7 @@ launcher.on('data', (e) => console.log(e));
 
 | Parameter                | Type     | Description                                                                               | Required |
 |--------------------------|----------|-------------------------------------------------------------------------------------------|----------|
-| `options.clientPackage`  | String   | Path or URL to the client package zip file.                                               | False    |
+| `options.clientPackage`  | String   | Path or URL to the client package zip file. Do not rehost Minecraft, it's against ToS.    | False    |
 | `options.removePackage`  | Boolean  | Option to remove the client package zip file after its finished extracting.                | False    |
 | `options.installer`      | String   | Path to installer being executed.                                                         | False    |
 | `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`,   | True     |
@@ -86,6 +86,7 @@ launcher.on('data', (e) => console.log(e));
 | `options.window.fullscreen`  | Boolean| Fullscreen the Minecraft Client.                                                     | False    |
 | `options.overrides`      | Object   | Json object redefining paths for better customization. Example below.                     | False    |
 | `options.overrides.minArgs`| Integer| The amount of launch arguments specified in the version file before it adds the default again| False    |
+#### IF YOU'RE NEW TO MCLC, LET IT HANDLE EVERYTHING! DO NOT USE OVERRIDES!
 ```js
 let opts = {
    otherOps...,
@@ -165,6 +166,12 @@ You'll need to provide the folder created in the versions if you're running the 
 |--------------|--------|--------------------------------------|----------|
 | `username` | String | Username used to login with | True     |
 | `password` | String | Password used to login with | True     |
+
+##### changeApiUrl
+
+| Parameter | Type   | Description                                                  | Required |
+|-----------|--------|--------------------------------------------------------------|----------|
+| `url`     | String | New URL that MCLC will make calls to authenticate the login. | True     |
 
 #### Events
 

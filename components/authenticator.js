@@ -1,6 +1,6 @@
 const request = require('request');
 const uuid = require('uuid/v1');
-const api_url = "https://authserver.mojang.com";
+let api_url = "https://authserver.mojang.com";
 
 module.exports.getAuth = function (username, password) {
     return new Promise((resolve, reject) => {
@@ -13,8 +13,7 @@ module.exports.getAuth = function (username, password) {
                 user_properties: JSON.stringify({})
             };
 
-            resolve(user);
-            return;
+            return resolve(user);
         }
 
         const requestObject = {
@@ -138,3 +137,7 @@ module.exports.signOut = function (username, password) {
         });
     });
 };
+
+module.exports.changeApiUrl = function(url) {
+    api_url = url;
+}
