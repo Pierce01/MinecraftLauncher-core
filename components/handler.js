@@ -514,7 +514,7 @@ class Handler {
                 '--proxyPass',
                 this.options.proxy.password
             );
-            if(this.options.customLaunchArgs) args.concat(this.options.customArgs)
+            if(this.options.customLaunchArgs) args.concat(this.options.customLaunchArgs)
             this.client.emit('debug', '[MCLC]: Set launch options');
             resolve(args);
         });
