@@ -71,13 +71,25 @@ class MCLCore extends EventEmitter {
         }
 
         let forge = null;
+        let forge_new = null;
         let custom = null;
         if(this.options.forge) {
             this.emit('debug', '[MCLC]: Detected Forge in options, getting dependencies');
             forge = await this.handler.getForgeDependenciesLegacy();
         }
         if(this.options.version.custom) {
-            this.emit('debug', '[MCLC]: Detected custom in options, setting custom version file');
+            if(this.options.version.custom.includes('forge')){
+                let forge_mcversion = this.options.version.custom.split('-')[0].split('.')
+                if(parseInt(forge_mcversion[1]) >= 13){
+                    this.emit('debug', '[MCLC]: Detected newer forge versions (1.13+), setting forge file');
+                    forge_new = true;
+                }else {
+                    this.emit('debug', '[MCLC/ERROR]: Please use "forge" args launch for forge 1.12 or older');
+                    return;
+                }
+            }else {
+                this.emit('debug', '[MCLC]: Detected custom in options, setting custom version file');
+            }
             custom = JSON.parse(fs.readFileSync(path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.json`), { encoding: 'utf8' }));
         }
 
@@ -121,7 +133,7 @@ class MCLCore extends EventEmitter {
 
         // Launch options. Thank you Lyrus for the reformat <3
         const modification = forge ? forge.forge : null || custom ? custom : null;
-        const launchOptions = await this.handler.getLaunchOptions(modification);
+        const launchOptions = await this.handler.getLaunchOptions(modification, forge_new);
 
         const launchArguments = args.concat(jvm, classPaths, launchOptions);
         this.emit('arguments', launchArguments);

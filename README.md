@@ -39,8 +39,8 @@ let opts = {
         type: "release"
     },
     memory: {
-        max: "6000",
-        min: "4000"
+        max: "1024",
+        min: "1024"
     }
 }
 
