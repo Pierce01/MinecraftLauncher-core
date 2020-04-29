@@ -337,7 +337,6 @@ class Handler {
 
             const downloadLink = `${url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`;
 
-
             if(fs.existsSync(path.join(jarPath, name))) {
                 paths.push(`${jarPath}${path.sep}${name}`);
                 counter = counter + 1;
@@ -475,7 +474,7 @@ class Handler {
             const assetRoot = this.options.overrides.assetRoot || path.join(this.options.root, 'assets');
             const assetPath = this.version.assets === "legacy" || this.version.assets === "pre-1.6" ? path.join(assetRoot, 'legacy') : path.join(assetRoot);
 
-            const minArgs = this.options.overrides.minArgs || 5;
+            const minArgs = this.options.overrides.minArgs || this.version.assets === "legacy" ? 5 : 11;
             if(args.length < minArgs) args = args.concat(this.version.minecraftArguments ? this.version.minecraftArguments.split(' ') : this.version.arguments.game);
 
             this.options.authorization = await Promise.resolve(this.options.authorization);
