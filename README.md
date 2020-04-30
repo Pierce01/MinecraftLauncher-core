@@ -2,7 +2,7 @@
 ##### This project is complete for now.
 [![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![version](https://img.shields.io/badge/stable_version-3.12.3-blue)
+![version](https://img.shields.io/badge/stable_version-3.13.2-blue)
 ![badge](https://img.shields.io/badge/ncurses-not_supported-purple)
 
 MCLC (Minecraft Launcher Core) is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
@@ -33,7 +33,6 @@ let opts = {
     // MCLC so you can handle auth based errors and validation!
     authorization: Authenticator.getAuth("username", "password"),
     root: "./minecraft",
-    os: "windows",
     version: {
         number: "1.14",
         type: "release"
@@ -66,7 +65,8 @@ launcher.on('data', (e) => console.log(e));
 | `options.installer`      | String   | Path to installer being executed.                                                         | False    |
 | `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`,   | True     |
 | `options.os`             | String   | windows, osx or linux. MCLC will auto determine the OS if this field isn't provided.      | False    |
-| `options.customArgs`     | Array    | Array of custom java arguments you want to add.                                           | False    |
+| `options.customLaunchArgs`| Array   | Array of custom Minecraft arguments you want to add.                                 | False    |
+| `options.customArgs`     | Array    | Array of custom Java arguments you want to add.                                           | False    |
 | `options.version.number` | String   | Minecraft version that is going to be launched.                                           | True     |
 | `options.version.type`   | String   | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
 | `options.version.custom` | String   | The name of the folder, jar file, and version json in the version folder.                 | False    |
@@ -197,3 +197,4 @@ These are the people that helped out that aren't listed [here](https://github.co
 * [Khionu](https://github.com/khionu) - Research on how Minecraft's`natives` are handled.
 * [Coding-Kiwi](https://github.com/Coding-Kiwi) - Pointed out I didn't pass `clientToken` in initial authentication function.
 * maxbsoft - Pointed out that a certain JVM option causes OSX Minecraft to bug out.
+* [Noé](https://github.com/NoXeDev) - Pointed out launch args weren't being passed for Forge 1.13+.
