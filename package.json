@@ -1,6 +1,6 @@
 {
   "name": "minecraft-launcher-core",
-  "version": "3.13.3",
+  "version": "3.14.0",
   "description": "Lightweight module that downloads and runs Minecraft using javascript / NodeJS",
   "main": "index.js",
   "dependencies": {
@@ -10,9 +10,16 @@
     "shelljs": "^0.8.2",
     "uuid": "^3.3.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.20.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "eslint ."
   },
   "repository": {
     "type": "git",

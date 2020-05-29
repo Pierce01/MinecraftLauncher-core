@@ -72,7 +72,7 @@ launcher.on('data', (e) => console.log(e));
 | `options.version.custom` | String   | The name of the folder, jar file, and version json in the version folder.                 | False    |
 | `options.memory.max`     | String   | Max amount of memory being used by Minecraft.                                             | True     |
 | `options.memory.min`     | String   | Min amount of memory being used by Minecraft.                                             | True     |
-| `options.forge`          | String   | Path to Universal Forge Jar. (Only for versions below 1.13+                               | False    |
+| `options.forge`          | String   | Path to Forge Jar. (Versions below 1.13 should be the "universal" jar while versions above 1.13+ should be the "installer" jar)| False    |
 | `options.javaPath`       | String   | Path to the JRE executable file, will default to `java` if not entered.                   | False    |
 | `options.server.host`    | String   | Host url to the server, don't include the port.                                           | False    |
 | `options.server.port`    | String   | Port of the host url, will default to `25565` if not entered.                             | False    |
@@ -118,16 +118,8 @@ let opts = {
 ##### Custom
 If you are loading up a client outside of vanilla Minecraft or Forge (Optifine and for an example), you'll need to download the needed files yourself if you don't provide downloads url downloads like Forge and Fabric. If no version jar is specified, MCLC will default back to the normal MC jar so mods like Fabric work.
 ##### Installer
-You'll need to provide the folder created in the versions if you're running the new forge like so
-```json
-{
-    "version": {
-        "number": "1.14.2",
-        "type": "release",
-        "custom": "1.14.2-forge-26.0.63"
-    },
-    "installer": "forge-1.14.2-26.0.63-installer.jar"
-}
+This runs an executable with specified launch arguments. Was used to support Forge 1.13 before ForgeWrapper.
+
 ```
 #### Authenticator Functions 
 
