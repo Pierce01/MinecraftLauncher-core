@@ -120,7 +120,6 @@ If you are loading up a client outside of vanilla Minecraft or Forge (Optifine a
 ##### Installer
 This runs an executable with specified launch arguments. Was used to support Forge 1.13 before ForgeWrapper.
 
-```
 #### Authenticator Functions 
 
 ##### getAuth
