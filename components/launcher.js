@@ -5,7 +5,7 @@ const fs = require('fs')
 const EventEmitter = require('events').EventEmitter
 
 class MCLCore extends EventEmitter {
-  async launch (options = this.options) {
+  async launch (options) {
     this.options = options
     this.options.root = path.resolve(this.options.root)
     this.options.overrides = {
@@ -81,7 +81,7 @@ class MCLCore extends EventEmitter {
       if (forge === false) custom = await this.handler.getForgedWrapped()
     }
     if (this.options.version.custom || custom) {
-      this.emit('debug', '[MCLC]: Detected custom in options, setting custom version file')
+      if (!custom) this.emit('debug', '[MCLC]: Detected custom in options, setting custom version file')
       custom = custom || JSON.parse(fs.readFileSync(path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.json`), { encoding: 'utf8' }))
     }
 
@@ -93,9 +93,9 @@ class MCLCore extends EventEmitter {
       '-XX:-OmitStackTraceInFastThrow',
       '-Dfml.ignorePatchDiscrepancies=true',
       '-Dfml.ignoreInvalidMinecraftCertificates=true',
-            `-Djava.library.path=${nativePath}`,
-            `-Xmx${this.options.memory.max}M`,
-            `-Xms${this.options.memory.min}M`
+      `-Djava.library.path=${nativePath}`,
+      `-Xmx${this.options.memory.max}M`,
+      `-Xms${this.options.memory.min}M`
     ]
     if (this.handler.getOS() === 'osx') {
       if (parseInt(versionFile.id.split('.')[1]) > 12) jvm.push(await this.handler.getJVM())

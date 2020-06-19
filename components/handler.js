@@ -95,9 +95,12 @@ class Handler {
   checkSum (hash, file) {
     return new Promise((resolve, reject) => {
       checksum.file(file, (err, sum) => {
-        err
-          ? reject(new Error(err))
-          : resolve(hash === sum)
+        if (err) {
+          this.client.emit('debug', `[MCLC]: Failed to check file hash due to ${err}`)
+          resolve(false)
+        } else {
+          resolve(hash === sum)
+        }
       })
     })
   }
@@ -107,8 +110,7 @@ class Handler {
       const versionJsonPath = this.options.overrides.versionJson || path.join(this.options.directory, `${this.options.version.number}.json`)
       if (fs.existsSync(versionJsonPath)) {
         this.version = JSON.parse(fs.readFileSync(versionJsonPath))
-        resolve(this.version)
-        return
+        return resolve(this.version)
       }
 
       const manifest = `${this.options.overrides.url.meta}/mc/game/version_manifest.json`
@@ -124,7 +126,7 @@ class Handler {
 
               this.client.emit('debug', '[MCLC]: Parsed version from version manifest')
               this.version = JSON.parse(body)
-              resolve(this.version)
+              return resolve(this.version)
             })
           }
         }
@@ -370,10 +372,17 @@ class Handler {
       const launchArgs = `"${this.options.javaPath ? this.options.javaPath : 'java'}" -jar ${path.resolve(this.options.forgeWrapper.jar)}` +
       ` --installer=${this.options.forge} --instance=${this.options.root} ` +
       `--saveTo=${path.join(this.options.root, 'libraries', 'io', 'github', 'zekerzhayard', 'ForgeWrapper', this.options.forgeWrapper.version)}`
+
       const fw = child.exec(launchArgs)
+      const forgeJson = path.join(this.options.root, 'forge', this.version.id, 'version.json')
 
       fw.on('close', (e) => {
-        resolve(JSON.parse(fs.readFileSync(path.join(this.options.root, 'forge', this.version.id, 'version.json'), { encoding: 'utf8' })))
+        if (!fs.existsSync(forgeJson)) {
+          this.client.emit('debug', '[MCLC]: ForgeWrapper did not produce a version file, using Vanilla')
+          resolve(null)
+        } else {
+          resolve(JSON.parse(fs.readFileSync(forgeJson, { encoding: 'utf8' })))
+        }
       })
     })
   }
@@ -548,17 +557,14 @@ class Handler {
   }
 
   async extractPackage (options = this.options) {
-    return new Promise(async resolve => {
-      if (options.clientPackage.startsWith('http')) {
-        await this.downloadAsync(options.clientPackage, options.root, 'clientPackage.zip', true, 'client-package')
-        options.clientPackage = path.join(options.root, 'clientPackage.zip')
-      }
-      new Zip(options.clientPackage).extractAllTo(options.root, true)
-      this.client.emit('package-extract', true)
-      if (options.removePackage) shelljs.rm(options.clientPackage)
+    if (options.clientPackage.startsWith('http')) {
+      await this.downloadAsync(options.clientPackage, options.root, 'clientPackage.zip', true, 'client-package')
+      options.clientPackage = path.join(options.root, 'clientPackage.zip')
+    }
+    new Zip(options.clientPackage).extractAllTo(options.root, true)
+    if (options.removePackage) shelljs.rm(options.clientPackage)
 
-      resolve()
-    })
+    return this.client.emit('package-extract', true)
   }
 }
 
