@@ -9,6 +9,7 @@ class MCLCore extends EventEmitter {
     this.options = options
     this.options.root = path.resolve(this.options.root)
     this.options.overrides = {
+      detached: true,
       ...this.options.overrides,
       url: {
         meta: 'https://launchermeta.mojang.com',
@@ -134,7 +135,7 @@ class MCLCore extends EventEmitter {
     this.emit('debug', `[MCLC]: Launching with arguments ${launchArguments.join(' ')}`)
 
     const minecraft = child.spawn(this.options.javaPath ? this.options.javaPath : 'java', launchArguments,
-      { cwd: this.options.overrides.cwd || this.options.root })
+      { cwd: this.options.overrides.cwd || this.options.root, detached: this.options.overrides.detached })
     minecraft.stdout.on('data', (data) => this.emit('data', data.toString('utf-8')))
     minecraft.stderr.on('data', (data) => this.emit('data', data.toString('utf-8')))
     minecraft.on('close', (code) => this.emit('close', code))

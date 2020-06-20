@@ -2,7 +2,7 @@
 ##### This project is complete for now.
 [![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![version](https://img.shields.io/badge/stable_version-3.13.3-blue)
+![version](https://img.shields.io/badge/stable_version-3.14.3-blue)
 ![badge](https://img.shields.io/badge/ncurses-not_supported-purple)
 
 MCLC (Minecraft Launcher Core) is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
@@ -96,7 +96,8 @@ let opts = {
        directory: "", // where the Minecraft jar and version json are located.
        natives: "", // native directory path.
        assetRoot: "",
-       cwd: "", // working directory of the java process
+       cwd: "", // working directory of the java process.
+       detached: false, // whether or not the client is detached from the parent / launcher.
        classes: [], // all class paths are required if you use this.
        minArgs: 11,
        maxSockets: 2, // max sockets for downloadAsync.
