@@ -60,7 +60,6 @@ class MCLCore extends EventEmitter {
     const directory = this.options.overrides.directory || path.join(this.options.root, 'versions', this.options.version.number)
     this.options.directory = directory
 
-    // Version JSON for the main launcher folder
     const versionFile = await this.handler.getVersion()
     const mcPath = this.options.overrides.minecraftJar || (this.options.version.custom
       ? path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.jar`)
@@ -76,7 +75,6 @@ class MCLCore extends EventEmitter {
     let custom = null
     if (this.options.forge) {
       this.options.forge = path.resolve(this.options.forge)
-
       this.emit('debug', '[MCLC]: Detected Forge in options, getting dependencies')
       forge = await this.handler.getForgeDependenciesLegacy()
       if (forge === false) custom = await this.handler.getForgedWrapped()
@@ -88,7 +86,6 @@ class MCLCore extends EventEmitter {
 
     const args = []
 
-    // Jvm
     let jvm = [
       '-XX:-UseAdaptiveSizePolicy',
       '-XX:-OmitStackTraceInFastThrow',
@@ -104,7 +101,7 @@ class MCLCore extends EventEmitter {
 
     if (this.options.customArgs) jvm = jvm.concat(this.options.customArgs)
 
-    const classes = this.options.overrides.classes || await Handler.cleanUp(await this.handler.getClasses(custom))
+    const classes = this.options.overrides.classes || this.handler.cleanUp(await this.handler.getClasses(custom))
     const classPaths = ['-cp']
     const separator = this.handler.getOS() === 'windows' ? ';' : ':'
     this.emit('debug', `[MCLC]: Using ${separator} to separate class paths`)
@@ -122,11 +119,10 @@ class MCLCore extends EventEmitter {
       classPaths.push(file.mainClass)
     }
 
-    // Download version's assets
     this.emit('debug', '[MCLC]: Attempting to download assets')
     await this.handler.getAssets()
 
-    // Launch options. Thank you Lyrus for the reformat <3
+    // Forge -> Custom -> Vanilla
     const modification = forge ? forge.forge : null || custom ? custom : null
     const launchOptions = await this.handler.getLaunchOptions(modification)
 

@@ -11,7 +11,6 @@ class Handler {
   constructor (client) {
     this.client = client
     this.options = client.options
-    this.version = undefined
     this.baseRequest = request.defaults({
       pool: { maxSockets: this.options.overrides.maxSockets || 2 },
       timeout: this.options.timeout || 10000
@@ -165,7 +164,7 @@ class Handler {
       if (!fs.existsSync(path.join(subAsset, hash)) || !await this.checkSum(hash, path.join(subAsset, hash))) {
         await this.downloadAsync(`${this.options.overrides.url.resource}/${subhash}/${hash}`, subAsset, hash,
           true, 'assets')
-        counter = counter + 1
+        counter++
         this.client.emit('progress', {
           type: 'assets',
           task: counter,
@@ -176,7 +175,7 @@ class Handler {
     counter = 0
 
     // Copy assets to legacy if it's an older Minecraft version.
-    if (this.version.assets === 'legacy' || this.version.assets === 'pre-1.6') {
+    if (this.isLegacy()) {
       const assetDirectory = this.options.overrides.assetRoot || path.join(this.options.root, 'assets')
       this.client.emit('debug', `[MCLC]: Copying assets over to ${path.join(assetDirectory, 'legacy')}`)
 
@@ -201,7 +200,7 @@ class Handler {
         if (!fs.existsSync(path.join(assetDirectory, 'legacy', asset))) {
           fs.copyFileSync(path.join(subAsset, hash), path.join(assetDirectory, 'legacy', asset))
         }
-        counter = counter + 1
+        counter++
         this.client.emit('progress', {
           type: 'assets-copy',
           task: counter,
@@ -261,7 +260,6 @@ class Handler {
       })
 
       await Promise.all(stat.map(async (native) => {
-        // Edge case on some systems where native is undefined and throws an error, this should fix it.
         if (!native) return
         const name = native.path.split('/').pop()
         await this.downloadAsync(native.url, nativeDirectory, name, true, 'natives')
@@ -277,7 +275,7 @@ class Handler {
           console.warn(e)
         }
         shelljs.rm(path.join(nativeDirectory, name))
-        counter = counter + 1
+        counter++
         this.client.emit('progress', {
           type: 'natives',
           task: counter,
@@ -343,7 +341,7 @@ class Handler {
 
       if (fs.existsSync(path.join(jarPath, name))) {
         paths.push(`${jarPath}${path.sep}${name}`)
-        counter = counter + 1
+        counter++
         this.client.emit('progress', { type: 'forge', task: counter, total: forge.libraries.length })
         return
       }
@@ -353,7 +351,7 @@ class Handler {
       if (!download) await this.downloadAsync(`${this.options.overrides.url.fallbackMaven}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`, jarPath, name, true, 'forge')
 
       paths.push(`${jarPath}${path.sep}${name}`)
-      counter = counter + 1
+      counter++
       this.client.emit('progress', {
         type: 'forge',
         task: counter,
@@ -421,7 +419,7 @@ class Handler {
         }
       }
 
-      counter = counter + 1
+      counter++
       this.client.emit('progress', {
         type: eventName,
         task: counter,
@@ -461,16 +459,13 @@ class Handler {
     return tempArray.join('/')
   }
 
-  static cleanUp (array) {
-    return new Promise(resolve => {
-      const newArray = []
-
-      for (const classPath in array) {
-        if (newArray.includes(array[classPath])) continue
-        newArray.push(array[classPath])
-      }
-      resolve(newArray)
-    })
+  cleanUp (array) {
+    const newArray = []
+    for (const classPath in array) {
+      if (newArray.includes(array[classPath])) continue
+      newArray.push(array[classPath])
+    }
+    return newArray
   }
 
   async getLaunchOptions (modification) {
@@ -480,12 +475,11 @@ class Handler {
       ? type.minecraftArguments.split(' ')
       : type.arguments.game
     const assetRoot = this.options.overrides.assetRoot || path.join(this.options.root, 'assets')
-    const assetPath = this.version.assets === 'legacy' ||
-      this.version.assets === 'pre-1.6'
+    const assetPath = this.isLegacy()
       ? path.join(assetRoot, 'legacy')
       : path.join(assetRoot)
 
-    const minArgs = this.options.overrides.minArgs || (this.version.assets === 'legacy' || this.version.assets === 'pre-1.6') ? 5 : 11
+    const minArgs = this.options.overrides.minArgs || this.isLegacy() ? 5 : 11
     if (args.length < minArgs) args = args.concat(this.version.minecraftArguments ? this.version.minecraftArguments.split(' ') : this.version.arguments.game)
 
     this.options.authorization = await Promise.resolve(this.options.authorization)
@@ -542,6 +536,10 @@ class Handler {
       linux: '-Xss1M'
     }
     return opts[this.getOS()]
+  }
+
+  isLegacy () {
+    return this.version.assets === 'legacy' || this.version.assets === 'pre-1.6'
   }
 
   getOS () {
