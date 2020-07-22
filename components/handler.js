@@ -142,12 +142,13 @@ class Handler {
   }
 
   async getAssets () {
-    if (!fs.existsSync(path.join(this.options.root, 'assets', 'indexes', `${this.version.assetIndex.id}.json`))) {
-      await this.downloadAsync(this.version.assetIndex.url, path.join(this.options.root, 'assets', 'indexes'),
+    const assetDirectory = path.resolve(this.options.overrides.assetRoot) || path.join(this.options.root, 'assets')
+    if (!fs.existsSync(path.join(assetDirectory, 'indexes', `${this.version.assetIndex.id}.json`))) {
+      await this.downloadAsync(this.version.assetIndex.url, path.join(assetDirectory, 'indexes'),
                   `${this.version.assetIndex.id}.json`, true, 'asset-json')
     }
 
-    const index = JSON.parse(fs.readFileSync(path.join(this.options.root, 'assets', 'indexes', `${this.version.assetIndex.id}.json`), { encoding: 'utf8' }))
+    const index = JSON.parse(fs.readFileSync(path.join(assetDirectory, 'indexes', `${this.version.assetIndex.id}.json`), { encoding: 'utf8' }))
 
     this.client.emit('progress', {
       type: 'assets',
@@ -158,7 +159,6 @@ class Handler {
     await Promise.all(Object.keys(index.objects).map(async asset => {
       const hash = index.objects[asset].hash
       const subhash = hash.substring(0, 2)
-      const assetDirectory = this.options.overrides.assetRoot || path.join(this.options.root, 'assets')
       const subAsset = path.join(assetDirectory, 'objects', subhash)
 
       if (!fs.existsSync(path.join(subAsset, hash)) || !await this.checkSum(hash, path.join(subAsset, hash))) {
@@ -176,7 +176,6 @@ class Handler {
 
     // Copy assets to legacy if it's an older Minecraft version.
     if (this.isLegacy()) {
-      const assetDirectory = this.options.overrides.assetRoot || path.join(this.options.root, 'assets')
       this.client.emit('debug', `[MCLC]: Copying assets over to ${path.join(assetDirectory, 'legacy')}`)
 
       this.client.emit('progress', {
@@ -474,7 +473,7 @@ class Handler {
     let args = type.minecraftArguments
       ? type.minecraftArguments.split(' ')
       : type.arguments.game
-    const assetRoot = this.options.overrides.assetRoot || path.join(this.options.root, 'assets')
+    const assetRoot = path.resolve(this.options.overrides.assetRoot) || path.join(this.options.root, 'assets')
     const assetPath = this.isLegacy()
       ? path.join(assetRoot, 'legacy')
       : path.join(assetRoot)
