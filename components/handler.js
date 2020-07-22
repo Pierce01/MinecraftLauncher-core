@@ -142,7 +142,7 @@ class Handler {
   }
 
   async getAssets () {
-    const assetDirectory = path.resolve(this.options.overrides.assetRoot) || path.join(this.options.root, 'assets')
+    const assetDirectory = path.resolve(this.options.overrides.assetRoot || path.join(this.options.root, 'assets'))
     if (!fs.existsSync(path.join(assetDirectory, 'indexes', `${this.version.assetIndex.id}.json`))) {
       await this.downloadAsync(this.version.assetIndex.url, path.join(assetDirectory, 'indexes'),
                   `${this.version.assetIndex.id}.json`, true, 'asset-json')
@@ -231,7 +231,7 @@ class Handler {
   }
 
   async getNatives () {
-    const nativeDirectory = this.options.overrides.natives || path.join(this.options.root, 'natives', this.version.id)
+    const nativeDirectory = path.resolve(this.options.overrides.natives || path.join(this.options.root, 'natives', this.version.id))
 
     if (!fs.existsSync(nativeDirectory) || !fs.readdirSync(nativeDirectory).length) {
       shelljs.mkdir('-p', nativeDirectory)
@@ -319,13 +319,15 @@ class Handler {
       total: forge.libraries.length
     })
 
+    const libraryDirectory = path.resolve(this.options.overrides.libraryRoot || path.join(this.options.root, 'libraries'))
+
     await Promise.all(forge.libraries.map(async library => {
       const lib = library.name.split(':')
 
       if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) return
 
       let url = this.options.overrides.url.mavenForge
-      const jarPath = path.join(this.options.root, 'libraries', `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`)
+      const jarPath = path.join(libraryDirectory, `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`)
       const name = `${lib[1]}-${lib[2]}.jar`
 
       if (!library.url) {
@@ -366,9 +368,10 @@ class Handler {
 
   getForgedWrapped () {
     return new Promise(resolve => {
+      const libraryDirectory = path.resolve(this.options.overrides.libraryRoot || path.join(this.options.root, 'libraries'))
       const launchArgs = `"${this.options.javaPath ? this.options.javaPath : 'java'}" -jar ${path.resolve(this.options.forgeWrapper.jar)}` +
       ` --installer=${this.options.forge} --instance=${this.options.root} ` +
-      `--saveTo=${path.join(this.options.root, 'libraries', 'io', 'github', 'zekerzhayard', 'ForgeWrapper', this.options.forgeWrapper.version)}`
+      `--saveTo=${path.join(libraryDirectory, 'io', 'github', 'zekerzhayard', 'ForgeWrapper', this.options.forgeWrapper.version)}`
 
       const fw = child.exec(launchArgs)
       const forgeJson = path.join(this.options.root, 'forge', this.version.id, 'version.json')
@@ -402,10 +405,10 @@ class Handler {
       let name
       if (library.downloads && library.downloads.artifact && library.downloads.artifact.path) {
         name = library.downloads.artifact.path.split('/')[library.downloads.artifact.path.split('/').length - 1]
-        jarPath = path.join(this.options.root, directory, this.popString(library.downloads.artifact.path))
+        jarPath = path.join(directory, this.popString(library.downloads.artifact.path))
       } else {
         name = `${lib[1]}-${lib[2]}${lib[3] ? '-' + lib[3] : ''}.jar`
-        jarPath = path.join(this.options.root, directory, `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`)
+        jarPath = path.join(directory, `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`)
       }
 
       if (!fs.existsSync(path.join(jarPath, name))) {
@@ -434,18 +437,20 @@ class Handler {
   async getClasses (classJson) {
     let libs = []
 
+    const libraryDirectory = path.resolve(this.options.overrides.libraryRoot || path.join(this.options.root, 'libraries'))
+
     if (classJson) {
       if (classJson.mavenFiles) {
-        await this.downloadToDirectory('libraries', classJson.mavenFiles, 'classes-maven-custom')
+        await this.downloadToDirectory(libraryDirectory, classJson.mavenFiles, 'classes-maven-custom')
       }
-      libs = (await this.downloadToDirectory('libraries', classJson.libraries, 'classes-custom'))
+      libs = (await this.downloadToDirectory(libraryDirectory, classJson.libraries, 'classes-custom'))
     }
 
     const parsed = this.version.libraries.map(lib => {
       if (lib.downloads.artifact && !this.parseRule(lib)) return lib
     })
 
-    libs = libs.concat((await this.downloadToDirectory('libraries', parsed, 'classes')))
+    libs = libs.concat((await this.downloadToDirectory(libraryDirectory, parsed, 'classes')))
     counter = 0
 
     this.client.emit('debug', '[MCLC]: Collected class paths')
@@ -473,7 +478,7 @@ class Handler {
     let args = type.minecraftArguments
       ? type.minecraftArguments.split(' ')
       : type.arguments.game
-    const assetRoot = path.resolve(this.options.overrides.assetRoot) || path.join(this.options.root, 'assets')
+    const assetRoot = path.resolve(this.options.overrides.assetRoot || path.join(this.options.root, 'assets'))
     const assetPath = this.isLegacy()
       ? path.join(assetRoot, 'legacy')
       : path.join(assetRoot)
