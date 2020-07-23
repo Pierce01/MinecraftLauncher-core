@@ -96,6 +96,7 @@ let opts = {
        directory: "", // where the Minecraft jar and version json are located.
        natives: "", // native directory path.
        assetRoot: "",
+       libraryRoot: "",
        cwd: "", // working directory of the java process.
        detached: true, // whether or not the client is detached from the parent / launcher.
        classes: [], // all class paths are required if you use this.
