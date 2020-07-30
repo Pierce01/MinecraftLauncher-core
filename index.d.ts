@@ -2,7 +2,6 @@
 
 declare module "minecraft-launcher-core" {
     type OS = "windows" | "osx" | "linux";
-    type Type = "release" | "snapshot";
   
     interface IOverrides {
       minArgs?: number;
@@ -35,7 +34,7 @@ declare module "minecraft-launcher-core" {
       customArgs?: Array<string>;
       version: {
         number: string;
-        type: Type;
+        type: string;
         custom?: string;
       };
       memory: {
