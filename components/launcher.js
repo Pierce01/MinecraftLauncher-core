@@ -8,6 +8,9 @@ class MCLCore extends EventEmitter {
   async launch (options) {
     this.options = options
     this.options.root = path.resolve(this.options.root)
+    if (this.options.gameDirectory) {
+      this.options.gameDirectory = path.resolve(this.options.gameDirectory)
+    }
     this.options.overrides = {
       detached: true,
       ...this.options.overrides,

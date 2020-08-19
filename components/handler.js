@@ -497,7 +497,7 @@ class Handler {
       '${user_type}': 'mojang',
       '${version_name}': this.options.version.number,
       '${assets_index_name}': this.version.assetIndex.id,
-      '${game_directory}': this.options.root,
+      '${game_directory}': this.options.gameDirectory || this.options.root,
       '${assets_root}': assetPath,
       '${game_assets}': assetPath,
       '${version_type}': this.options.version.type
