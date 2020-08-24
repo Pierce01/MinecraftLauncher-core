@@ -99,8 +99,8 @@ class MCLCore extends EventEmitter {
       '-Dfml.ignorePatchDiscrepancies=true',
       '-Dfml.ignoreInvalidMinecraftCertificates=true',
       `-Djava.library.path=${nativePath}`,
-      `-Xmx${this.options.memory.max}M`,
-      `-Xms${this.options.memory.min}M`
+      `-Xmx${this.options.memory.max}`,
+      `-Xms${this.options.memory.min}`
     ]
     if (this.handler.getOS() === 'osx') {
       if (parseInt(versionFile.id.split('.')[1]) > 12) jvm.push(await this.handler.getJVM())
