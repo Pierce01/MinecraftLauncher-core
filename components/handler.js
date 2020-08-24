@@ -557,6 +557,25 @@ class Handler {
     }
   }
 
+  // To prevent launchers from breaking when they update. Will be reworked with rewrite.
+  getMemory () {
+    if (!this.options.memory) {
+      this.client.emit('debug', '[MCLC]: Memory not set! Setting 1GB as MAX!')
+      this.options.memory = {
+        min: 512,
+        max: 1023
+      }
+    }
+    if (!isNaN(this.options.memory.max) && !isNaN(this.options.memory.min)) {
+      if (this.options.memory.max < this.options.memory.min) {
+        this.client.emit('debug', '[MCLC]: MIN memory is higher then MAX! Resetting!')
+        this.options.memory.max = 1023
+        this.options.memory.min = 512
+      }
+      return [`${this.options.memory.max}M`, `${this.options.memory.min}M`]
+    } else { return [`${this.options.memory.max}`, `${this.options.memory.min}`] }
+  }
+
   async extractPackage (options = this.options) {
     if (options.clientPackage.startsWith('http')) {
       await this.downloadAsync(options.clientPackage, options.root, 'clientPackage.zip', true, 'client-package')
