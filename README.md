@@ -64,7 +64,6 @@ launcher.on('data', (e) => console.log(e));
 | `options.removePackage`  | Boolean  | Option to remove the client package zip file after its finished extracting.                | False    |
 | `options.installer`      | String   | Path to installer being executed.                                                         | False    |
 | `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`,   | True     |
-| `options.gameDirectofy`  | String   | Path where you want the game to work in.  If you don't specify it, it will be in the same place as root.| False    |
 | `options.os`             | String   | windows, osx or linux. MCLC will auto determine the OS if this field isn't provided.      | False    |
 | `options.customLaunchArgs`| Array   | Array of custom Minecraft arguments you want to add.                                 | False    |
 | `options.customArgs`     | Array    | Array of custom Java arguments you want to add.                                           | False    |
@@ -86,12 +85,12 @@ launcher.on('data', (e) => console.log(e));
 | `options.window.height`  | String   | Height of the Minecraft Client.                                                           | False    |
 | `options.window.fullscreen`  | Boolean| Fullscreen the Minecraft Client.                                                     | False    |
 | `options.overrides`      | Object   | Json object redefining paths for better customization. Example below.                     | False    |
-| `options.overrides.minArgs`| Integer| The amount of launch arguments specified in the version file before it adds the default again| False    |
 #### IF YOU'RE NEW TO MCLC, LET IT HANDLE EVERYTHING! DO NOT USE OVERRIDES!
 ```js
 let opts = {
    otherOps...,
    overrides: {
+       gameDirectory: "", // where the game process generates folders like saves and resource packs.
        minecraftJar: "",
        versionJson: "",
        directory: "", // where the Minecraft jar and version json are located.
@@ -101,7 +100,7 @@ let opts = {
        cwd: "", // working directory of the java process.
        detached: true, // whether or not the client is detached from the parent / launcher.
        classes: [], // all class paths are required if you use this.
-       minArgs: 11,
+       minArgs: 11, // The amount of launch arguments specified in the version file before it adds the default again
        maxSockets: 2, // max sockets for downloadAsync.
        // The following is for launcher developers located in countries that have the Minecraft and Forge resource servers
        // blocked for what ever reason. They obviously need to mirror the formatting of the original JSONs / file structures.

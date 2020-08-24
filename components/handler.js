@@ -1,5 +1,4 @@
 const fs = require('fs')
-const shelljs = require('shelljs')
 const path = require('path')
 const request = require('request')
 const checksum = require('checksum')
@@ -37,7 +36,7 @@ class Handler {
 
   downloadAsync (url, directory, name, retry, type) {
     return new Promise(resolve => {
-      shelljs.mkdir('-p', directory)
+      fs.mkdirSync(directory, { recursive: true })
 
       const _request = this.baseRequest(url)
 
@@ -84,7 +83,7 @@ class Handler {
       file.on('error', async (e) => {
         this.client.emit('debug', `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${e}.` +
                     ` Retrying... ${retry}`)
-        if (fs.existsSync(path.join(directory, name))) shelljs.rm(path.join(directory, name))
+        if (fs.existsSync(path.join(directory, name))) fs.unlinkSync(path.join(directory, name))
         if (retry) await this.downloadAsync(url, directory, name, false, type)
         resolve()
       })
@@ -193,7 +192,7 @@ class Handler {
         legacyAsset.pop()
 
         if (!fs.existsSync(path.join(assetDirectory, 'legacy', legacyAsset.join('/')))) {
-          shelljs.mkdir('-p', path.join(assetDirectory, 'legacy', legacyAsset.join('/')))
+          fs.mkdirSync(path.join(assetDirectory, 'legacy', legacyAsset.join('/')), { recursive: true })
         }
 
         if (!fs.existsSync(path.join(assetDirectory, 'legacy', asset))) {
@@ -234,7 +233,7 @@ class Handler {
     const nativeDirectory = path.resolve(this.options.overrides.natives || path.join(this.options.root, 'natives', this.version.id))
 
     if (!fs.existsSync(nativeDirectory) || !fs.readdirSync(nativeDirectory).length) {
-      shelljs.mkdir('-p', nativeDirectory)
+      fs.mkdirSync(nativeDirectory, { recursive: true })
 
       const natives = async () => {
         const natives = []
@@ -273,7 +272,7 @@ class Handler {
           // All is well.
           console.warn(e)
         }
-        shelljs.rm(path.join(nativeDirectory, name))
+        fs.unlinkSync(path.join(nativeDirectory, name))
         counter++
         this.client.emit('progress', {
           type: 'natives',
@@ -293,7 +292,7 @@ class Handler {
   // Not bothering to rewrite this.
   async getForgeDependenciesLegacy () {
     if (!fs.existsSync(path.join(this.options.root, 'forge'))) {
-      shelljs.mkdir('-p', path.join(this.options.root, 'forge'))
+      fs.mkdirSync(path.join(this.options.root, 'forge'), { recursive: true })
     }
 
     const zipFile = new Zip(this.options.forge)
@@ -346,7 +345,7 @@ class Handler {
         this.client.emit('progress', { type: 'forge', task: counter, total: forge.libraries.length })
         return
       }
-      if (!fs.existsSync(jarPath)) shelljs.mkdir('-p', jarPath)
+      if (!fs.existsSync(jarPath)) fs.mkdirSync(jarPath, { recursive: true })
 
       const download = await this.downloadAsync(downloadLink, jarPath, name, true, 'forge')
       if (!download) await this.downloadAsync(`${this.options.overrides.url.fallbackMaven}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`, jarPath, name, true, 'forge')
@@ -497,7 +496,7 @@ class Handler {
       '${user_type}': 'mojang',
       '${version_name}': this.options.version.number,
       '${assets_index_name}': this.version.assetIndex.id,
-      '${game_directory}': this.options.gameDirectory || this.options.root,
+      '${game_directory}': this.options.overrides.gameDirectory || this.options.root,
       '${assets_root}': assetPath,
       '${game_assets}': assetPath,
       '${version_type}': this.options.version.type
@@ -564,7 +563,7 @@ class Handler {
       options.clientPackage = path.join(options.root, 'clientPackage.zip')
     }
     new Zip(options.clientPackage).extractAllTo(options.root, true)
-    if (options.removePackage) shelljs.rm(options.clientPackage)
+    if (options.removePackage) fs.unlinkSync(options.clientPackage)
 
     return this.client.emit('package-extract', true)
   }

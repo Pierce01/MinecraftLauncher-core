@@ -7,7 +7,6 @@
     "adm-zip": "^0.4.13",
     "checksum": "^0.1.1",
     "request": "^2.88.0",
-    "shelljs": "^0.8.2",
     "uuid": "^3.3.2"
   },
   "devDependencies": {

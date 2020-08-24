@@ -8,9 +8,6 @@ class MCLCore extends EventEmitter {
   async launch (options) {
     this.options = options
     this.options.root = path.resolve(this.options.root)
-    if (this.options.gameDirectory) {
-      this.options.gameDirectory = path.resolve(this.options.gameDirectory)
-    }
     this.options.overrides = {
       detached: true,
       ...this.options.overrides,
@@ -46,6 +43,13 @@ class MCLCore extends EventEmitter {
     if (!fs.existsSync(this.options.root)) {
       this.emit('debug', '[MCLC]: Attempting to create root folder')
       fs.mkdirSync(this.options.root)
+    }
+
+    if (this.options.overrides.gameDirectory) {
+      this.options.overrides.gameDirectory = path.resolve(this.options.overrides.gameDirectory)
+      if (!fs.existsSync(this.options.overrides.gameDirectory)) {
+        fs.mkdirSync(this.options.overrides.gameDirectory, { recursive: true })
+      }
     }
 
     if (this.options.clientPackage) {
