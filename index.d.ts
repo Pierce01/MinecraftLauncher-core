@@ -27,7 +27,7 @@ declare module "minecraft-launcher-core" {
     interface ILauncherOptions {
       clientPackage?: string;
       removePackage?: boolean;
-      installed?: string;
+      installer?: string;
       root: string;
       os?: OS;
       customLaunchArgs?: Array<string>;
@@ -38,8 +38,8 @@ declare module "minecraft-launcher-core" {
         custom?: string;
       };
       memory: {
-        max: string;
-        min: string;
+        max: string | number;
+        min: string | number;
       };
       forge?: string;
       javaPath?: string;
@@ -57,6 +57,7 @@ declare module "minecraft-launcher-core" {
       window?: {
         width?: number;
         height?: number;
+        fullscreen?: boolean;
       };
       overrides?: IOverrides;
       authorization: Promise<IUser>;
