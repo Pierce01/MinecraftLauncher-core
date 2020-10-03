@@ -175,7 +175,14 @@ class Handler {
 
     // Copy assets to legacy if it's an older Minecraft version.
     if (this.isLegacy()) {
-      this.client.emit('debug', `[MCLC]: Copying assets over to ${path.join(assetDirectory, 'legacy')}`)
+      if (fs.existsSync(path.join(assetDirectory, 'legacy'))) {
+        this.client.emit('debug', '[MCLC]: The \'legacy\' directory is no longer used as Minecraft looks ' +
+          'for the resouces folder regardless of what is passed in the assetDirecotry launch option. I\'d ' +
+          `recommend removing the directory (${path.join(assetDirectory, 'legacy')})`)
+      }
+
+      const legacyDirectory = path.join(this.options.root, 'resources')
+      this.client.emit('debug', `[MCLC]: Copying assets over to ${legacyDirectory}`)
 
       this.client.emit('progress', {
         type: 'assets-copy',
@@ -191,12 +198,12 @@ class Handler {
         const legacyAsset = asset.split('/')
         legacyAsset.pop()
 
-        if (!fs.existsSync(path.join(assetDirectory, 'legacy', legacyAsset.join('/')))) {
-          fs.mkdirSync(path.join(assetDirectory, 'legacy', legacyAsset.join('/')), { recursive: true })
+        if (!fs.existsSync(path.join(legacyDirectory, legacyAsset.join('/')))) {
+          fs.mkdirSync(path.join(legacyDirectory, legacyAsset.join('/')), { recursive: true })
         }
 
-        if (!fs.existsSync(path.join(assetDirectory, 'legacy', asset))) {
-          fs.copyFileSync(path.join(subAsset, hash), path.join(assetDirectory, 'legacy', asset))
+        if (!fs.existsSync(path.join(legacyDirectory, asset))) {
+          fs.copyFileSync(path.join(subAsset, hash), path.join(legacyDirectory, asset))
         }
         counter++
         this.client.emit('progress', {
@@ -479,7 +486,7 @@ class Handler {
       : type.arguments.game
     const assetRoot = path.resolve(this.options.overrides.assetRoot || path.join(this.options.root, 'assets'))
     const assetPath = this.isLegacy()
-      ? path.join(assetRoot, 'legacy')
+      ? path.join(this.options.root, 'resources')
       : path.join(assetRoot)
 
     const minArgs = this.options.overrides.minArgs || this.isLegacy() ? 5 : 11
