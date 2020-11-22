@@ -375,9 +375,9 @@ class Handler {
   getForgedWrapped () {
     return new Promise(resolve => {
       const libraryDirectory = path.resolve(this.options.overrides.libraryRoot || path.join(this.options.root, 'libraries'))
-      const launchArgs = `"${this.options.javaPath ? this.options.javaPath : 'java'}" -jar ${path.resolve(this.options.forgeWrapper.jar)}` +
-      ` --installer=${this.options.forge} --instance=${this.options.root} ` +
-      `--saveTo=${path.join(libraryDirectory, 'io', 'github', 'zekerzhayard', 'ForgeWrapper', this.options.forgeWrapper.version)}`
+      const launchArgs = `"${this.options.javaPath ? this.options.javaPath : 'java'}" -jar "${path.resolve(this.options.forgeWrapper.jar)}"` +
+      ` --installer="${this.options.forge}" --instance="${this.options.root}" ` +
+      `--saveTo="${path.join(libraryDirectory, 'io', 'github', 'zekerzhayard', 'ForgeWrapper', this.options.forgeWrapper.version)}"`
 
       const fw = child.exec(launchArgs)
       const forgeJson = path.join(this.options.root, 'forge', this.version.id, 'version.json')
