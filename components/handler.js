@@ -374,22 +374,86 @@ class Handler {
 
   getForgedWrapped () {
     return new Promise(resolve => {
-      const libraryDirectory = path.resolve(this.options.overrides.libraryRoot || path.join(this.options.root, 'libraries'))
-      const launchArgs = `"${this.options.javaPath ? this.options.javaPath : 'java'}" -jar "${path.resolve(this.options.forgeWrapper.jar)}"` +
-      ` --installer="${this.options.forge}" --instance="${this.options.root}" ` +
-      `--saveTo="${path.join(libraryDirectory, 'io', 'github', 'zekerzhayard', 'ForgeWrapper', this.options.forgeWrapper.version)}"`
+      const forgeWrapperAgrs = [
+        `-Dforgewrapper.librariesDir=${path.resolve(this.options.overrides.libraryRoot || path.join(this.options.root, 'libraries'))}`,
+        `-Dforgewrapper.installer=${this.options.forge}`,
+        `-Dforgewrapper.minecraft=${this.options.mcPath}`
+      ]
+      this.options.customArgs
+        ? this.options.customArgs = this.options.customArgs.concat(forgeWrapperAgrs)
+        : this.options.customArgs = forgeWrapperAgrs
 
-      const fw = child.exec(launchArgs)
-      const forgeJson = path.join(this.options.root, 'forge', this.version.id, 'version.json')
+      let json = null
+      const versionPath = path.join(this.options.root, 'forge', `${this.version.id}`, 'version.json')
+      // Since we're building a proper "custom" JSON that will work nativly with MCLC, the version JSON will not
+      // be re-generated on the next run.
+      if (fs.existsSync(versionPath)) {
+        try {
+          json = JSON.parse(fs.readFileSync(versionPath))
+          if (!json.forgeWrapperVersion || !(json.forgeWrapperVersion === this.fw.version)) {
+            this.client.emit('debug', '[MCLC]: Old ForgeWrapper has generated this version JSON, re-generating')
+          } else {
+            return resolve(json)
+          }
+        } catch (e) {
+          this.client.emit('debug', '[MCLC]: Failed to parse Forge version JSON, re-generating')
+        }
+      }
 
-      fw.on('close', (e) => {
-        if (!fs.existsSync(forgeJson)) {
-          this.client.emit('debug', '[MCLC]: ForgeWrapper did not produce a version file, using Vanilla')
-          resolve(null)
-        } else {
-          resolve(JSON.parse(fs.readFileSync(forgeJson, { encoding: 'utf8' })))
+      this.client.emit('debug', '[MCLC]: Generating a proper version json, this might take a bit')
+      const zipFile = new Zip(this.options.forge)
+      json = zipFile.readAsText('version.json')
+      let installerJson = zipFile.readAsText('install_profile.json')
+
+      try {
+        json = JSON.parse(json)
+        installerJson = JSON.parse(installerJson)
+      } catch (e) {
+        this.client.emit('debug', '[MCLC]: Failed to load json files for ForgeWrapper, using Vanilla instead')
+        return resolve(null)
+      }
+      // So we know when to re-generate the file when there's a new ForgeWrapper version.
+      json.forgeWrapperVersion = this.options.fw.version
+      // Adding the installer libraries as mavenFiles so MCLC downloads them but doesn't add them to the class paths.
+      json.mavenFiles
+        ? json.mavenFiles = json.mavenFiles.concat(installerJson.libraries)
+        : json.mavenFiles = installerJson.libraries
+
+      // Modifying inital forge entry to include launcher so ForgeWrapper can work properly
+      json.libraries[0].name = json.libraries[0].name + ':launcher'
+      json.libraries[0].downloads.artifact.path = json.libraries[0].downloads.artifact.path.replace('.jar', '-launcher.jar')
+      json.libraries[0].downloads.artifact.url = 'https://files.minecraftforge.net/maven/' + json.libraries[0].downloads.artifact.path
+      // Providing a download URL to the universal jar library so it can be downloaded properly.
+      for (const library of json.mavenFiles) {
+        const lib = library.name.split(':')
+        if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) {
+          library.downloads.artifact.url = 'https://files.minecraftforge.net/maven/' + library.downloads.artifact.path
+          break
+        }
+      }
+
+      const fwName = `ForgeWrapper-${this.options.fw.version}.jar`
+      const fwPathArr = ['io', 'github', 'zekerzhayard', 'ForgeWrapper', this.options.fw.version]
+      // Adding ForgeWrapper to the libraries list so MCLC includes it in the classpaths.
+      json.libraries.push({
+        name: fwPathArr.join(':'),
+        downloads: {
+          artifact: {
+            path: [...fwPathArr, fwName].join('/'),
+            url: `${this.options.fw.baseUrl}${this.options.fw.version}/${fwName}`,
+            sha1: this.options.fw.sh1,
+            size: this.options.fw.size
+          }
         }
       })
+      json.mainClass = 'io.github.zekerzhayard.forgewrapper.installer.Main'
+
+      if (!fs.existsSync(path.join(this.options.root, 'forge', this.version.id))) {
+        fs.mkdirSync(path.join(this.options.root, 'forge', this.version.id), { recursive: true })
+      }
+      fs.writeFileSync(versionPath, JSON.stringify(json, null, 4))
+
+      return resolve(json)
     })
   }
 

@@ -22,10 +22,11 @@ class MCLCore extends EventEmitter {
           : undefined
       }
     }
-    // ForgeWrapper fork that is maintained on a side repo (https://github.com/Pierce01/ForgeWrapper)
-    this.options.forgeWrapper = {
-      jar: path.join(__dirname, 'fw.jar'),
-      version: '1.4.1-mclc'
+    this.options.fw = {
+      baseUrl: 'https://github.com/ZekerZhayard/ForgeWrapper/releases/download/',
+      version: '1.4.2',
+      sh1: '79ff9c1530e8743450c5c3ebc6e07b535437aa6e',
+      size: 22346
     }
 
     this.handler = new Handler(this)
@@ -71,6 +72,7 @@ class MCLCore extends EventEmitter {
     const mcPath = this.options.overrides.minecraftJar || (this.options.version.custom
       ? path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.jar`)
       : path.join(directory, `${this.options.version.number}.jar`))
+    this.options.mcPath = mcPath
     const nativePath = await this.handler.getNatives()
 
     if (!fs.existsSync(mcPath)) {
