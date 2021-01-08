@@ -59,7 +59,7 @@ class MCLCore extends EventEmitter {
     }
 
     if (this.options.installer) {
-      // So the forge installer can run without breaking :)
+      // So installers that create a profile in launcher_profiles.json can run without breaking.
       const profilePath = path.join(this.options.root, 'launcher_profiles.json')
       if (!fs.existsSync(profilePath)) { fs.writeFileSync(profilePath, JSON.stringify({}, null, 4)) }
       await this.handler.runInstaller(this.options.installer)
@@ -80,17 +80,15 @@ class MCLCore extends EventEmitter {
       await this.handler.getJar()
     }
 
-    let forge = null
-    let custom = null
+    let modifyJson = null
     if (this.options.forge) {
       this.options.forge = path.resolve(this.options.forge)
       this.emit('debug', '[MCLC]: Detected Forge in options, getting dependencies')
-      forge = await this.handler.getForgeDependenciesLegacy()
-      if (forge === false) custom = await this.handler.getForgedWrapped()
+      modifyJson = await this.handler.getForgedWrapped()
     }
-    if (this.options.version.custom || custom) {
-      if (!custom) this.emit('debug', '[MCLC]: Detected custom in options, setting custom version file')
-      custom = custom || JSON.parse(fs.readFileSync(path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.json`), { encoding: 'utf8' }))
+    if (this.options.version.custom) {
+      this.emit('debug', '[MCLC]: Detected custom in options, setting custom version file')
+      modifyJson = modifyJson || JSON.parse(fs.readFileSync(path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.json`), { encoding: 'utf8' }))
     }
 
     const args = []
@@ -110,30 +108,24 @@ class MCLCore extends EventEmitter {
 
     if (this.options.customArgs) jvm = jvm.concat(this.options.customArgs)
 
-    const classes = this.options.overrides.classes || this.handler.cleanUp(await this.handler.getClasses(custom))
+    const classes = this.options.overrides.classes || this.handler.cleanUp(await this.handler.getClasses(modifyJson))
     const classPaths = ['-cp']
     const separator = this.handler.getOS() === 'windows' ? ';' : ':'
     this.emit('debug', `[MCLC]: Using ${separator} to separate class paths`)
-    if (forge) {
-      this.emit('debug', '[MCLC]: Setting Forge class paths')
-      classPaths.push(`${path.resolve(this.options.forge)}${separator}${forge.paths.join(separator)}${separator}${classes.join(separator)}${separator}${mcPath}`)
-      classPaths.push(forge.forge.mainClass)
-    } else {
-      const file = custom || versionFile
-      // So mods like fabric work.
-      const jar = fs.existsSync(mcPath)
-        ? `${separator}${mcPath}`
-        : `${separator}${path.join(directory, `${this.options.version.number}.jar`)}`
-      classPaths.push(`${classes.join(separator)}${jar}`)
-      classPaths.push(file.mainClass)
-    }
+    // Handling launch arguments.
+    const file = modifyJson || versionFile
+    // So mods like fabric work.
+    const jar = fs.existsSync(mcPath)
+      ? `${separator}${mcPath}`
+      : `${separator}${path.join(directory, `${this.options.version.number}.jar`)}`
+    classPaths.push(`${this.options.forge ? this.options.forge + separator : ''}${classes.join(separator)}${jar}`)
+    classPaths.push(file.mainClass)
 
     this.emit('debug', '[MCLC]: Attempting to download assets')
     await this.handler.getAssets()
 
     // Forge -> Custom -> Vanilla
-    const modification = forge ? forge.forge : null || custom ? custom : null
-    const launchOptions = await this.handler.getLaunchOptions(modification)
+    const launchOptions = await this.handler.getLaunchOptions(modifyJson)
 
     const launchArguments = args.concat(jvm, classPaths, launchOptions)
     this.emit('arguments', launchArguments)

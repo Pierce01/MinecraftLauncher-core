@@ -245,7 +245,7 @@ class Handler {
       const natives = async () => {
         const natives = []
         await Promise.all(this.version.libraries.map(async (lib) => {
-          if (!lib.downloads.classifiers) return
+          if (!lib.downloads || !lib.downloads.classifiers) return
           if (this.parseRule(lib)) return
 
           const native = this.getOS() === 'osx'
@@ -296,165 +296,153 @@ class Handler {
     return nativeDirectory
   }
 
-  // Not bothering to rewrite this.
-  async getForgeDependenciesLegacy () {
-    if (!fs.existsSync(path.join(this.options.root, 'forge'))) {
-      fs.mkdirSync(path.join(this.options.root, 'forge'), { recursive: true })
-    }
-
-    const zipFile = new Zip(this.options.forge)
-
-    if (zipFile.getEntry('install_profile.json')) {
-      this.client.emit('debug', '[MCLC]: Detected Forge installer, will treat as custom with ForgeWrapper')
-      return false
-    }
-
-    try {
-      await zipFile.extractEntryTo('version.json', path.join(this.options.root, 'forge', `${this.version.id}`), false, true)
-    } catch (e) {
-      this.client.emit('debug', `[MCLC]: Unable to extract version.json from the forge jar due to ${e}`)
-      return null
-    }
-
-    const forge = JSON.parse(fs.readFileSync(path.join(this.options.root, 'forge', `${this.version.id}`, 'version.json'), { encoding: 'utf8' }))
-    const paths = []
-
-    this.client.emit('progress', {
-      type: 'forge',
-      task: 0,
-      total: forge.libraries.length
-    })
-
-    const libraryDirectory = path.resolve(this.options.overrides.libraryRoot || path.join(this.options.root, 'libraries'))
-
-    await Promise.all(forge.libraries.map(async library => {
-      const lib = library.name.split(':')
-
-      if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) return
-
-      let url = this.options.overrides.url.mavenForge
-      const jarPath = path.join(libraryDirectory, `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`)
-      const name = `${lib[1]}-${lib[2]}.jar`
-
-      if (!library.url) {
-        if (library.serverreq || library.clientreq) {
-          url = this.options.overrides.url.defaultRepoForge
-        } else {
-          return
-        }
-      }
-
-      const downloadLink = `${url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`
-
-      if (fs.existsSync(path.join(jarPath, name))) {
-        paths.push(`${jarPath}${path.sep}${name}`)
-        counter++
-        this.client.emit('progress', { type: 'forge', task: counter, total: forge.libraries.length })
-        return
-      }
-      if (!fs.existsSync(jarPath)) fs.mkdirSync(jarPath, { recursive: true })
-
-      const download = await this.downloadAsync(downloadLink, jarPath, name, true, 'forge')
-      if (!download) await this.downloadAsync(`${this.options.overrides.url.fallbackMaven}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`, jarPath, name, true, 'forge')
-
-      paths.push(`${jarPath}${path.sep}${name}`)
-      counter++
-      this.client.emit('progress', {
-        type: 'forge',
-        task: counter,
-        total: forge.libraries.length
-      })
-    }))
-
-    counter = 0
-    this.client.emit('debug', '[MCLC]: Downloaded Forge dependencies')
-
-    return { paths, forge }
+  fwAddArgs () {
+    const forgeWrapperAgrs = [
+      `-Dforgewrapper.librariesDir=${path.resolve(this.options.overrides.libraryRoot || path.join(this.options.root, 'libraries'))}`,
+      `-Dforgewrapper.installer=${this.options.forge}`,
+      `-Dforgewrapper.minecraft=${this.options.mcPath}`
+    ]
+    this.options.customArgs
+      ? this.options.customArgs = this.options.customArgs.concat(forgeWrapperAgrs)
+      : this.options.customArgs = forgeWrapperAgrs
   }
 
-  getForgedWrapped () {
-    return new Promise(resolve => {
-      const forgeWrapperAgrs = [
-        `-Dforgewrapper.librariesDir=${path.resolve(this.options.overrides.libraryRoot || path.join(this.options.root, 'libraries'))}`,
-        `-Dforgewrapper.installer=${this.options.forge}`,
-        `-Dforgewrapper.minecraft=${this.options.mcPath}`
-      ]
-      this.options.customArgs
-        ? this.options.customArgs = this.options.customArgs.concat(forgeWrapperAgrs)
-        : this.options.customArgs = forgeWrapperAgrs
-
-      let json = null
-      const versionPath = path.join(this.options.root, 'forge', `${this.version.id}`, 'version.json')
-      // Since we're building a proper "custom" JSON that will work nativly with MCLC, the version JSON will not
-      // be re-generated on the next run.
-      if (fs.existsSync(versionPath)) {
-        try {
-          json = JSON.parse(fs.readFileSync(versionPath))
-          if (!json.forgeWrapperVersion || !(json.forgeWrapperVersion === this.fw.version)) {
-            this.client.emit('debug', '[MCLC]: Old ForgeWrapper has generated this version JSON, re-generating')
-          } else {
-            return resolve(json)
-          }
-        } catch (e) {
-          this.client.emit('debug', '[MCLC]: Failed to parse Forge version JSON, re-generating')
-        }
-      }
-
-      this.client.emit('debug', '[MCLC]: Generating a proper version json, this might take a bit')
-      const zipFile = new Zip(this.options.forge)
-      json = zipFile.readAsText('version.json')
-      let installerJson = zipFile.readAsText('install_profile.json')
-
+  async getForgedWrapped () {
+    let json = null
+    let installerJson = null
+    const versionPath = path.join(this.options.root, 'forge', `${this.version.id}`, 'version.json')
+    // Since we're building a proper "custom" JSON that will work nativly with MCLC, the version JSON will not
+    // be re-generated on the next run.
+    if (fs.existsSync(versionPath)) {
       try {
-        json = JSON.parse(json)
-        installerJson = JSON.parse(installerJson)
+        json = JSON.parse(fs.readFileSync(versionPath))
+        if (!json.forgeWrapperVersion || !(json.forgeWrapperVersion === this.options.fw.version)) {
+          this.client.emit('debug', '[MCLC]: Old ForgeWrapper has generated this version JSON, re-generating')
+        } else {
+          this.fwAddArgs()
+          // Make MCLC treat modern forge as a custom version json rather then legacy forge.
+          this.options.forge = null
+          return json
+        }
       } catch (e) {
-        this.client.emit('debug', '[MCLC]: Failed to load json files for ForgeWrapper, using Vanilla instead')
-        return resolve(null)
+        console.warn(e)
+        this.client.emit('debug', '[MCLC]: Failed to parse Forge version JSON, re-generating')
       }
-      // So we know when to re-generate the file when there's a new ForgeWrapper version.
-      json.forgeWrapperVersion = this.options.fw.version
-      // Adding the installer libraries as mavenFiles so MCLC downloads them but doesn't add them to the class paths.
+    }
+
+    this.client.emit('debug', '[MCLC]: Generating a proper version json, this might take a bit')
+    const zipFile = new Zip(this.options.forge)
+    json = zipFile.readAsText('version.json')
+    if (zipFile.getEntry('install_profile.json')) installerJson = zipFile.readAsText('install_profile.json')
+
+    try {
+      json = JSON.parse(json)
+      if (installerJson) installerJson = JSON.parse(installerJson)
+    } catch (e) {
+      this.client.emit('debug', '[MCLC]: Failed to load json files for ForgeWrapper, using Vanilla instead')
+      return null
+    }
+    // Adding the installer libraries as mavenFiles so MCLC downloads them but doesn't add them to the class paths.
+    if (installerJson) {
       json.mavenFiles
         ? json.mavenFiles = json.mavenFiles.concat(installerJson.libraries)
         : json.mavenFiles = installerJson.libraries
+    }
 
-      // Modifying inital forge entry to include launcher so ForgeWrapper can work properly
-      json.libraries[0].name = json.libraries[0].name + ':launcher'
-      json.libraries[0].downloads.artifact.path = json.libraries[0].downloads.artifact.path.replace('.jar', '-launcher.jar')
-      json.libraries[0].downloads.artifact.url = 'https://files.minecraftforge.net/maven/' + json.libraries[0].downloads.artifact.path
-      // Providing a download URL to the universal jar library so it can be downloaded properly.
-      for (const library of json.mavenFiles) {
-        const lib = library.name.split(':')
-        if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) {
-          library.downloads.artifact.url = 'https://files.minecraftforge.net/maven/' + library.downloads.artifact.path
-          break
-        }
-      }
+    // Holder for the specifc jar ending which depends on the specifc forge version.
+    let jarEnding = 'universal'
+    // We need to handle modern forge differently than legacy.
+    if (json.inheritsFrom && json.inheritsFrom.split('.')[1] >= 12) {
+      // If forge is modern and above 1.12, we add ForgeWrapper to the libraries so MCLC includes it in the classpaths.
+      if (json.inheritsFrom !== '1.12.2') {
+        this.fwAddArgs()
+        const fwName = `ForgeWrapper-${this.options.fw.version}.jar`
+        const fwPathArr = ['io', 'github', 'zekerzhayard', 'ForgeWrapper', this.options.fw.version]
+        json.libraries.push({
+          name: fwPathArr.join(':'),
+          downloads: {
+            artifact: {
+              path: [...fwPathArr, fwName].join('/'),
+              url: `${this.options.fw.baseUrl}${this.options.fw.version}/${fwName}`,
+              sha1: this.options.fw.sh1,
+              size: this.options.fw.size
+            }
+          }
+        })
+        json.mainClass = 'io.github.zekerzhayard.forgewrapper.installer.Main'
+        jarEnding = 'launcher'
 
-      const fwName = `ForgeWrapper-${this.options.fw.version}.jar`
-      const fwPathArr = ['io', 'github', 'zekerzhayard', 'ForgeWrapper', this.options.fw.version]
-      // Adding ForgeWrapper to the libraries list so MCLC includes it in the classpaths.
-      json.libraries.push({
-        name: fwPathArr.join(':'),
-        downloads: {
-          artifact: {
-            path: [...fwPathArr, fwName].join('/'),
-            url: `${this.options.fw.baseUrl}${this.options.fw.version}/${fwName}`,
-            sha1: this.options.fw.sh1,
-            size: this.options.fw.size
+        // Providing a download URL to the universal jar mavenFile so it can be downloaded properly.
+        for (const library of json.mavenFiles) {
+          const lib = library.name.split(':')
+          if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) {
+            library.downloads.artifact.url = 'https://files.minecraftforge.net/maven/' + library.downloads.artifact.path
+            break
           }
         }
-      })
-      json.mainClass = 'io.github.zekerzhayard.forgewrapper.installer.Main'
-
-      if (!fs.existsSync(path.join(this.options.root, 'forge', this.version.id))) {
-        fs.mkdirSync(path.join(this.options.root, 'forge', this.version.id), { recursive: true })
+      } else {
+        // Remove the forge dependent since we're going to overwrite the first entry anyways.
+        for (const library in json.mavenFiles) {
+          const lib = json.mavenFiles[library].name.split(':')
+          if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) {
+            delete json.mavenFiles[library]
+            break
+          }
+        }
       }
-      fs.writeFileSync(versionPath, JSON.stringify(json, null, 4))
+    } else {
+      // Modifying legacy library format to play nice with MCLC's downloadToDirectory function.
+      await Promise.all(json.libraries.map(async library => {
+        const lib = library.name.split(':')
+        if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) return
 
-      return resolve(json)
-    })
+        let url = this.options.overrides.url.mavenForge
+        const name = `${lib[1]}-${lib[2]}.jar`
+
+        if (!library.url) {
+          if (library.serverreq || library.clientreq) {
+            url = this.options.overrides.url.defaultRepoForge
+          } else {
+            return
+          }
+        }
+        library.url = url
+        const downloadLink = `${url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`
+        // Checking if the file still exists on Forge's server, if not, replace it with the fallback.
+        // Not checking for sucess, only if it 404s.
+        this.baseRequest(downloadLink, (error, response, body) => {
+          if (error) {
+            this.client.emit('debug', `[MCLC]: Failed checking request for ${downloadLink}`)
+          } else {
+            if (response.statusCode === 404) library.url = this.options.overrides.url.fallbackMaven
+          }
+        })
+      }))
+    }
+    // If a downloads property exists, we modify the inital forge entry to include ${jarEnding} so ForgeWrapper can work properly.
+    // If it doesn't, we simply remove it since we're already providing the universal jar.
+    if (json.libraries[0].downloads) {
+      json.libraries[0].name = json.libraries[0].name + `:${jarEnding}`
+      json.libraries[0].downloads.artifact.path = json.libraries[0].downloads.artifact.path.replace('.jar', `-${jarEnding}.jar`)
+      json.libraries[0].downloads.artifact.url = 'https://files.minecraftforge.net/maven/' + json.libraries[0].downloads.artifact.path
+    } else {
+      delete json.libraries[0]
+    }
+
+    // Removing duplicates and null types
+    json.libraries = this.cleanUp(json.libraries)
+    if (json.mavenFiles) json.mavenFiles = this.cleanUp(json.mavenFiles)
+
+    // Saving file for next run!
+    if (!fs.existsSync(path.join(this.options.root, 'forge', this.version.id))) {
+      fs.mkdirSync(path.join(this.options.root, 'forge', this.version.id), { recursive: true })
+    }
+    fs.writeFileSync(versionPath, JSON.stringify(json, null, 4))
+
+    // Make MCLC treat modern forge as a custom version json rather then legacy forge.
+    this.options.forge = null
+
+    return json
   }
 
   runInstaller (path) {
@@ -517,7 +505,7 @@ class Handler {
     }
 
     const parsed = this.version.libraries.map(lib => {
-      if (lib.downloads.artifact && !this.parseRule(lib)) return lib
+      if (lib.downloads && lib.downloads.artifact && !this.parseRule(lib)) return lib
     })
 
     libs = libs.concat((await this.downloadToDirectory(libraryDirectory, parsed, 'classes')))
@@ -536,7 +524,7 @@ class Handler {
   cleanUp (array) {
     const newArray = []
     for (const classPath in array) {
-      if (newArray.includes(array[classPath])) continue
+      if (newArray.includes(array[classPath]) || array[classPath] === null) continue
       newArray.push(array[classPath])
     }
     return newArray
