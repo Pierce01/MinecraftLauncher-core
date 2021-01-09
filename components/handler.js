@@ -307,6 +307,10 @@ class Handler {
       : this.options.customArgs = forgeWrapperAgrs
   }
 
+  isModernForge (json) {
+    return json.inheritsFrom && json.inheritsFrom.split('.')[1] >= 12 && !(json.inheritsFrom === '1.12.2' && (json.id.split('.')[json.id.split('.').length - 1]) === '2847')
+  }
+
   async getForgedWrapped () {
     let json = null
     let installerJson = null
@@ -319,9 +323,11 @@ class Handler {
         if (!json.forgeWrapperVersion || !(json.forgeWrapperVersion === this.options.fw.version)) {
           this.client.emit('debug', '[MCLC]: Old ForgeWrapper has generated this version JSON, re-generating')
         } else {
-          this.fwAddArgs()
-          // Make MCLC treat modern forge as a custom version json rather then legacy forge.
-          this.options.forge = null
+          // If forge is modern, add ForgeWrappers launch arguments and set forge to null so MCLC treats it as a custom json.
+          if (this.isModernForge(json)) {
+            this.fwAddArgs()
+            this.options.forge = null
+          }
           return json
         }
       } catch (e) {
@@ -352,8 +358,8 @@ class Handler {
     // Holder for the specifc jar ending which depends on the specifc forge version.
     let jarEnding = 'universal'
     // We need to handle modern forge differently than legacy.
-    if (json.inheritsFrom && json.inheritsFrom.split('.')[1] >= 12) {
-      // If forge is modern and above 1.12, we add ForgeWrapper to the libraries so MCLC includes it in the classpaths.
+    if (this.isModernForge(json)) {
+      // If forge is modern and above 1.12.2, we add ForgeWrapper to the libraries so MCLC includes it in the classpaths.
       if (json.inheritsFrom !== '1.12.2') {
         this.fwAddArgs()
         const fwName = `ForgeWrapper-${this.options.fw.version}.jar`
@@ -440,7 +446,7 @@ class Handler {
     fs.writeFileSync(versionPath, JSON.stringify(json, null, 4))
 
     // Make MCLC treat modern forge as a custom version json rather then legacy forge.
-    this.options.forge = null
+    if (this.isModernForge(json)) this.options.forge = null
 
     return json
   }
