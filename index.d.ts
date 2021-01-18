@@ -73,7 +73,7 @@ declare module "minecraft-launcher-core" {
       /**
        * 	The name of the folder, jar file, and version json in the version folder. 
        * 
-       * ` MCLM will look in the `versions` folder for this name
+       * ` MCLC will look in the `versions` folder for this name
        * @example '1.16.4-fabric'
        */
       custom?: string;
