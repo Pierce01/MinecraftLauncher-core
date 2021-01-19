@@ -205,7 +205,7 @@ declare module "minecraft-launcher-core" {
   import { ChildProcessWithoutNullStreams } from 'child_process'
 
   export class Client extends EventEmitter {
-    launch(options: ILauncherOptions): ChildProcessWithoutNullStreams | null;
+    launch(options: ILauncherOptions): Promise<ChildProcessWithoutNullStreams | null>;
   }
 
   export const Authenticator: IAuthenticator;
