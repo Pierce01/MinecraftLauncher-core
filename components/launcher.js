@@ -31,9 +31,8 @@ class MCLCore extends EventEmitter {
 
     this.handler = new Handler(this)
 
-    if (fs.existsSync(path.join(__dirname, '..', 'package.json'))) {
-      this.emit('debug', `[MCLC]: MCLC version ${JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), { encoding: 'utf8' })).version}`)
-    } else { this.emit('debug', '[MCLC]: Package JSON not found, skipping MCLC version check.') }
+    this.printVersion()
+
     const java = await this.handler.checkJava(this.options.javaPath || 'java')
     if (!java.run) {
       this.emit('debug', `[MCLC]: Couldn't start Minecraft due to: ${java.message}`)
@@ -41,22 +40,10 @@ class MCLCore extends EventEmitter {
       return null
     }
 
-    if (!fs.existsSync(this.options.root)) {
-      this.emit('debug', '[MCLC]: Attempting to create root folder')
-      fs.mkdirSync(this.options.root)
-    }
+    this.createRootDirectory()
+    this.createGameDirectory()
 
-    if (this.options.overrides.gameDirectory) {
-      this.options.overrides.gameDirectory = path.resolve(this.options.overrides.gameDirectory)
-      if (!fs.existsSync(this.options.overrides.gameDirectory)) {
-        fs.mkdirSync(this.options.overrides.gameDirectory, { recursive: true })
-      }
-    }
-
-    if (this.options.clientPackage) {
-      this.emit('debug', `[MCLC]: Extracting client package to ${this.options.root}`)
-      await this.handler.extractPackage()
-    }
+    await this.extractPackage()
 
     if (this.options.installer) {
       // So installers that create a profile in launcher_profiles.json can run without breaking.
@@ -80,15 +67,7 @@ class MCLCore extends EventEmitter {
       await this.handler.getJar()
     }
 
-    let modifyJson = null
-    if (this.options.forge) {
-      this.options.forge = path.resolve(this.options.forge)
-      this.emit('debug', '[MCLC]: Detected Forge in options, getting dependencies')
-      modifyJson = await this.handler.getForgedWrapped()
-    } else if (this.options.version.custom) {
-      this.emit('debug', '[MCLC]: Detected custom in options, setting custom version file')
-      modifyJson = modifyJson || JSON.parse(fs.readFileSync(path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.json`), { encoding: 'utf8' }))
-    }
+    const modifyJson = await this.getModifyJson()
 
     const args = []
 
@@ -130,12 +109,60 @@ class MCLCore extends EventEmitter {
     this.emit('arguments', launchArguments)
     this.emit('debug', `[MCLC]: Launching with arguments ${launchArguments.join(' ')}`)
 
+    return this.startMinecraft(launchArguments)
+  }
+
+  printVersion () {
+    if (fs.existsSync(path.join(__dirname, '..', 'package.json'))) {
+      const { version } = require('../package.json')
+      this.emit('debug', `[MCLC]: MCLC version ${version}`)
+    } else { this.emit('debug', '[MCLC]: Package JSON not found, skipping MCLC version check.') }
+  }
+
+  createRootDirectory () {
+    if (!fs.existsSync(this.options.root)) {
+      this.emit('debug', '[MCLC]: Attempting to create root folder')
+      fs.mkdirSync(this.options.root)
+    }
+  }
+
+  createGameDirectory () {
+    if (this.options.overrides.gameDirectory) {
+      this.options.overrides.gameDirectory = path.resolve(this.options.overrides.gameDirectory)
+      if (!fs.existsSync(this.options.overrides.gameDirectory)) {
+        fs.mkdirSync(this.options.overrides.gameDirectory, { recursive: true })
+      }
+    }
+  }
+
+  async extractPackage () {
+    if (this.options.clientPackage) {
+      this.emit('debug', `[MCLC]: Extracting client package to ${this.options.root}`)
+      await this.handler.extractPackage()
+    }
+  }
+
+  async getModifyJson () {
+    let modifyJson = null
+
+    if (this.options.forge) {
+      this.options.forge = path.resolve(this.options.forge)
+      this.emit('debug', '[MCLC]: Detected Forge in options, getting dependencies')
+      modifyJson = await this.handler.getForgedWrapped()
+    } else if (this.options.version.custom) {
+      this.emit('debug', '[MCLC]: Detected custom in options, setting custom version file')
+      modifyJson = modifyJson || JSON.parse(fs.readFileSync(path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.json`), { encoding: 'utf8' }))
+    }
+
+    return modifyJson
+  }
+
+  startMinecraft (launchArguments) {
     const minecraft = child.spawn(this.options.javaPath ? this.options.javaPath : 'java', launchArguments,
       { cwd: this.options.overrides.cwd || this.options.root, detached: this.options.overrides.detached })
     minecraft.stdout.on('data', (data) => this.emit('data', data.toString('utf-8')))
     minecraft.stderr.on('data', (data) => this.emit('data', data.toString('utf-8')))
     minecraft.on('close', (code) => this.emit('close', code))
-
     return minecraft
   }
 }
