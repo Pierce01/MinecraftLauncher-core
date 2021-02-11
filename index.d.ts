@@ -206,6 +206,12 @@ declare module "minecraft-launcher-core" {
 
   export class Client extends EventEmitter {
     launch(options: ILauncherOptions): Promise<ChildProcessWithoutNullStreams | null>;
+    protected printVersion(): void;
+    protected createRootDirectory(): void;
+    protected createGameDirectory(): void;
+    protected async extractPackage(): void;
+    protected async getModifyJson(): any;
+    protected startMinecraft(launchArguments: string[]): Promise<ChildProcessWithoutNullStreams>;
   }
 
   export const Authenticator: IAuthenticator;
