@@ -6,7 +6,7 @@ const EventEmitter = require('events').EventEmitter
 
 class MCLCore extends EventEmitter {
   async launch (options) {
-    this.options = options
+    this.options = { ...options }
     this.options.root = path.resolve(this.options.root)
     this.options.overrides = {
       detached: true,
