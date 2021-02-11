@@ -205,13 +205,13 @@ declare module "minecraft-launcher-core" {
   import { ChildProcessWithoutNullStreams } from 'child_process'
 
   export class Client extends EventEmitter {
-    launch(options: ILauncherOptions): ChildProcessWithoutNullStreams | null;
+    launch(options: ILauncherOptions): Promise<ChildProcessWithoutNullStreams | null>;
     protected printVersion(): void;
     protected createRootDirectory(): void;
     protected createGameDirectory(): void;
     protected async extractPackage(): void;
     protected async getModifyJson(): any;
-    protected startMinecraft(launchArguments: string[]): ChildProcessWithoutNullStreams;
+    protected startMinecraft(launchArguments: string[]): Promise<ChildProcessWithoutNullStreams>;
   }
 
   export const Authenticator: IAuthenticator;
