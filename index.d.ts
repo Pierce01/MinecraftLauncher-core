@@ -211,7 +211,7 @@ declare module "minecraft-launcher-core" {
     protected createGameDirectory(): void;
     protected async extractPackage(): void;
     protected async getModifyJson(): any;
-    protected startMinecraft(launchArguments: string[]): Promise<ChildProcessWithoutNullStreams>;
+    protected startMinecraft(launchArguments: string[]): ChildProcessWithoutNullStreams;
   }
 
   export const Authenticator: IAuthenticator;
