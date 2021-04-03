@@ -209,8 +209,8 @@ declare module "minecraft-launcher-core" {
     protected printVersion(): void;
     protected createRootDirectory(): void;
     protected createGameDirectory(): void;
-    protected async extractPackage(): void;
-    protected async getModifyJson(): any;
+    protected extractPackage(): Promise<void>;
+    protected getModifyJson(): Promise<any>;
     protected startMinecraft(launchArguments: string[]): ChildProcessWithoutNullStreams;
   }
 
