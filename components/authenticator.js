@@ -10,7 +10,7 @@ module.exports.getAuth = function (username, password) {
         client_token: uuid(),
         uuid: uuid(),
         name: username,
-        user_properties: JSON.stringify({})
+        user_properties: '{}'
       }
 
       return resolve(user)
@@ -42,7 +42,7 @@ module.exports.getAuth = function (username, password) {
         uuid: body.selectedProfile.id,
         name: body.selectedProfile.name,
         selected_profile: body.selectedProfile,
-        user_properties: JSON.stringify(body.user.properties || {})
+        user_properties: parsePropts(body.user.properties)
       }
 
       resolve(userProfile)
@@ -92,7 +92,7 @@ module.exports.refreshAuth = function (accessToken, clientToken, selectedProfile
         client_token: uuid(),
         uuid: body.selectedProfile.id,
         name: body.selectedProfile.name,
-        user_properties: JSON.stringify(body.user.properties || {})
+        user_properties: parsePropts(body.user.properties)
       }
 
       resolve(userProfile)
@@ -140,4 +140,20 @@ module.exports.signOut = function (username, password) {
 
 module.exports.changeApiUrl = function (url) {
   api_url = url
+}
+
+function parsePropts (array) {
+  if (array) {
+    const newObj = {}
+    for (const entry of array) {
+      if (newObj[entry.name]) {
+        newObj[entry.name].push(entry.value)
+      } else {
+        newObj[entry.name] = [entry.value]
+      }
+    }
+    return JSON.stringify(newObj)
+  } else {
+    return '{}'
+  }
 }
