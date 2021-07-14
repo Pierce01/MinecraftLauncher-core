@@ -152,7 +152,7 @@ declare module "minecraft-launcher-core" {
     name: string;
     user_properties: Partial<any>;
     meta?: {
-      type: "mojang" | "xbox",
+      type: "mojang" | "msa",
       demo?: boolean
     };
   }
