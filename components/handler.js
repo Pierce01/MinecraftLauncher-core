@@ -551,20 +551,24 @@ class Handler {
     if (args.length < minArgs) args = args.concat(this.version.minecraftArguments ? this.version.minecraftArguments.split(' ') : this.version.arguments.game)
 
     this.options.authorization = await Promise.resolve(this.options.authorization)
-
+    this.options.authorization.meta = this.options.authorization.meta ? this.options.authorization.meta : { type: 'mojang' }
     const fields = {
       '${auth_access_token}': this.options.authorization.access_token,
       '${auth_session}': this.options.authorization.access_token,
       '${auth_player_name}': this.options.authorization.name,
       '${auth_uuid}': this.options.authorization.uuid,
       '${user_properties}': this.options.authorization.user_properties,
-      '${user_type}': 'mojang',
+      '${user_type}': this.options.authorization.meta.type,
       '${version_name}': this.options.version.number,
       '${assets_index_name}': this.version.assetIndex.id,
       '${game_directory}': this.options.overrides.gameDirectory || this.options.root,
       '${assets_root}': assetPath,
       '${game_assets}': assetPath,
       '${version_type}': this.options.version.type
+    }
+
+    if (this.options.authorization.meta.demo) {
+      args.push('--demo')
     }
 
     for (let index = 0; index < args.length; index++) {

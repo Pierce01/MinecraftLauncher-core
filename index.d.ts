@@ -143,12 +143,18 @@ declare module "minecraft-launcher-core" {
     authorization: Promise<IUser>;
   }
 
+
+
   interface IUser {
     access_token: string;
     client_token: string;
     uuid: string;
     name: string;
     user_properties: Partial<any>;
+    meta?: {
+      type: "mojang" | "msa",
+      demo?: boolean
+    };
   }
 
   interface IProfile {
