@@ -22,6 +22,12 @@ declare module "minecraft-launcher-core" {
       defaultRepoForge?: string;
       fallbackMaven?: string;
     };
+    fw?: {
+      baseUrl?: string;
+      version?: string;
+      sh1?: string;
+      size?: number;
+    };
   }
 
   interface ILauncherOptions {
@@ -185,7 +191,6 @@ declare module "minecraft-launcher-core" {
     refreshAuth(
       access_token: string,
       client_token: string,
-      selectedProfile: IProfile
     ): Promise<IUser>;
     /**
      * 

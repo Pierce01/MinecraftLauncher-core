@@ -320,7 +320,7 @@ class Handler {
     if (fs.existsSync(versionPath)) {
       try {
         json = JSON.parse(fs.readFileSync(versionPath))
-        if (!json.forgeWrapperVersion || !(json.forgeWrapperVersion === this.options.fw.version)) {
+        if (!json.forgeWrapperVersion || !(json.forgeWrapperVersion === this.options.overrides.fw.version)) {
           this.client.emit('debug', '[MCLC]: Old ForgeWrapper has generated this version JSON, re-generating')
         } else {
           // If forge is modern, add ForgeWrappers launch arguments and set forge to null so MCLC treats it as a custom json.
@@ -362,16 +362,16 @@ class Handler {
       // If forge is modern and above 1.12.2, we add ForgeWrapper to the libraries so MCLC includes it in the classpaths.
       if (json.inheritsFrom !== '1.12.2') {
         this.fwAddArgs()
-        const fwName = `ForgeWrapper-${this.options.fw.version}.jar`
-        const fwPathArr = ['io', 'github', 'zekerzhayard', 'ForgeWrapper', this.options.fw.version]
+        const fwName = `ForgeWrapper-${this.options.overrides.fw.version}.jar`
+        const fwPathArr = ['io', 'github', 'zekerzhayard', 'ForgeWrapper', this.options.overrides.fw.version]
         json.libraries.push({
           name: fwPathArr.join(':'),
           downloads: {
             artifact: {
               path: [...fwPathArr, fwName].join('/'),
-              url: `${this.options.fw.baseUrl}${this.options.fw.version}/${fwName}`,
-              sha1: this.options.fw.sh1,
-              size: this.options.fw.size
+              url: `${this.options.overrides.fw.baseUrl}${this.options.overrides.fw.version}/${fwName}`,
+              sha1: this.options.overrides.fw.sh1,
+              size: this.options.overrides.fw.size
             }
           }
         })

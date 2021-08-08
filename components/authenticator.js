@@ -1,13 +1,13 @@
 const request = require('request')
-const uuid = require('uuid/v1')
+const uuid = require('uuid').v1
 let api_url = 'https://authserver.mojang.com'
 
-module.exports.getAuth = function (username, password) {
+module.exports.getAuth = function (username, password, client_token = null) {
   return new Promise((resolve, reject) => {
     if (!password) {
       const user = {
         access_token: uuid(),
-        client_token: uuid(),
+        client_token: client_token || uuid(),
         uuid: uuid(),
         name: username,
         user_properties: '{}'
@@ -69,14 +69,13 @@ module.exports.validate = function (access_token, client_token) {
   })
 }
 
-module.exports.refreshAuth = function (accessToken, clientToken, selectedProfile) {
+module.exports.refreshAuth = function (accessToken, clientToken) {
   return new Promise((resolve, reject) => {
     const requestObject = {
       url: api_url + '/refresh',
       json: {
         accessToken: accessToken,
         clientToken: clientToken,
-        selectedProfile: selectedProfile,
         requestUser: true
       }
     }

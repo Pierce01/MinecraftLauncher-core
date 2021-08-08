@@ -111,7 +111,14 @@ let opts = {
            defaultRepoForge: "https://libraries.minecraft.net/", // for Forge only, you need to redefine the library url
                                                                 // in the version json.
            fallbackMaven: "https://search.maven.org/remotecontent?filepath="
-       }
+       },
+       // The following is options for which version of ForgeWrapper MCLC uses. This allows us to launch modern Forge.
+       fw: {
+        baseUrl: 'https://github.com/ZekerZhayard/ForgeWrapper/releases/download/',
+        version: '1.5.1',
+        sh1: '90104e9aaa8fbedf6c3d1f6d0b90cabce080b5a9',
+        size: 29892,
+      }
    }
 }
 ```
@@ -130,6 +137,7 @@ This runs an executable with specified launch arguments. Was used to support For
 |-----------|--------|--------------------------------------------------------------|----------|
 | `username`| String | Email or username                                            | True     |
 | `password`| String | Password for the Mojang account   being used if online mode. | False    |
+| `client_token`| String | Client token that will be used. If one is not specified, one will be generated | False    |
 
 ##### validate
 
@@ -144,7 +152,6 @@ This runs an executable with specified launch arguments. Was used to support For
 |--------------------|--------|-------------------------------------------------------------------------------------|----------|
 | `access_token`     | String | Token being checked if it can be used to login with (online mode).                  | True     |
 | `client_token`     | String | Token being checked if it's the same client that the access_token was created from. | True     |
-| `selected_profile` | Object | Json Object that was returned from Mojang's auth api.                                | True     |
 
 ##### invalidate
 
