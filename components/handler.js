@@ -439,6 +439,8 @@ class Handler {
     json.libraries = this.cleanUp(json.libraries)
     if (json.mavenFiles) json.mavenFiles = this.cleanUp(json.mavenFiles)
 
+    json.forgeWrapperVersion = this.options.overrides.fw.version
+
     // Saving file for next run!
     if (!fs.existsSync(path.join(this.options.root, 'forge', this.version.id))) {
       fs.mkdirSync(path.join(this.options.root, 'forge', this.version.id), { recursive: true })
