@@ -428,9 +428,11 @@ class Handler {
     // If a downloads property exists, we modify the inital forge entry to include ${jarEnding} so ForgeWrapper can work properly.
     // If it doesn't, we simply remove it since we're already providing the universal jar.
     if (json.libraries[0].downloads) {
-      json.libraries[0].name = json.libraries[0].name + `:${jarEnding}`
-      json.libraries[0].downloads.artifact.path = json.libraries[0].downloads.artifact.path.replace('.jar', `-${jarEnding}.jar`)
-      json.libraries[0].downloads.artifact.url = 'https://files.minecraftforge.net/maven/' + json.libraries[0].downloads.artifact.path
+      if (json.libraries[0].name.includes('minecraftforge')) {
+        json.libraries[0].name = json.libraries[0].name + `:${jarEnding}`
+        json.libraries[0].downloads.artifact.path = json.libraries[0].downloads.artifact.path.replace('.jar', `-${jarEnding}.jar`)
+        json.libraries[0].downloads.artifact.url = 'https://files.minecraftforge.net/maven/' + json.libraries[0].downloads.artifact.path
+      }
     } else {
       delete json.libraries[0]
     }
