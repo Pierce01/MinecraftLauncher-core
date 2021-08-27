@@ -467,6 +467,7 @@ class Handler {
 
     await Promise.all(libraries.map(async library => {
       if (!library) return
+      if (this.parseRule(library)) return
       const lib = library.name.split(':')
 
       let jarPath
