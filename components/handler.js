@@ -37,7 +37,8 @@ class Handler {
   downloadAsync (url, directory, name, retry, type) {
     return new Promise(resolve => {
       fs.mkdirSync(directory, { recursive: true })
-
+      if(!navigator.onLine)
+        reject("offline")
       const _request = this.baseRequest(url)
 
       let receivedBytes = 0
