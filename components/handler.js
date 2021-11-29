@@ -562,6 +562,7 @@ class Handler {
       '${auth_session}': this.options.authorization.access_token,
       '${auth_player_name}': this.options.authorization.name,
       '${auth_uuid}': this.options.authorization.uuid,
+      '${auth_xuid}': this.options.authorization.meta.xuid || this.options.authorization.access_token,
       '${user_properties}': this.options.authorization.user_properties,
       '${user_type}': this.options.authorization.meta.type,
       '${version_name}': this.options.version.number,
@@ -569,7 +570,8 @@ class Handler {
       '${game_directory}': this.options.overrides.gameDirectory || this.options.root,
       '${assets_root}': assetPath,
       '${game_assets}': assetPath,
-      '${version_type}': this.options.version.type
+      '${version_type}': this.options.version.type,
+      '${clientid}': this.options.authorization.meta.clientId || (this.options.authorization.client_token || this.options.authorization.access_token)
     }
 
     if (this.options.authorization.meta.demo) {

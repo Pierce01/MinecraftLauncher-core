@@ -2,7 +2,7 @@
 ##### This project is complete for now.
 [![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![version](https://img.shields.io/badge/stable_version-3.16.8-blue)
+![version](https://img.shields.io/badge/stable_version-3.16.9-blue)
 ![badge](https://img.shields.io/badge/ncurses-not_supported-purple)
 
 MCLC (Minecraft Launcher Core) is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
@@ -90,14 +90,14 @@ launcher.on('data', (e) => console.log(e));
 let opts = {
    otherOps...,
    overrides: {
-       gameDirectory: "", // where the game process generates folders like saves and resource packs.
-       minecraftJar: "",
-       versionJson: "",
-       directory: "", // where the Minecraft jar and version json are located.
-       natives: "", // native directory path.
-       assetRoot: "",
-       libraryRoot: "",
-       cwd: "", // working directory of the java process.
+       gameDirectory: '', // where the game process generates folders like saves and resource packs.
+       minecraftJar: '',
+       versionJson: '',
+       directory: '', // where the Minecraft jar and version json are located.
+       natives: '', // native directory path.
+       assetRoot: '',
+       libraryRoot: '',
+       cwd: '', // working directory of the java process.
        detached: true, // whether or not the client is detached from the parent / launcher.
        classes: [], // all class paths are required if you use this.
        minArgs: 11, // The amount of launch arguments specified in the version file before it adds the default again
@@ -105,12 +105,12 @@ let opts = {
        // The following is for launcher developers located in countries that have the Minecraft and Forge resource servers
        // blocked for what ever reason. They obviously need to mirror the formatting of the original JSONs / file structures.
        url: {
-           meta: "https://launchermeta.mojang.com", // List of versions.
-           resource: "https://resources.download.minecraft.net", // Minecraft resources.
-           mavenForge: "http://files.minecraftforge.net/maven/", // Forge resources.
-           defaultRepoForge: "https://libraries.minecraft.net/", // for Forge only, you need to redefine the library url
+           meta: 'https://launchermeta.mojang.com', // List of versions.
+           resource: 'https://resources.download.minecraft.net', // Minecraft resources.
+           mavenForge: 'http://files.minecraftforge.net/maven/', // Forge resources.
+           defaultRepoForge: 'https://libraries.minecraft.net/', // for Forge only, you need to redefine the library url
                                                                 // in the version json.
-           fallbackMaven: "https://search.maven.org/remotecontent?filepath="
+           fallbackMaven: 'https://search.maven.org/remotecontent?filepath='
        },
        // The following is options for which version of ForgeWrapper MCLC uses. This allows us to launch modern Forge.
        fw: {
@@ -128,6 +128,24 @@ let opts = {
 If you are loading up a client outside of vanilla Minecraft or Forge (Optifine and for an example), you'll need to download the needed files yourself if you don't provide downloads url downloads like Forge and Fabric. If no version jar is specified, MCLC will default back to the normal MC jar so mods like Fabric work.
 ##### Installer
 This runs an executable with specified launch arguments. Was used to support Forge 1.13 before ForgeWrapper.
+##### Authentication
+MCLC's authenticator module does not support Microsoft authentication. You will need to use a library like [MSMC](https://github.com/Hanro50/MSMC). If you weant to create your own solution, the following is the authorization JSON object format.
+```js
+{
+    access_token: '',
+    client_token: '',
+    uuid: '',
+    name: '',
+    user_properties: '{}',
+    meta: {
+        type: 'mojang' || 'msa',
+        demo: true || false
+        // properties only exists for specific Minecraft versions.
+        xuid: '',
+        clientId: ''
+    }
+}
+```
 
 #### Authenticator Functions 
 
