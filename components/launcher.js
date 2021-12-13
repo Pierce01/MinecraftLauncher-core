@@ -23,9 +23,9 @@ class MCLCore extends EventEmitter {
       },
       fw: {
         baseUrl: 'https://github.com/ZekerZhayard/ForgeWrapper/releases/download/',
-        version: '1.5.3',
-        sh1: '2b0e06937349a209dbb90dca6381258daa456ad7',
-        size: 30486,
+        version: '1.5.4',
+        sh1: 'e97805af76d4c1cebb753132eadbabd92e67a17b',
+        size: 34299,
         ...this.options.overrides
           ? this.options.overrides.fw
           : undefined
@@ -88,6 +88,26 @@ class MCLCore extends EventEmitter {
     } else jvm.push(await this.handler.getJVM())
 
     if (this.options.customArgs) jvm = jvm.concat(this.options.customArgs)
+    if (this.options.overrides.logj4ConfigurationFile) {
+      jvm.push(`-Dlog4j.configurationFile=${path.resolve(this.options.overrides.logj4ConfigurationFile)}`)
+    }
+    // https://help.minecraft.net/hc/en-us/articles/4416199399693-Security-Vulnerability-in-Minecraft-Java-Edition
+    if (parseInt(versionFile.id.split('.')[1]) === 17) jvm.push('-Dlog4j2.formatMsgNoLookups=true')
+    if (parseInt(versionFile.id.split('.')[1]) < 17) {
+      if (!jvm.find(arg => arg.includes('Dlog4j.configurationFile'))) {
+        const configPath = path.resolve(this.options.overrides.cwd || this.options.root)
+        const intVersion = parseInt(versionFile.id.split('.')[1])
+        if (intVersion >= 12) {
+          await this.handler.downloadAsync('https://launcher.mojang.com/v1/objects/02937d122c86ce73319ef9975b58896fc1b491d1/log4j2_112-116.xml',
+            configPath, 'log4j2_112-116.xml', true, 'log4j')
+          jvm.push('-Dlog4j.configurationFile=log4j2_112-116.xml')
+        } else if (intVersion >= 7) {
+          await this.handler.downloadAsync('https://launcher.mojang.com/v1/objects/dd2b723346a8dcd48e7f4d245f6bf09e98db9696/log4j2_17-111.xml',
+            configPath, 'log4j2_17-111.xml', true, 'log4j')
+          jvm.push('-Dlog4j.configurationFile=log4j2_17-111.xml')
+        }
+      }
+    }
 
     const classes = this.options.overrides.classes || this.handler.cleanUp(await this.handler.getClasses(modifyJson))
     const classPaths = ['-cp']
