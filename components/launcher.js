@@ -23,9 +23,9 @@ class MCLCore extends EventEmitter {
       },
       fw: {
         baseUrl: 'https://github.com/ZekerZhayard/ForgeWrapper/releases/download/',
-        version: '1.5.4',
-        sh1: 'e97805af76d4c1cebb753132eadbabd92e67a17b',
-        size: 34299,
+        version: '1.5.5',
+        sh1: '566dfd60aacffaa02884614835f1151d36f1f985',
+        size: 34331,
         ...this.options.overrides
           ? this.options.overrides.fw
           : undefined
