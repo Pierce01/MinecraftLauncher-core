@@ -1,14 +1,17 @@
 const request = require('request')
-const uuid = require('uuid').v1
+const { v3 } = require('uuid')
+
+let uuid
 let api_url = 'https://authserver.mojang.com'
 
 module.exports.getAuth = function (username, password, client_token = null) {
   return new Promise((resolve, reject) => {
+    getUUID(username)
     if (!password) {
       const user = {
-        access_token: uuid(),
-        client_token: client_token || uuid(),
-        uuid: uuid(),
+        access_token: uuid,
+        client_token: client_token || uuid,
+        uuid,
         name: username,
         user_properties: '{}'
       }
@@ -23,9 +26,9 @@ module.exports.getAuth = function (username, password, client_token = null) {
           name: 'Minecraft',
           version: 1
         },
-        username: username,
-        password: password,
-        clientToken: uuid(),
+        username,
+        password,
+        clientToken: uuid,
         requestUser: true
       }
     }
@@ -50,13 +53,13 @@ module.exports.getAuth = function (username, password, client_token = null) {
   })
 }
 
-module.exports.validate = function (access_token, client_token) {
+module.exports.validate = function (accessToken, clientToken) {
   return new Promise((resolve, reject) => {
     const requestObject = {
       url: api_url + '/validate',
       json: {
-        accessToken: access_token,
-        clientToken: client_token
+        accessToken,
+        clientToken
       }
     }
 
@@ -74,8 +77,8 @@ module.exports.refreshAuth = function (accessToken, clientToken) {
     const requestObject = {
       url: api_url + '/refresh',
       json: {
-        accessToken: accessToken,
-        clientToken: clientToken,
+        accessToken,
+        clientToken,
         requestUser: true
       }
     }
@@ -88,13 +91,13 @@ module.exports.refreshAuth = function (accessToken, clientToken) {
 
       const userProfile = {
         access_token: body.accessToken,
-        client_token: uuid(),
+        client_token: getUUID(body.selectedProfile.name),
         uuid: body.selectedProfile.id,
         name: body.selectedProfile.name,
         user_properties: parsePropts(body.user.properties)
       }
 
-      resolve(userProfile)
+      return resolve(userProfile)
     })
   })
 }
@@ -104,16 +107,16 @@ module.exports.invalidate = function (accessToken, clientToken) {
     const requestObject = {
       url: api_url + '/invalidate',
       json: {
-        accessToken: accessToken,
-        clientToken: clientToken
+        accessToken,
+        clientToken
       }
     }
 
     request.post(requestObject, function (error, response, body) {
       if (error) return reject(error)
 
-      if (!body) resolve(true)
-      else reject(body)
+      if (!body) return resolve(true)
+      else return reject(body)
     })
   })
 }
@@ -123,16 +126,16 @@ module.exports.signOut = function (username, password) {
     const requestObject = {
       url: api_url + '/signout',
       json: {
-        username: username,
-        password: password
+        username,
+        password
       }
     }
 
     request.post(requestObject, function (error, response, body) {
       if (error) return reject(error)
 
-      if (!body) resolve(true)
-      else reject(body)
+      if (!body) return resolve(true)
+      else return reject(body)
     })
   })
 }
@@ -155,4 +158,11 @@ function parsePropts (array) {
   } else {
     return '{}'
   }
+}
+
+function getUUID (value) {
+  if (!uuid) {
+    uuid = v3(value, v3.DNS)
+  }
+  return uuid
 }

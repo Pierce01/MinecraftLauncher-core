@@ -458,7 +458,7 @@ class Handler {
   runInstaller (path) {
     return new Promise(resolve => {
       const installer = child.exec(path)
-      installer.on('close', (code) => resolve())
+      installer.on('close', (code) => resolve(code))
     })
   }
 
