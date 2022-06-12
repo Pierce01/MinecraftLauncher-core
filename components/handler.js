@@ -229,7 +229,7 @@ class Handler {
           return true
         }
       } else {
-        if (lib.rules[0].action === 'allow' && lib.rules[0].os) return this.getOS() !== 'osx'
+        if (lib.rules[0].action === 'allow' && lib.rules[0].os) return lib.rules[0].os.name !== this.getOS()
       }
     } else {
       return false
@@ -238,6 +238,8 @@ class Handler {
 
   async getNatives () {
     const nativeDirectory = path.resolve(this.options.overrides.natives || path.join(this.options.root, 'natives', this.version.id))
+
+    if (parseInt(this.version.id.split('.')[1]) >= 19) return this.options.overrides.cwd || this.options.root
 
     if (!fs.existsSync(nativeDirectory) || !fs.readdirSync(nativeDirectory).length) {
       fs.mkdirSync(nativeDirectory, { recursive: true })
