@@ -142,12 +142,13 @@ class Handler {
 
   async getAssets () {
     const assetDirectory = path.resolve(this.options.overrides.assetRoot || path.join(this.options.root, 'assets'))
-    if (!fs.existsSync(path.join(assetDirectory, 'indexes', `${this.version.assetIndex.id}.json`))) {
+    const assetId = this.options.version.custom || this.options.version.number
+    if (!fs.existsSync(path.join(assetDirectory, 'indexes', `${assetId}.json`))) {
       await this.downloadAsync(this.version.assetIndex.url, path.join(assetDirectory, 'indexes'),
-                  `${this.version.assetIndex.id}.json`, true, 'asset-json')
+                  `${assetId}.json`, true, 'asset-json')
     }
 
-    const index = JSON.parse(fs.readFileSync(path.join(assetDirectory, 'indexes', `${this.version.assetIndex.id}.json`), { encoding: 'utf8' }))
+    const index = JSON.parse(fs.readFileSync(path.join(assetDirectory, 'indexes', `${assetId}.json`), { encoding: 'utf8' }))
 
     this.client.emit('progress', {
       type: 'assets',
