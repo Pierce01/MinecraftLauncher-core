@@ -141,7 +141,7 @@ MCLC's authenticator module does not support Microsoft authentication. You will 
     user_properties: '{}',
     meta: {
         type: 'mojang' || 'msa',
-        demo: true || false, // Demo can also be specified by addomg 'is_demo_user' to the options.feature array 
+        demo: true || false, // Demo can also be specified by adding 'is_demo_user' to the options.feature array 
         // properties only exists for specific Minecraft versions.
         xuid: '',
         clientId: ''

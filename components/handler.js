@@ -587,7 +587,6 @@ class Handler {
     const replaceArg = (obj, index) => {
       if (Array.isArray(obj.value)) {
         for (const arg of obj.value) {
-          console.log(arg)
           args.push(arg)
         }
       } else {
