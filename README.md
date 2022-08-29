@@ -61,18 +61,19 @@ launcher.on('data', (e) => console.log(e));
 | Parameter                | Type     | Description                                                                               | Required |
 |--------------------------|----------|-------------------------------------------------------------------------------------------|----------|
 | `options.clientPackage`  | String   | Path or URL to the client package zip file. Do not rehost Minecraft, it's against ToS.    | False    |
-| `options.removePackage`  | Boolean  | Option to remove the client package zip file after its finished extracting.                | False    |
+| `options.removePackage`  | Boolean  | Option to remove the client package zip file after its finished extracting.               | False    |
 | `options.installer`      | String   | Path to installer being executed.                                                         | False    |
 | `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`,   | True     |
 | `options.os`             | String   | windows, osx or linux. MCLC will auto determine the OS if this field isn't provided.      | False    |
-| `options.customLaunchArgs`| Array   | Array of custom Minecraft arguments you want to add.                                 | False    |
+| `options.customLaunchArgs`| Array   | Array of custom Minecraft arguments you want to add.                                      | False    |
 | `options.customArgs`     | Array    | Array of custom Java arguments you want to add.                                           | False    |
+| `options.features`       | Array    | Array of game argument feature flags. ex: `is_demo_user` or `has_custom_resolution`       | False    |
 | `options.version.number` | String   | Minecraft version that is going to be launched.                                           | True     |
 | `options.version.type`   | String   | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                  | True     |
 | `options.version.custom` | String   | The name of the folder, jar file, and version json in the version folder.                 | False    |
 | `options.memory.max`     | String   | Max amount of memory being used by Minecraft.                                             | True     |
 | `options.memory.min`     | String   | Min amount of memory being used by Minecraft.                                             | True     |
-| `options.forge`          | String   | Path to Forge Jar. (Versions below 1.13 should be the "universal" jar while versions above 1.13+ should be the "installer" jar)| False    |
+| `options.forge`          | String   | Path to Forge Jar. (Versions below 1.13 should be the "universal" jar while versions above 1.13+ should be the "installer" jar) | False    |
 | `options.javaPath`       | String   | Path to the JRE executable file, will default to `java` if not entered.                   | False    |
 | `options.server.host`    | String   | Host url to the server, don't include the port.                                           | False    |
 | `options.server.port`    | String   | Port of the host url, will default to `25565` if not entered.                             | False    |
@@ -81,9 +82,9 @@ launcher.on('data', (e) => console.log(e));
 | `options.proxy.username` | String   | Username for the proxy.                                                                   | False    |
 | `options.proxy.password` | String   | Password for the proxy.                                                                   | False    |
 | `options.timeout`        | Integer  | Timeout on download requests.                                                             | False    |
-| `options.window.width`   | String   | Width of the Minecraft Client                                                             | False    |
+| `options.window.width`   | String   | Width of the Minecraft Client.                                                            | False    |
 | `options.window.height`  | String   | Height of the Minecraft Client.                                                           | False    |
-| `options.window.fullscreen`  | Boolean| Fullscreen the Minecraft Client.                                                     | False    |
+| `options.window.fullscreen`  | Boolean| Fullscreen the Minecraft Client.                                                        | False    |
 | `options.overrides`      | Object   | Json object redefining paths for better customization. Example below.                     | False    |
 #### IF YOU'RE NEW TO MCLC, LET IT HANDLE EVERYTHING! DO NOT USE OVERRIDES!
 ```js
@@ -130,7 +131,7 @@ If you are loading up a client outside of vanilla Minecraft or Forge (Optifine a
 ##### Installer
 This runs an executable with specified launch arguments. Was used to support Forge 1.13 before ForgeWrapper.
 ##### Authentication
-MCLC's authenticator module does not support Microsoft authentication. You will need to use a library like [MSMC](https://github.com/Hanro50/MSMC). If you weant to create your own solution, the following is the authorization JSON object format.
+MCLC's authenticator module does not support Microsoft authentication. You will need to use a library like [MSMC](https://github.com/Hanro50/MSMC). If you want to create your own solution, the following is the authorization JSON object format.
 ```js
 {
     access_token: '',
@@ -140,7 +141,7 @@ MCLC's authenticator module does not support Microsoft authentication. You will 
     user_properties: '{}',
     meta: {
         type: 'mojang' || 'msa',
-        demo: true || false,
+        demo: true || false, // Demo can also be specified by addomg 'is_demo_user' to the options.feature array 
         // properties only exists for specific Minecraft versions.
         xuid: '',
         clientId: ''

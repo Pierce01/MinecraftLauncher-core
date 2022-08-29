@@ -63,6 +63,10 @@ declare module "minecraft-launcher-core" {
      */
     customArgs?: Array<string>;
     /**
+     * Array of game argument feature flags
+     */
+    features?: Array<string>;
+    /**
      * minecraft version info
      */
     version: {

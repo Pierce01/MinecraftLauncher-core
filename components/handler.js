@@ -557,6 +557,7 @@ class Handler {
 
     const minArgs = this.options.overrides.minArgs || this.isLegacy() ? 5 : 11
     if (args.length < minArgs) args = args.concat(this.version.minecraftArguments ? this.version.minecraftArguments.split(' ') : this.version.arguments.game)
+    if (this.options.customLaunchArgs) args = args.concat(this.options.customLaunchArgs)
 
     this.options.authorization = await Promise.resolve(this.options.authorization)
     this.options.authorization.meta = this.options.authorization.meta ? this.options.authorization.meta : { type: 'mojang' }
@@ -574,24 +575,63 @@ class Handler {
       '${assets_root}': assetPath,
       '${game_assets}': assetPath,
       '${version_type}': this.options.version.type,
-      '${clientid}': this.options.authorization.meta.clientId || (this.options.authorization.client_token || this.options.authorization.access_token)
+      '${clientid}': this.options.authorization.meta.clientId || (this.options.authorization.client_token || this.options.authorization.access_token),
+      '${resolution_width}' : this.options.window ? this.options.window.width : 856,
+      '${resolution_height}': this.options.window ? this.options.window.height : 482,
     }
 
-    if (this.options.authorization.meta.demo) {
+    if (this.options.authorization.meta.demo && (this.options.features ? !this.options.features.includes('is_demo_user') : true)) {
       args.push('--demo')
     }
 
+    const replaceArg = (obj, index) => {
+      if (Array.isArray(obj.value)) {
+        for (const arg of obj.value) {
+          console.log(arg)
+          args.push(arg)
+        }
+      } else {
+        args.push(obj.value)
+      }
+      delete args[index]
+    }
+
     for (let index = 0; index < args.length; index++) {
-      if (typeof args[index] === 'object') args.splice(index, 2)
-      if (Object.keys(fields).includes(args[index])) {
-        args[index] = fields[args[index]]
+      if (typeof args[index] === 'object') {
+        if (args[index].rules) {
+          if (!this.options.features) continue
+          const featureFlags = []
+          for (const rule of args[index].rules) {
+            featureFlags.push(...Object.keys(rule.features))
+          }
+          let hasAllRules = true
+          for (const feature of this.options.features) {
+            if (!featureFlags.includes(feature)) {
+              hasAllRules = false
+            }
+          }
+          if (hasAllRules) replaceArg(args[index], index)
+        } else {
+          replaceArg(args[index], index)
+        }
+      } else {
+        if (Object.keys(fields).includes(args[index])) {
+          args[index] = fields[args[index]]
+        }
       }
     }
+    args = args.filter((value) => {
+      return typeof value === 'string' || typeof value === 'number'
+    })
 
     if (this.options.window) {
       this.options.window.fullscreen
         ? args.push('--fullscreen')
-        : args.push('--width', this.options.window.width, '--height', this.options.window.height)
+        : () => {
+          if (this.options.features ? !this.options.features.includes('has_custom_resolution') : true) {
+            args.push('--width', this.options.window.width, '--height', this.options.window.height)
+          }
+        }
     }
     if (this.options.server) args.push('--server', this.options.server.host, '--port', this.options.server.port || '25565')
     if (this.options.proxy) {
@@ -606,7 +646,7 @@ class Handler {
         this.options.proxy.password
       )
     }
-    if (this.options.customLaunchArgs) args = args.concat(this.options.customLaunchArgs)
+
     this.client.emit('debug', '[MCLC]: Set launch options')
     return args
   }
