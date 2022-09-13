@@ -46,7 +46,7 @@ class Handler {
       _request.on('response', (data) => {
         if (data.statusCode === 404) {
           this.client.emit('debug', `[MCLC]: Failed to download ${url} due to: File not found...`)
-          resolve(false)
+          return resolve(false)
         }
 
         totalBytes = parseInt(data.headers['content-length'])
@@ -113,14 +113,14 @@ class Handler {
 
       const manifest = `${this.options.overrides.url.meta}/mc/game/version_manifest.json`
       request.get(manifest, (error, response, body) => {
-        if (error) resolve(error)
+        if (error) return resolve(error)
 
         const parsed = JSON.parse(body)
 
         for (const desiredVersion in parsed.versions) {
           if (parsed.versions[desiredVersion].id === this.options.version.number) {
             request.get(parsed.versions[desiredVersion].url, (error, response, body) => {
-              if (error) resolve(error)
+              if (error) return resolve(error)
 
               this.client.emit('debug', '[MCLC]: Parsed version from version manifest')
               this.version = JSON.parse(body)
@@ -576,8 +576,8 @@ class Handler {
       '${game_assets}': assetPath,
       '${version_type}': this.options.version.type,
       '${clientid}': this.options.authorization.meta.clientId || (this.options.authorization.client_token || this.options.authorization.access_token),
-      '${resolution_width}' : this.options.window ? this.options.window.width : 856,
-      '${resolution_height}': this.options.window ? this.options.window.height : 482,
+      '${resolution_width}': this.options.window ? this.options.window.width : 856,
+      '${resolution_height}': this.options.window ? this.options.window.height : 482
     }
 
     if (this.options.authorization.meta.demo && (this.options.features ? !this.options.features.includes('is_demo_user') : true)) {
@@ -624,6 +624,7 @@ class Handler {
     })
 
     if (this.options.window) {
+      // eslint-disable-next-line no-unused-expressions
       this.options.window.fullscreen
         ? args.push('--fullscreen')
         : () => {
