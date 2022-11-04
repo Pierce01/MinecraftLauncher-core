@@ -26,7 +26,7 @@ const { Client, Authenticator } = require('minecraft-launcher-core');
 const launcher = new Client();
 
 let opts = {
-    clientPackage: null,
+    clientPackage: undefined,
     // For production launchers, I recommend not passing 
     // the getAuth function through the authorization field and instead
     // handling authentication outside before you initialize
