@@ -7,6 +7,7 @@ declare module "minecraft-launcher-core" {
     minArgs?: number;
     minecraftJar?: string;
     versionJson?: string;
+    gameDirectory?: string;
     directory?: string;
     natives?: string;
     assetRoot?: string;
