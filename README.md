@@ -2,7 +2,7 @@
 ##### This project is complete for now.
 [![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![version](https://img.shields.io/badge/stable_version-3.16.14-blue)
+![version](https://img.shields.io/badge/stable_version-3.16.15-blue)
 ![badge](https://img.shields.io/badge/ncurses-not_supported-purple)
 
 MCLC (Minecraft Launcher Core) is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
@@ -26,7 +26,6 @@ const { Client, Authenticator } = require('minecraft-launcher-core');
 const launcher = new Client();
 
 let opts = {
-    clientPackage: undefined,
     // For production launchers, I recommend not passing 
     // the getAuth function through the authorization field and instead
     // handling authentication outside before you initialize
@@ -60,7 +59,7 @@ launcher.on('data', (e) => console.log(e));
 
 | Parameter                | Type     | Description                                                                               | Required |
 |--------------------------|----------|-------------------------------------------------------------------------------------------|----------|
-| `options.clientPackage`  | String   | Path or URL to the client package zip file. Do not rehost Minecraft, it's against ToS.    | False    |
+| `options.clientPackage`  | String   | Path or URL to a zip file, which will be extracted to the root directory. (Not recommended for produnction use)| False    |
 | `options.removePackage`  | Boolean  | Option to remove the client package zip file after its finished extracting.               | False    |
 | `options.installer`      | String   | Path to installer being executed.                                                         | False    |
 | `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`,   | True     |
