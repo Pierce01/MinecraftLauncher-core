@@ -1,6 +1,6 @@
 {
   "name": "minecraft-launcher-core",
-  "version": "3.16.17",
+  "version": "3.16.18",
   "description": "Lightweight module that downloads and runs Minecraft using javascript / NodeJS",
   "main": "index.js",
   "dependencies": {
