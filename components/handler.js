@@ -121,7 +121,7 @@ class Handler {
             this.client.emit('debug', '[MCLC]: Cache directory created.')
           }
           fs.writeFile(path.join(`${cache}/version_manifest.json`), body, (err) => {
-            if (err) resolve(err)
+            if (err) return resolve(err);
             this.client.emit('debug', '[MCLC]: Cached version_manifest.json')
           })
         }
@@ -134,7 +134,7 @@ class Handler {
               if (error && error.code !== 'ENOTFOUND') return resolve(error) 
               if (!error) { 
                 fs.writeFile(path.join(`${cache}/${this.options.version.number}.json`), body, (err) => {
-                  if (err) resolve(err)
+                  if (err) return resolve(err);
                   this.client.emit('debug', `[MCLC]: Cached ${this.options.version.number}.json`)
                 })
               }
