@@ -112,35 +112,35 @@ class Handler {
       }
 
       const manifest = `${this.options.overrides.url.meta}/mc/game/version_manifest.json`
-      const cache = this.options.cache? `${this.options.cache}/json`: `${this.options.root}/cache/json`
+      const cache = this.options.cache ? `${this.options.cache}/json` : `${this.options.root}/cache/json`
       request.get(manifest, (error, response, body) => {
-        if (error && error.code !== 'ENOTFOUND') return resolve(error);
-        if (!error) { 
-          if(!fs.existsSync(cache)) {
-            fs.mkdirSync(cache, { recursive: true });
+        if (error && error.code !== 'ENOTFOUND') return resolve(error)
+        if (!error) {
+          if (!fs.existsSync(cache)) {
+            fs.mkdirSync(cache, { recursive: true })
             this.client.emit('debug', '[MCLC]: Cache directory created.')
           }
           fs.writeFile(path.join(`${cache}/version_manifest.json`), body, (err) => {
-            if (err) return resolve(err);
+            if (err) return resolve(err)
             this.client.emit('debug', '[MCLC]: Cached version_manifest.json')
           })
         }
 
-        const parsed = JSON.parse(error?.code == 'ENOTFOUND'? fs.readFileSync(`${cache}/version_manifest.json`): body)
-        
+        const parsed = JSON.parse(error?.code === 'ENOTFOUND' ? fs.readFileSync(`${cache}/version_manifest.json`) : body)
+
         for (const desiredVersion in parsed.versions) {
           if (parsed.versions[desiredVersion].id === this.options.version.number) {
             request.get(parsed.versions[desiredVersion].url, (error, response, body) => {
-              if (error && error.code !== 'ENOTFOUND') return resolve(error) 
-              if (!error) { 
+              if (error && error.code !== 'ENOTFOUND') return resolve(error)
+              if (!error) {
                 fs.writeFile(path.join(`${cache}/${this.options.version.number}.json`), body, (err) => {
-                  if (err) return resolve(err);
+                  if (err) return resolve(err)
                   this.client.emit('debug', `[MCLC]: Cached ${this.options.version.number}.json`)
                 })
               }
 
               this.client.emit('debug', '[MCLC]: Parsed version from version manifest')
-              this.version = JSON.parse(error?.code == 'ENOTFOUND'? fs.readFileSync(`${cache}/${this.options.version.number}.json`): body)
+              this.version = JSON.parse(error?.code === 'ENOTFOUND' ? fs.readFileSync(`${cache}/${this.options.version.number}.json`) : body)
               return resolve(this.version)
             })
           }
