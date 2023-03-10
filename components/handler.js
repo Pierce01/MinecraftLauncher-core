@@ -126,7 +126,12 @@ class Handler {
           })
         }
 
-        const parsed = JSON.parse(error?.code === 'ENOTFOUND' ? fs.readFileSync(`${cache}/version_manifest.json`) : body)
+        let parsed
+        if (error && (error.code === 'ENOTFOUND')) {
+          parsed = JSON.parse(fs.readFileSync(`${cache}/version_manifest.json`))
+        } else {
+          parsed = JSON.parse(body)
+        }
 
         for (const desiredVersion in parsed.versions) {
           if (parsed.versions[desiredVersion].id === this.options.version.number) {
@@ -140,7 +145,11 @@ class Handler {
               }
 
               this.client.emit('debug', '[MCLC]: Parsed version from version manifest')
-              this.version = JSON.parse(error?.code === 'ENOTFOUND' ? fs.readFileSync(`${cache}/${this.options.version.number}.json`) : body)
+              if (error && (error.code === 'ENOTFOUND')) {
+                this.version = JSON.parse(fs.readFileSync(`${cache}/${this.options.version.number}.json`))
+              } else {
+                this.version = JSON.parse(body)
+              }
               return resolve(this.version)
             })
           }
