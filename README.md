@@ -59,10 +59,11 @@ launcher.on('data', (e) => console.log(e));
 
 | Parameter                | Type     | Description                                                                               | Required |
 |--------------------------|----------|-------------------------------------------------------------------------------------------|----------|
-| `options.clientPackage`  | String   | Path or URL to a zip file, which will be extracted to the root directory. (Not recommended for produnction use)| False    |
+| `options.clientPackage`  | String   | Path or URL to a zip file, which will be extracted to the root directory. (Not recommended for production use)| False    |
 | `options.removePackage`  | Boolean  | Option to remove the client package zip file after its finished extracting.               | False    |
 | `options.installer`      | String   | Path to installer being executed.                                                         | False    |
 | `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`,   | True     |
+| `options.cache`           | String   | Path where launcher files will be cached in.  like `C:/Users/user/AppData/Roaming/.mc/cache`,   | False     |
 | `options.os`             | String   | windows, osx or linux. MCLC will auto determine the OS if this field isn't provided.      | False    |
 | `options.customLaunchArgs`| Array   | Array of custom Minecraft arguments you want to add.                                      | False    |
 | `options.customArgs`     | Array    | Array of custom Java arguments you want to add.                                           | False    |
