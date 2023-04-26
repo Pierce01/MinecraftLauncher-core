@@ -125,7 +125,7 @@ class MCLCore extends EventEmitter {
       // So mods like fabric work.
       const jar = fs.existsSync(mcPath)
         ? `${separator}${mcPath}`
-        : `${separator}${path.join(directory, `${this.options.version.number}.jar`)}`
+        : `${separator}${path.join(directory, `${this.options.overrides.minecraftJar||this.options.version.custom||this.options.version.number}.jar`)}`
       classPaths.push(`${this.options.forge ? this.options.forge + separator : ''}${classes.join(separator)}${jar}`)
       classPaths.push(file.mainClass)
 
