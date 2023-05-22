@@ -509,7 +509,7 @@ class Handler {
         jarPath = path.join(directory, `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`)
       }
 
-      if (!fs.existsSync(path.join(jarPath, name))) {
+      if (!fs.existsSync(path.join(jarPath, name)) || !this.checkSum(library.downloads.artifact.sha1, path.join(jarPath, name))) {
         // Simple lib support, forgot which addon needed this but here you go, Mr special.
         if (library.url) {
           const url = `${library.url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`
