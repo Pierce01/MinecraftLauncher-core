@@ -599,7 +599,7 @@ class Handler {
       '${user_properties}': this.options.authorization.user_properties,
       '${user_type}': this.options.authorization.meta.type,
       '${version_name}': this.options.version.number,
-      '${assets_index_name}': this.options.version.custom || this.options.version.number,
+      '${assets_index_name}': this.options.overrides.assetIndex || this.options.version.custom || this.options.version.number,
       '${game_directory}': this.options.overrides.gameDirectory || this.options.root,
       '${assets_root}': assetPath,
       '${game_assets}': assetPath,
