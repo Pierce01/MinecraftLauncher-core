@@ -2,7 +2,7 @@
 ##### This project is complete for now.
 [![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![version](https://img.shields.io/badge/stable_version-3.16.19-blue)
+![version](https://img.shields.io/badge/stable_version-3.17.0-blue)
 ![badge](https://img.shields.io/badge/ncurses-not_supported-purple)
 
 MCLC (Minecraft Launcher Core) is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
@@ -62,8 +62,8 @@ launcher.on('data', (e) => console.log(e));
 | `options.clientPackage`  | String   | Path or URL to a zip file, which will be extracted to the root directory. (Not recommended for production use)| False    |
 | `options.removePackage`  | Boolean  | Option to remove the client package zip file after its finished extracting.               | False    |
 | `options.installer`      | String   | Path to installer being executed.                                                         | False    |
-| `options.root`           | String   | Path where you want the launcher to work in.  like `C:/Users/user/AppData/Roaming/.mc`,   | True     |
-| `options.cache`           | String   | Path where launcher files will be cached in.  like `C:/Users/user/AppData/Roaming/.mc/cache`,   | False     |
+| `options.root`           | String   | Path where you want the launcher to work in. `C:/Users/user/AppData/Roaming/.mc`          | True     |
+| `options.cache`          | String   | Path where launcher files will be cached in. `C:/Users/user/AppData/Roaming/.mc/cache`    | False    |
 | `options.os`             | String   | windows, osx or linux. MCLC will auto determine the OS if this field isn't provided.      | False    |
 | `options.customLaunchArgs`| Array   | Array of custom Minecraft arguments you want to add.                                      | False    |
 | `options.customArgs`     | Array    | Array of custom Java arguments you want to add.                                           | False    |
@@ -75,8 +75,9 @@ launcher.on('data', (e) => console.log(e));
 | `options.memory.min`     | String   | Min amount of memory being used by Minecraft.                                             | True     |
 | `options.forge`          | String   | Path to Forge Jar. (Versions below 1.13 should be the "universal" jar while versions above 1.13+ should be the "installer" jar) | False    |
 | `options.javaPath`       | String   | Path to the JRE executable file, will default to `java` if not entered.                   | False    |
-| `options.server.host`    | String   | Host url to the server, don't include the port.                                           | False    |
-| `options.server.port`    | String   | Port of the host url, will default to `25565` if not entered.                             | False    |
+| `options.quickPlay.type` | String   | The type of the quickPlay session. `singleplayer` | `multiplayer` | `realms` | `legacy`   | False    |
+| `options.quickPlay.identifier` | String   | The folder name, server address, or realm ID, relating to the specified type. `legacy` follows `multiplayer` format.        | False    |
+| `options.quickPlay.path` | String   | The specified path for logging (relative to the run directory)                            | False    |
 | `options.proxy.host`     | String   | Host url to the proxy, don't include the port.                                            | False    |
 | `options.proxy.port`     | String   | Port of the host proxy, will default to `8080` if not entered.                            | False    |
 | `options.proxy.username` | String   | Username for the proxy.                                                                   | False    |
@@ -84,7 +85,7 @@ launcher.on('data', (e) => console.log(e));
 | `options.timeout`        | Integer  | Timeout on download requests.                                                             | False    |
 | `options.window.width`   | String   | Width of the Minecraft Client.                                                            | False    |
 | `options.window.height`  | String   | Height of the Minecraft Client.                                                           | False    |
-| `options.window.fullscreen`  | Boolean| Fullscreen the Minecraft Client.                                                        | False    |
+| `options.window.fullscreen`| Boolean| Fullscreen the Minecraft Client.                                                          | False    |
 | `options.overrides`      | Object   | Json object redefining paths for better customization. Example below.                     | False    |
 #### IF YOU'RE NEW TO MCLC, LET IT HANDLE EVERYTHING! DO NOT USE OVERRIDES!
 ```js

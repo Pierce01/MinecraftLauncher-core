@@ -11,6 +11,7 @@ declare module "minecraft-launcher-core" {
     directory?: string;
     natives?: string;
     assetRoot?: string;
+    assetIndex?: string;
     libraryRoot?: string;
     cwd?: string;
     detached?: boolean;
@@ -150,6 +151,11 @@ declare module "minecraft-launcher-core" {
       height?: number;
       fullscreen?: boolean;
     };
+    quickPlay?: {
+      type: 'singleplayer' | 'multiplayer' | 'realms' | 'legacy';
+      identifier: string;
+      path?: string;
+    };
     overrides?: IOverrides;
     authorization: Promise<IUser>;
     /**
@@ -157,8 +163,6 @@ declare module "minecraft-launcher-core" {
      */
     cache?: string;
   }
-
-
 
   interface IUser {
     access_token: string;

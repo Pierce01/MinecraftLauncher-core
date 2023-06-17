@@ -573,6 +573,26 @@ class Handler {
     return newArray
   }
 
+  formatQuickPlay () {
+    const types = {
+      singleplayer: '--quickPlaySingleplayer',
+      multiplayer: '--quickPlayMultiplayer',
+      realms: '--quickPlayRealms',
+      legacy: null
+    }
+    const { type, identifier, path } = this.options.quickPlay
+    const keys = Object.keys(types)
+    if (!keys.includes(type)) {
+      this.client.emit('debug', `[MCLC]: quickPlay type is not valid. Valid types are: ${keys.join(', ')}`)
+      return null
+    }
+    const returnArgs = type === 'legacy'
+      ? ['--server', identifier.split(':')[0], '--port', identifier.split(':')[1] || '25565']
+      : [types[type], identifier]
+    if (path) returnArgs.push('--quickPlayPath', path)
+    return returnArgs
+  }
+
   async getLaunchOptions (modification) {
     const type = modification || this.version
 
@@ -648,10 +668,6 @@ class Handler {
         }
       }
     }
-    args = args.filter((value) => {
-      return typeof value === 'string' || typeof value === 'number'
-    })
-
     if (this.options.window) {
       // eslint-disable-next-line no-unused-expressions
       this.options.window.fullscreen
@@ -662,7 +678,8 @@ class Handler {
           }
         }
     }
-    if (this.options.server) args.push('--server', this.options.server.host, '--port', this.options.server.port || '25565')
+    if (this.options.server) this.client.emit('debug', '[MCLC]: server and port are deprecated launch flags. Use the quickPlay field.')
+    if (this.options.quickPlay) args = args.concat(this.formatQuickPlay())
     if (this.options.proxy) {
       args.push(
         '--proxyHost',
@@ -675,7 +692,7 @@ class Handler {
         this.options.proxy.password
       )
     }
-
+    args = args.filter(value => typeof value === 'string' || typeof value === 'number')
     this.client.emit('debug', '[MCLC]: Set launch options')
     return args
   }
