@@ -19,7 +19,7 @@ declare module "minecraft-launcher-core" {
     maxSockets?: number;
     url?: {
       meta?: string;
-      resources?: string;
+      resource?: string;
       mavenForge?: string;
       defaultRepoForge?: string;
       fallbackMaven?: string;
