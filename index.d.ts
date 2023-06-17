@@ -166,7 +166,7 @@ declare module "minecraft-launcher-core" {
       path?: string;
     };
     overrides?: IOverrides;
-    authorization: Promise<IUser>;
+    authorization: Promise<IUser> | IUser;
     /**
      * Path of json cache.
      */
