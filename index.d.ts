@@ -30,7 +30,7 @@ declare module "minecraft-launcher-core" {
       sh1?: string;
       size?: number;
     };
-    logj4ConfigurationFile: string;
+    logj4ConfigurationFile?: string;
   }
 
   interface ILauncherOptions {
