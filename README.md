@@ -75,7 +75,7 @@ launcher.on('data', (e) => console.log(e));
 | `options.memory.min`     | String   | Min amount of memory being used by Minecraft.                                             | True     |
 | `options.forge`          | String   | Path to Forge Jar. (Versions below 1.13 should be the "universal" jar while versions above 1.13+ should be the "installer" jar) | False    |
 | `options.javaPath`       | String   | Path to the JRE executable file, will default to `java` if not entered.                   | False    |
-| `options.quickPlay.type` | String   | The type of the quickPlay session. `singleplayer` | `multiplayer` | `realms` | `legacy`   | False    |
+| `options.quickPlay.type` | String   | The type of the quickPlay session. `singleplayer`, `multiplayer`, `realms`, `legacy`      | False    |
 | `options.quickPlay.identifier` | String   | The folder name, server address, or realm ID, relating to the specified type. `legacy` follows `multiplayer` format.        | False    |
 | `options.quickPlay.path` | String   | The specified path for logging (relative to the run directory)                            | False    |
 | `options.proxy.host`     | String   | Host url to the proxy, don't include the port.                                            | False    |
