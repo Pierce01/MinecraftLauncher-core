@@ -139,9 +139,29 @@ declare module "minecraft-launcher-core" {
       height?: number;
       fullscreen?: boolean;
     };
+
+
+    /**
+     * Allows the game to be launched directly into a world
+     */
     quickPlay?: {
+      /**
+       * The type of world you want to join.
+       * Note, that versions prior to 1.20 only support "legacy"
+       */
       type: 'singleplayer' | 'multiplayer' | 'realms' | 'legacy';
+      /**
+       * Represents the world you want to join
+       *
+       * For singleplayer this should be the folder name of the world
+       * For multiplayer this should be the IP address of the server
+       * For realms this should be the Realms ID
+       * legacy follows multiplayer format
+       */
       identifier: string;
+      /**
+       * The specified path for logging (relative to the run directory)
+       */
       path?: string;
     };
     overrides?: IOverrides;
