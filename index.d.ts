@@ -110,18 +110,6 @@ declare module "minecraft-launcher-core" {
      * Path to the JRE executable file, will default to java if not entered.
      */
     javaPath?: string;
-    server?: {
-      /**
-       * 	Host url to the server, don't include the port.
-       */
-      host: string;
-      /**
-       * Port of the host url
-       * 
-       * @default 25565
-       */
-      port?: string;
-    };
     proxy?: {
       /**
        * Host url to the proxy, don't include the port.
