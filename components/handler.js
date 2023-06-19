@@ -509,14 +509,18 @@ class Handler {
         jarPath = path.join(directory, `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`)
       }
 
-      if (!fs.existsSync(path.join(jarPath, name)) || !this.checkSum(library.downloads.artifact.sha1, path.join(jarPath, name))) {
-        // Simple lib support, forgot which addon needed this but here you go, Mr special.
+      const downloadLibrary = async library => {
         if (library.url) {
           const url = `${library.url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`
           await this.downloadAsync(url, jarPath, name, true, eventName)
         } else if (library.downloads && library.downloads.artifact) {
           await this.downloadAsync(library.downloads.artifact.url, jarPath, name, true, eventName)
         }
+      }
+
+      if (!fs.existsSync(path.join(jarPath, name))) downloadLibrary(library)
+      else if (library.downloads && library.downloads.artifact) {
+        if (!this.checkSum(library.downloads.artifact.sha1, path.join(jarPath, name))) downloadLibrary(library)
       }
 
       counter++
