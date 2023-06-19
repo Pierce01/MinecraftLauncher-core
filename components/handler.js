@@ -598,7 +598,7 @@ class Handler {
   }
 
   async getLaunchOptions (modification) {
-    const type = modification || this.version
+    const type = Object.assign(this.version, modification)
 
     let args = type.minecraftArguments
       ? type.minecraftArguments.split(' ')
