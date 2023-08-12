@@ -190,13 +190,13 @@ class Handler {
       if (!fs.existsSync(path.join(subAsset, hash)) || !await this.checkSum(hash, path.join(subAsset, hash))) {
         await this.downloadAsync(`${this.options.overrides.url.resource}/${subhash}/${hash}`, subAsset, hash,
           true, 'assets')
-        counter++
-        this.client.emit('progress', {
+      }
+      counter++
+      this.client.emit('progress', {
           type: 'assets',
           task: counter,
           total: Object.keys(index.objects).length
-        })
-      }
+      })
     }))
     counter = 0
 
