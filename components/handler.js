@@ -160,9 +160,7 @@ class Handler {
 
   async getJar () {
     await this.downloadAsync(this.version.downloads.client.url, this.options.directory, `${this.options.version.custom ? this.options.version.custom : this.options.version.number}.jar`, true, 'version-jar')
-
     fs.writeFileSync(path.join(this.options.directory, `${this.options.version.number}.json`), JSON.stringify(this.version, null, 4))
-
     return this.client.emit('debug', '[MCLC]: Downloaded version jar and wrote version json')
   }
 
@@ -193,9 +191,9 @@ class Handler {
       }
       counter++
       this.client.emit('progress', {
-          type: 'assets',
-          task: counter,
-          total: Object.keys(index.objects).length
+        type: 'assets',
+        task: counter,
+        total: Object.keys(index.objects).length
       })
     }))
     counter = 0
