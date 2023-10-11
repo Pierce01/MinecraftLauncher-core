@@ -160,9 +160,7 @@ class Handler {
 
   async getJar () {
     await this.downloadAsync(this.version.downloads.client.url, this.options.directory, `${this.options.version.custom ? this.options.version.custom : this.options.version.number}.jar`, true, 'version-jar')
-
     fs.writeFileSync(path.join(this.options.directory, `${this.options.version.number}.json`), JSON.stringify(this.version, null, 4))
-
     return this.client.emit('debug', '[MCLC]: Downloaded version jar and wrote version json')
   }
 
@@ -190,13 +188,13 @@ class Handler {
       if (!fs.existsSync(path.join(subAsset, hash)) || !await this.checkSum(hash, path.join(subAsset, hash))) {
         await this.downloadAsync(`${this.options.overrides.url.resource}/${subhash}/${hash}`, subAsset, hash,
           true, 'assets')
-        counter++
-        this.client.emit('progress', {
-          type: 'assets',
-          task: counter,
-          total: Object.keys(index.objects).length
-        })
       }
+      counter++
+      this.client.emit('progress', {
+        type: 'assets',
+        task: counter,
+        total: Object.keys(index.objects).length
+      })
     }))
     counter = 0
 
@@ -509,14 +507,18 @@ class Handler {
         jarPath = path.join(directory, `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`)
       }
 
-      if (!fs.existsSync(path.join(jarPath, name)) || !this.checkSum(library.downloads.artifact.sha1, path.join(jarPath, name))) {
-        // Simple lib support, forgot which addon needed this but here you go, Mr special.
+      const downloadLibrary = async library => {
         if (library.url) {
           const url = `${library.url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`
           await this.downloadAsync(url, jarPath, name, true, eventName)
         } else if (library.downloads && library.downloads.artifact) {
           await this.downloadAsync(library.downloads.artifact.url, jarPath, name, true, eventName)
         }
+      }
+
+      if (!fs.existsSync(path.join(jarPath, name))) downloadLibrary(library)
+      else if (library.downloads && library.downloads.artifact) {
+        if (!this.checkSum(library.downloads.artifact.sha1, path.join(jarPath, name))) downloadLibrary(library)
       }
 
       counter++
@@ -594,7 +596,7 @@ class Handler {
   }
 
   async getLaunchOptions (modification) {
-    const type = modification || this.version
+    const type = Object.assign({}, this.version, modification)
 
     let args = type.minecraftArguments
       ? type.minecraftArguments.split(' ')
