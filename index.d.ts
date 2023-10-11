@@ -4,26 +4,72 @@ declare module "minecraft-launcher-core" {
   type OS = "windows" | "osx" | "linux";
 
   interface IOverrides {
+    /**
+     * The amount of launch arguments specified in the version file before it adds the default again
+     */
     minArgs?: number;
     minecraftJar?: string;
     versionJson?: string;
+    /**
+     * Folder, where the game process generates folders like saves and resource packs.
+     */
     gameDirectory?: string;
+    /**
+     * Folder, where the Minecraft jar and version json are located.
+     */
     directory?: string;
     natives?: string;
     assetRoot?: string;
     assetIndex?: string;
     libraryRoot?: string;
+    /**
+     * Working directory of the java process.
+     */
     cwd?: string;
+    /**
+     * Whether or not the client is detached from the parent / launcher.
+     */
     detached?: boolean;
+    /**
+     * List of classes.
+     * All class paths are required if you use this.
+     */
     classes?: Array<string>;
+    /**
+     * Max sockets for downloadAsync.
+     */
     maxSockets?: number;
+    /**
+     * Urls to the Minecraft and Forge resource servers
+     * 
+     * This is for launcher developers located in countries that have the Minecraft and Forge resource servers
+     * blocked for what ever reason. They obviously need to mirror the formatting of the original JSONs / file structures.
+     */
     url?: {
+      /**
+       * List of versions.
+       */
       meta?: string;
+      /**
+       * Minecraft resources.
+       */
       resource?: string;
+      /**
+       * Forge resources.
+       */
       mavenForge?: string;
+      /**
+       * for Forge only, you need to redefine the library url in the version json.
+       */
       defaultRepoForge?: string;
+      /**
+       * 
+       */
       fallbackMaven?: string;
     };
+    /**
+     * Version of the ForgeWrapper which MCLC uses. This allows us to launch modern Forge.
+     */
     fw?: {
       baseUrl?: string;
       version?: string;
@@ -136,8 +182,18 @@ declare module "minecraft-launcher-core" {
      */
     timeout?: number;
     window?: {
+
+      /**
+       * Width of the Minecraft Client
+       */
       width?: number;
+      /**
+       * Height of the Minecraft Client
+       */
       height?: number;
+      /**
+       * Fullscreen the Minecraft Client.
+       */
       fullscreen?: boolean;
     };
 
@@ -165,7 +221,11 @@ declare module "minecraft-launcher-core" {
        */
       path?: string;
     };
+    /**
+     * Json object redefining paths for better customization
+     */
     overrides?: IOverrides;
+
     authorization: Promise<IUser> | IUser;
     /**
      * Path of json cache.
