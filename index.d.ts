@@ -4,32 +4,79 @@ declare module "minecraft-launcher-core" {
   type OS = "windows" | "osx" | "linux";
 
   interface IOverrides {
+    /**
+     * The amount of launch arguments specified in the version file before it adds the default again
+     */
     minArgs?: number;
     minecraftJar?: string;
     versionJson?: string;
+    /**
+     * Folder, where the game process generates folders like saves and resource packs.
+     */
     gameDirectory?: string;
+    /**
+     * Folder, where the Minecraft jar and version json are located.
+     */
     directory?: string;
     natives?: string;
     assetRoot?: string;
     assetIndex?: string;
     libraryRoot?: string;
+    /**
+     * Working directory of the java process.
+     */
     cwd?: string;
+    /**
+     * Whether or not the client is detached from the parent / launcher.
+     */
     detached?: boolean;
+    /**
+     * List of classes.
+     * All class paths are required if you use this.
+     */
     classes?: Array<string>;
+    /**
+     * Max sockets for downloadAsync.
+     */
     maxSockets?: number;
+    /**
+     * Urls to the Minecraft and Forge resource servers
+     * 
+     * This is for launcher developers located in countries that have the Minecraft and Forge resource servers
+     * blocked for what ever reason. They obviously need to mirror the formatting of the original JSONs / file structures.
+     */
     url?: {
+      /**
+       * List of versions.
+       */
       meta?: string;
-      resources?: string;
+      /**
+       * Minecraft resources.
+       */
+      resource?: string;
+      /**
+       * Forge resources.
+       */
       mavenForge?: string;
+      /**
+       * for Forge only, you need to redefine the library url in the version json.
+       */
       defaultRepoForge?: string;
+      /**
+       * 
+       */
       fallbackMaven?: string;
     };
+    /**
+     * Version of the ForgeWrapper which MCLC uses. This allows us to launch modern Forge.
+     */
     fw?: {
       baseUrl?: string;
       version?: string;
       sh1?: string;
       size?: number;
     };
+    logj4ConfigurationFile?: string;
   }
 
   interface ILauncherOptions {
@@ -110,18 +157,6 @@ declare module "minecraft-launcher-core" {
      * Path to the JRE executable file, will default to java if not entered.
      */
     javaPath?: string;
-    server?: {
-      /**
-       * 	Host url to the server, don't include the port.
-       */
-      host: string;
-      /**
-       * Port of the host url
-       * 
-       * @default 25565
-       */
-      port?: string;
-    };
     proxy?: {
       /**
        * Host url to the proxy, don't include the port.
@@ -147,17 +182,51 @@ declare module "minecraft-launcher-core" {
      */
     timeout?: number;
     window?: {
+
+      /**
+       * Width of the Minecraft Client
+       */
       width?: number;
+      /**
+       * Height of the Minecraft Client
+       */
       height?: number;
+      /**
+       * Fullscreen the Minecraft Client.
+       */
       fullscreen?: boolean;
     };
+
+
+    /**
+     * Allows the game to be launched directly into a world
+     */
     quickPlay?: {
+      /**
+       * The type of world you want to join.
+       * Note, that versions prior to 1.20 only support "legacy"
+       */
       type: 'singleplayer' | 'multiplayer' | 'realms' | 'legacy';
+      /**
+       * Represents the world you want to join
+       *
+       * For singleplayer this should be the folder name of the world
+       * For multiplayer this should be the IP address of the server
+       * For realms this should be the Realms ID
+       * legacy follows multiplayer format
+       */
       identifier: string;
+      /**
+       * The specified path for logging (relative to the run directory)
+       */
       path?: string;
     };
+    /**
+     * Json object redefining paths for better customization
+     */
     overrides?: IOverrides;
-    authorization: Promise<IUser>;
+
+    authorization: Promise<IUser> | IUser;
     /**
      * Path of json cache.
      */
