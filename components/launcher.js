@@ -99,6 +99,7 @@ class MCLCore extends EventEmitter {
         jvm.push(`-Dlog4j.configurationFile=${path.resolve(this.options.overrides.logj4ConfigurationFile)}`)
       }
       // https://help.minecraft.net/hc/en-us/articles/4416199399693-Security-Vulnerability-in-Minecraft-Java-Edition
+      if (parseInt(versionFile.id.split('.')[1]) === 18 && !parseInt(versionFile.id.split('.')[2])) jvm.push('-Dlog4j2.formatMsgNoLookups=true')
       if (parseInt(versionFile.id.split('.')[1]) === 17) jvm.push('-Dlog4j2.formatMsgNoLookups=true')
       if (parseInt(versionFile.id.split('.')[1]) < 17) {
         if (!jvm.find(arg => arg.includes('Dlog4j.configurationFile'))) {
