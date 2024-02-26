@@ -1,9 +1,8 @@
 ![logo](https://owo.whats-th.is/8mT5kxc.png)
-##### This project is complete for now.
+##### Project rewrite coming soon™
 [![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![version](https://img.shields.io/badge/stable_version-3.17.2-blue)
-![badge](https://img.shields.io/badge/ncurses-not_supported-purple)
 
 MCLC (Minecraft Launcher Core) is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
 Basically a core for your Electron or script based launchers.
@@ -61,7 +60,6 @@ launcher.on('data', (e) => console.log(e));
 |--------------------------|----------|-------------------------------------------------------------------------------------------|----------|
 | `options.clientPackage`  | String   | Path or URL to a zip file, which will be extracted to the root directory. (Not recommended for production use)| False    |
 | `options.removePackage`  | Boolean  | Option to remove the client package zip file after its finished extracting.               | False    |
-| `options.installer`      | String   | Path to installer being executed.                                                         | False    |
 | `options.root`           | String   | Path where you want the launcher to work in. `C:/Users/user/AppData/Roaming/.mc`          | True     |
 | `options.cache`          | String   | Path where launcher files will be cached in. `C:/Users/user/AppData/Roaming/.mc/cache`    | False    |
 | `options.os`             | String   | windows, osx or linux. MCLC will auto determine the OS if this field isn't provided.      | False    |
@@ -73,7 +71,7 @@ launcher.on('data', (e) => console.log(e));
 | `options.version.custom` | String   | The name of the folder, jar file, and version json in the version folder.                 | False    |
 | `options.memory.max`     | String   | Max amount of memory being used by Minecraft.                                             | True     |
 | `options.memory.min`     | String   | Min amount of memory being used by Minecraft.                                             | True     |
-| `options.forge`          | String   | Path to Forge Jar. (Versions below 1.13 should be the "universal" jar while versions above 1.13+ should be the "installer" jar) | False    |
+| `options.forge`          | String   | Path to Forge Jar. (Versions below 1.12.2 should be the "universal" jar while versions above 1.13 should be the "installer" jar) | False    |
 | `options.javaPath`       | String   | Path to the JRE executable file, will default to `java` if not entered.                   | False    |
 | `options.quickPlay.type` | String   | The type of the quickPlay session. `singleplayer`, `multiplayer`, `realms`, `legacy`      | False    |
 | `options.quickPlay.identifier` | String   | The folder name, server address, or realm ID, relating to the specified type. `legacy` follows `multiplayer` format.        | False    |
@@ -94,6 +92,7 @@ let opts = {
    overrides: {
        gameDirectory: '', // where the game process generates folders like saves and resource packs.
        minecraftJar: '',
+       versionName: '', // replaces the value after the version flag.
        versionJson: '',
        directory: '', // where the Minecraft jar and version json are located.
        natives: '', // native directory path.
@@ -130,9 +129,8 @@ let opts = {
 #### Notes
 ##### Custom
 If you are loading up a client outside of vanilla Minecraft or Forge (Optifine and for an example), you'll need to download the needed files yourself if you don't provide downloads url downloads like Forge and Fabric. If no version jar is specified, MCLC will default back to the normal MC jar so mods like Fabric work.
-##### Installer
-This runs an executable with specified launch arguments. Was used to support Forge 1.13 before ForgeWrapper.
-##### Authentication
+
+#### Authentication (Deprecated)
 MCLC's authenticator module does not support Microsoft authentication. You will need to use a library like [MSMC](https://github.com/Hanro50/MSMC). If you want to create your own solution, the following is the authorization JSON object format.
 ```js
 {

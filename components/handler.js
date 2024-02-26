@@ -12,7 +12,7 @@ class Handler {
     this.options = client.options
     this.baseRequest = request.defaults({
       pool: { maxSockets: this.options.overrides.maxSockets || 2 },
-      timeout: this.options.timeout || 10000
+      timeout: this.options.timeout || 50000
     })
   }
 
@@ -95,10 +95,9 @@ class Handler {
       checksum.file(file, (err, sum) => {
         if (err) {
           this.client.emit('debug', `[MCLC]: Failed to check file hash due to ${err}`)
-          resolve(false)
-        } else {
-          resolve(hash === sum)
+          return resolve(false)
         }
+        return resolve(hash === sum)
       })
     })
   }
@@ -125,34 +124,28 @@ class Handler {
             this.client.emit('debug', '[MCLC]: Cached version_manifest.json')
           })
         }
+        const parsed = (error && error.code === 'ENOTFOUND')
+          ? JSON.parse(fs.readFileSync(`${cache}/version_manifest.json`))
+          : JSON.parse(body)
+        const desiredVersion = Object.values(parsed.versions).find(version => version.id === this.options.version.number)
+        if (desiredVersion) {
+          request.get(desiredVersion.url, (error, response, body) => {
+            if (error && error.code !== 'ENOTFOUND') throw Error(error)
+            if (!error) {
+              fs.writeFile(path.join(`${cache}/${this.options.version.number}.json`), body, (err) => {
+                if (err) throw Error(err)
+                this.client.emit('debug', `[MCLC]: Cached ${this.options.version.number}.json`)
+              })
+            }
 
-        let parsed
-        if (error && (error.code === 'ENOTFOUND')) {
-          parsed = JSON.parse(fs.readFileSync(`${cache}/version_manifest.json`))
+            this.client.emit('debug', '[MCLC]: Parsed version from version manifest')
+            this.version = error && error.code === 'ENOTFOUND'
+              ? JSON.parse(fs.readFileSync(`${cache}/${this.options.version.number}.json`))
+              : JSON.parse(body)
+            return resolve(this.version)
+          })
         } else {
-          parsed = JSON.parse(body)
-        }
-
-        for (const desiredVersion in parsed.versions) {
-          if (parsed.versions[desiredVersion].id === this.options.version.number) {
-            request.get(parsed.versions[desiredVersion].url, (error, response, body) => {
-              if (error && error.code !== 'ENOTFOUND') return resolve(error)
-              if (!error) {
-                fs.writeFile(path.join(`${cache}/${this.options.version.number}.json`), body, (err) => {
-                  if (err) return resolve(err)
-                  this.client.emit('debug', `[MCLC]: Cached ${this.options.version.number}.json`)
-                })
-              }
-
-              this.client.emit('debug', '[MCLC]: Parsed version from version manifest')
-              if (error && (error.code === 'ENOTFOUND')) {
-                this.version = JSON.parse(fs.readFileSync(`${cache}/${this.options.version.number}.json`))
-              } else {
-                this.version = JSON.parse(body)
-              }
-              return resolve(this.version)
-            })
-          }
+          throw Error(`Failed to find version ${this.options.version.number} in version_manifest.json`)
         }
       })
     })
@@ -168,8 +161,7 @@ class Handler {
     const assetDirectory = path.resolve(this.options.overrides.assetRoot || path.join(this.options.root, 'assets'))
     const assetId = this.options.version.custom || this.options.version.number
     if (!fs.existsSync(path.join(assetDirectory, 'indexes', `${assetId}.json`))) {
-      await this.downloadAsync(this.version.assetIndex.url, path.join(assetDirectory, 'indexes'),
-                  `${assetId}.json`, true, 'asset-json')
+      await this.downloadAsync(this.version.assetIndex.url, path.join(assetDirectory, 'indexes'), `${assetId}.json`, true, 'asset-json')
     }
 
     const index = JSON.parse(fs.readFileSync(path.join(assetDirectory, 'indexes', `${assetId}.json`), { encoding: 'utf8' }))
@@ -186,8 +178,7 @@ class Handler {
       const subAsset = path.join(assetDirectory, 'objects', subhash)
 
       if (!fs.existsSync(path.join(subAsset, hash)) || !await this.checkSum(hash, path.join(subAsset, hash))) {
-        await this.downloadAsync(`${this.options.overrides.url.resource}/${subhash}/${hash}`, subAsset, hash,
-          true, 'assets')
+        await this.downloadAsync(`${this.options.overrides.url.resource}/${subhash}/${hash}`, subAsset, hash, true, 'assets')
       }
       counter++
       this.client.emit('progress', {
@@ -246,13 +237,10 @@ class Handler {
   parseRule (lib) {
     if (lib.rules) {
       if (lib.rules.length > 1) {
-        if (lib.rules[0].action === 'allow' &&
-                    lib.rules[1].action === 'disallow' &&
-                    lib.rules[1].os.name === 'osx') {
+        if (lib.rules[0].action === 'allow' && lib.rules[1].action === 'disallow' && lib.rules[1].os.name === 'osx') {
           return this.getOS() === 'osx'
-        } else {
-          return true
         }
+        return true
       } else {
         if (lib.rules[0].action === 'allow' && lib.rules[0].os) return lib.rules[0].os.name !== this.getOS()
       }
@@ -363,7 +351,7 @@ class Handler {
       }
     }
 
-    this.client.emit('debug', '[MCLC]: Generating a proper version json, this might take a bit')
+    this.client.emit('debug', '[MCLC]: Generating Forge version json, this might take a bit')
     const zipFile = new Zip(this.options.forge)
     json = zipFile.readAsText('version.json')
     if (zipFile.getEntry('install_profile.json')) installerJson = zipFile.readAsText('install_profile.json')
@@ -409,7 +397,7 @@ class Handler {
         for (const library of json.mavenFiles) {
           const lib = library.name.split(':')
           if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) {
-            library.downloads.artifact.url = 'https://files.minecraftforge.net/maven/' + library.downloads.artifact.path
+            library.downloads.artifact.url = this.options.overrides.url.mavenForge + library.downloads.artifact.path
             break
           }
         }
@@ -455,10 +443,11 @@ class Handler {
     // If a downloads property exists, we modify the inital forge entry to include ${jarEnding} so ForgeWrapper can work properly.
     // If it doesn't, we simply remove it since we're already providing the universal jar.
     if (json.libraries[0].downloads) {
-      if (json.libraries[0].name.includes('minecraftforge')) {
-        json.libraries[0].name = json.libraries[0].name + `:${jarEnding}`
+      const name = json.libraries[0].name
+      if (name.includes('minecraftforge:forge') && !name.includes('universal')) {
+        json.libraries[0].name = name + `:${jarEnding}`
         json.libraries[0].downloads.artifact.path = json.libraries[0].downloads.artifact.path.replace('.jar', `-${jarEnding}.jar`)
-        json.libraries[0].downloads.artifact.url = 'https://files.minecraftforge.net/maven/' + json.libraries[0].downloads.artifact.path
+        json.libraries[0].downloads.artifact.url = this.options.overrides.url.mavenForge + json.libraries[0].downloads.artifact.path
       }
     } else {
       delete json.libraries[0]
@@ -480,13 +469,6 @@ class Handler {
     if (this.isModernForge(json)) this.options.forge = null
 
     return json
-  }
-
-  runInstaller (path) {
-    return new Promise(resolve => {
-      const installer = child.exec(path)
-      installer.on('close', (code) => resolve(code))
-    })
   }
 
   async downloadToDirectory (directory, libraries, eventName) {
@@ -511,14 +493,15 @@ class Handler {
         if (library.url) {
           const url = `${library.url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`
           await this.downloadAsync(url, jarPath, name, true, eventName)
-        } else if (library.downloads && library.downloads.artifact) {
+        } else if (library.downloads && library.downloads.artifact && library.downloads.artifact.url) {
+          // Only download if there's a URL provided. If not, we're assuming it's going a generated dependency.
           await this.downloadAsync(library.downloads.artifact.url, jarPath, name, true, eventName)
         }
       }
 
-      if (!fs.existsSync(path.join(jarPath, name))) downloadLibrary(library)
-      else if (library.downloads && library.downloads.artifact) {
-        if (!this.checkSum(library.downloads.artifact.sha1, path.join(jarPath, name))) downloadLibrary(library)
+      if (!fs.existsSync(path.join(jarPath, name))) await downloadLibrary(library)
+      if (library.downloads && library.downloads.artifact) {
+        if (!this.checkSum(library.downloads.artifact.sha1, path.join(jarPath, name))) await downloadLibrary(library)
       }
 
       counter++
@@ -543,7 +526,7 @@ class Handler {
       if (classJson.mavenFiles) {
         await this.downloadToDirectory(libraryDirectory, classJson.mavenFiles, 'classes-maven-custom')
       }
-      libs = (await this.downloadToDirectory(libraryDirectory, classJson.libraries, 'classes-custom'))
+      libs = await this.downloadToDirectory(libraryDirectory, classJson.libraries, 'classes-custom')
     }
 
     const parsed = this.version.libraries.map(lib => {
@@ -561,18 +544,11 @@ class Handler {
   }
 
   popString (path) {
-    const tempArray = path.split('/')
-    tempArray.pop()
-    return tempArray.join('/')
+    return path.split('/').slice(0, -1).join('/')
   }
 
   cleanUp (array) {
-    const newArray = []
-    for (const classPath in array) {
-      if (newArray.includes(array[classPath]) || array[classPath] === null) continue
-      newArray.push(array[classPath])
-    }
-    return newArray
+    return [...new Set(Object.values(array).filter(value => value !== null))]
   }
 
   formatQuickPlay () {
@@ -620,7 +596,7 @@ class Handler {
       '${auth_xuid}': this.options.authorization.meta.xuid || this.options.authorization.access_token,
       '${user_properties}': this.options.authorization.user_properties,
       '${user_type}': this.options.authorization.meta.type,
-      '${version_name}': this.options.version.number,
+      '${version_name}': this.options.version.number || this.options.overrides.versionName,
       '${assets_index_name}': this.options.overrides.assetIndex || this.options.version.custom || this.options.version.number,
       '${game_directory}': this.options.overrides.gameDirectory || this.options.root,
       '${assets_root}': assetPath,
@@ -671,14 +647,12 @@ class Handler {
       }
     }
     if (this.options.window) {
-      // eslint-disable-next-line no-unused-expressions
-      this.options.window.fullscreen
-        ? args.push('--fullscreen')
-        : () => {
-          if (this.options.features ? !this.options.features.includes('has_custom_resolution') : true) {
-            args.push('--width', this.options.window.width, '--height', this.options.window.height)
-          }
-        }
+      if (this.options.window.fullscreen) {
+        args.push('--fullscreen')
+      } else {
+        if (this.options.window.width) args.push('--width', this.options.window.width)
+        if (this.options.window.height) args.push('--height', this.options.window.height)
+      }
     }
     if (this.options.server) this.client.emit('debug', '[MCLC]: server and port are deprecated launch flags. Use the quickPlay field.')
     if (this.options.quickPlay) args = args.concat(this.formatQuickPlay())

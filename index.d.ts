@@ -10,6 +10,7 @@ declare module "minecraft-launcher-core" {
     minArgs?: number;
     minecraftJar?: string;
     versionJson?: string;
+    versionName?: string;
     /**
      * Folder, where the game process generates folders like saves and resource packs.
      */
@@ -88,10 +89,6 @@ declare module "minecraft-launcher-core" {
      * if true MCLC will remove the client package zip file after its finished extracting.
      */
     removePackage?: boolean;
-    /**
-     * Path to installer being executed.
-     */
-    installer?: string;
     /**
      * Path where you want the launcher to work in.
      * This will usually be your .minecraft folder
