@@ -5,6 +5,7 @@
     "main": "index.js",
     "dependencies": {
         "adm-zip": "^0.4.13",
+        "axios": "^1.6.7",
         "checksum": "^0.1.1",
         "request": "^2.88.2",
         "uuid": "^8.3.2"
