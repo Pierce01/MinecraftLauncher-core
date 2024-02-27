@@ -16,3 +16,4 @@ launcher.launch({
 
 launcher.on('debug', (e) => console.log(e));
 launcher.on('data', (e) => console.log(e));
+launcher.on('progress', (e) => console.log(e));
