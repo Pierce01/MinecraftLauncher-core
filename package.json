@@ -1,42 +1,44 @@
 {
-  "name": "minecraft-launcher-core",
-  "version": "3.18.0",
-  "description": "Lightweight module that downloads and runs Minecraft using javascript / NodeJS",
-  "main": "index.js",
-  "dependencies": {
-    "adm-zip": "^0.4.13",
-    "checksum": "^0.1.1",
-    "request": "^2.88.2",
-    "uuid": "^8.3.2"
-  },
-  "devDependencies": {
-    "@types/checksum": "^0.1.35",
-    "@types/node": "^14.0.27",
-    "eslint": "^6.8.0",
-    "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1"
-  },
-  "scripts": {
-    "test": "eslint ."
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Pierce01/MinecraftLauncher-core.git"
-  },
-  "keywords": [
-    "minecraft",
-    "minecraft-launcher-node",
-    "minecraft-launcher",
-    "launcher",
-    "minecraft-forge"
-  ],
-  "author": "Pierce Harriz",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/Pierce01/MinecraftLauncher-core/issues"
-  },
-  "homepage": "https://github.com/Pierce01/MinecraftLauncher-core#readme"
+    "name": "minecraft-launcher-core",
+    "version": "3.18.0",
+    "description": "Lightweight module that downloads and runs Minecraft using javascript / NodeJS",
+    "main": "index.js",
+    "dependencies": {
+        "adm-zip": "^0.4.13",
+        "checksum": "^0.1.1",
+        "request": "^2.88.2",
+        "uuid": "^8.3.2"
+    },
+    "devDependencies": {
+        "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
+        "@types/checksum": "^0.1.35",
+        "@types/node": "^14.0.27",
+        "@types/request": "^2.48.12",
+        "@typescript-eslint/eslint-plugin": "^7.1.0",
+        "@typescript-eslint/parser": "^7.1.0",
+        "eslint": "^8.57.0",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-prettier": "^5.1.3",
+        "prettier": "^3.2.5"
+    },
+    "scripts": {
+        "test": "eslint ."
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Pierce01/MinecraftLauncher-core.git"
+    },
+    "keywords": [
+        "minecraft",
+        "minecraft-launcher-node",
+        "minecraft-launcher",
+        "launcher",
+        "minecraft-forge"
+    ],
+    "author": "Pierce Harriz",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/Pierce01/MinecraftLauncher-core/issues"
+    },
+    "homepage": "https://github.com/Pierce01/MinecraftLauncher-core#readme"
 }
