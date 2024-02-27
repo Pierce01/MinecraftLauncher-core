@@ -1,18 +1,21 @@
 const fs = require('fs');
 const path = require('path');
-const request = require('request');
+const axios = require('axios');
 const checksum = require('checksum');
 const Zip = require('adm-zip');
 const child = require('child_process');
+const http = require('http');
+const https = require('https');
 let counter = 0;
 
 class Handler {
     constructor(client) {
         this.client = client;
         this.options = client.options;
-        this.baseRequest = request.defaults({
-            pool: { maxSockets: this.options.overrides.maxSockets || 2 },
+        this.baseRequest = axios.create({
             timeout: this.options.timeout || 50000,
+            httpAgent: new http.Agent({ keepAlive: true, maxSockets: this.options.overrides.maxSockets || 2 }),
+            httpsAgent: new https.Agent({ keepAlive: true, maxSockets: this.options.overrides.maxSockets || 2 }),
         });
     }
 
@@ -37,35 +40,20 @@ class Handler {
         });
     }
 
-    downloadAsync(url, directory, name, retry, type) {
-        return new Promise((resolve) => {
+    async downloadAsync(url, directory, name, retry, type) {
+        try {
             fs.mkdirSync(directory, { recursive: true });
 
-            const _request = this.baseRequest(url);
+            const response = await this.baseRequest({
+                url: url,
+                method: 'GET',
+                responseType: 'stream',
+            });
 
+            const totalBytes = parseInt(response.headers['content-length']);
             let receivedBytes = 0;
-            let totalBytes = 0;
 
-            _request.on('response', (data) => {
-                if (data.statusCode === 404) {
-                    this.client.emit('debug', `[MCLC]: Failed to download ${url} due to: File not found...`);
-                    return resolve(false);
-                }
-
-                totalBytes = parseInt(data.headers['content-length']);
-            });
-
-            _request.on('error', async (error) => {
-                this.client.emit(
-                    'debug',
-                    `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${error}.` +
-                        ` Retrying... ${retry}`,
-                );
-                if (retry) await this.downloadAsync(url, directory, name, false, type);
-                resolve();
-            });
-
-            _request.on('data', (data) => {
+            response.data.on('data', (data) => {
                 receivedBytes += data.length;
                 this.client.emit('download-status', {
                     name: name,
@@ -76,27 +64,26 @@ class Handler {
             });
 
             const file = fs.createWriteStream(path.join(directory, name));
-            _request.pipe(file);
+            response.data.pipe(file);
 
-            file.once('finish', () => {
-                this.client.emit('download', name);
-                resolve({
-                    failed: false,
-                    asset: null,
-                });
+            await new Promise((resolve, reject) => {
+                file.on('finish', resolve);
+                file.on('error', reject);
             });
 
-            file.on('error', async (e) => {
-                this.client.emit(
-                    'debug',
-                    `[MCLC]: Failed to download asset to ${path.join(directory, name)} due to\n${e}.` +
-                        ` Retrying... ${retry}`,
-                );
-                if (fs.existsSync(path.join(directory, name))) fs.unlinkSync(path.join(directory, name));
-                if (retry) await this.downloadAsync(url, directory, name, false, type);
-                resolve();
-            });
-        });
+            this.client.emit('download', name);
+            return {
+                failed: false,
+                asset: null,
+            };
+        } catch (error) {
+            this.client.emit(
+                'debug',
+                `[MCLC]: Failed to download asset to ${path.join(directory, name)} due\n${error}. Retrying... ${retry}`,
+            );
+            if (retry) await this.downloadAsync(url, directory, name, false, type);
+            return;
+        }
     }
 
     checkSum(hash, file) {
@@ -111,59 +98,45 @@ class Handler {
         });
     }
 
-    getVersion() {
-        return new Promise((resolve) => {
+    async getVersion() {
+        try {
             const versionJsonPath =
                 this.options.overrides.versionJson ||
                 path.join(this.options.directory, `${this.options.version.number}.json`);
             if (fs.existsSync(versionJsonPath)) {
                 this.version = JSON.parse(fs.readFileSync(versionJsonPath));
-                return resolve(this.version);
+                return this.version;
             }
 
             const manifest = `${this.options.overrides.url.meta}/mc/game/version_manifest.json`;
             const cache = this.options.cache ? `${this.options.cache}/json` : `${this.options.root}/cache/json`;
-            request.get(manifest, (error, response, body) => {
-                if (error && error.code !== 'ENOTFOUND') return resolve(error);
-                if (!error) {
-                    if (!fs.existsSync(cache)) {
-                        fs.mkdirSync(cache, { recursive: true });
-                        this.client.emit('debug', '[MCLC]: Cache directory created.');
-                    }
-                    fs.writeFile(path.join(`${cache}/version_manifest.json`), body, (err) => {
-                        if (err) return resolve(err);
-                        this.client.emit('debug', '[MCLC]: Cached version_manifest.json');
-                    });
-                }
-                const parsed =
-                    error && error.code === 'ENOTFOUND'
-                        ? JSON.parse(fs.readFileSync(`${cache}/version_manifest.json`))
-                        : JSON.parse(body);
-                const desiredVersion = Object.values(parsed.versions).find(
-                    (version) => version.id === this.options.version.number,
-                );
-                if (desiredVersion) {
-                    request.get(desiredVersion.url, (error, response, body) => {
-                        if (error && error.code !== 'ENOTFOUND') throw Error(error);
-                        if (!error) {
-                            fs.writeFile(path.join(`${cache}/${this.options.version.number}.json`), body, (err) => {
-                                if (err) throw Error(err);
-                                this.client.emit('debug', `[MCLC]: Cached ${this.options.version.number}.json`);
-                            });
-                        }
+            const { data } = await axios.get(manifest);
 
-                        this.client.emit('debug', '[MCLC]: Parsed version from version manifest');
-                        this.version =
-                            error && error.code === 'ENOTFOUND'
-                                ? JSON.parse(fs.readFileSync(`${cache}/${this.options.version.number}.json`))
-                                : JSON.parse(body);
-                        return resolve(this.version);
-                    });
-                } else {
-                    throw Error(`Failed to find version ${this.options.version.number} in version_manifest.json`);
-                }
-            });
-        });
+            if (!fs.existsSync(cache)) {
+                fs.mkdirSync(cache, { recursive: true });
+                this.client.emit('debug', '[MCLC]: Cache directory created.');
+            }
+
+            fs.writeFileSync(path.join(cache, 'version_manifest.json'), JSON.stringify(data));
+            this.client.emit('debug', '[MCLC]: Cached version_manifest.json');
+
+            const desiredVersion = Object.values(data.versions).find(
+                (version) => version.id === this.options.version.number,
+            );
+            if (desiredVersion) {
+                const { data } = await axios.get(desiredVersion.url);
+                fs.writeFileSync(path.join(`${cache}/${this.options.version.number}.json`), JSON.stringify(data));
+                this.client.emit('debug', `[MCLC]: Cached ${this.options.version.number}.json`);
+
+                this.client.emit('debug', '[MCLC]: Parsed version from version manifest');
+                this.version = data;
+                return this.version;
+            } else {
+                throw Error(`Failed to find version ${this.options.version.number} in version_manifest.json`);
+            }
+        } catch (error) {
+            return error;
+        }
     }
 
     async getJar() {
@@ -499,13 +472,12 @@ class Handler {
                     const downloadLink = `${url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`;
                     // Checking if the file still exists on Forge's server, if not, replace it with the fallback.
                     // Not checking for sucess, only if it 404s.
-                    this.baseRequest(downloadLink, (error, response, body) => {
-                        if (error) {
-                            this.client.emit('debug', `[MCLC]: Failed checking request for ${downloadLink}`);
-                        } else {
-                            if (response.statusCode === 404) library.url = this.options.overrides.url.fallbackMaven;
-                        }
-                    });
+                    try {
+                        const response = await axios.head(downloadLink);
+                        if (response.status === 404) library.url = this.options.overrides.url.fallbackMaven;
+                    } catch (error) {
+                        this.client.emit('debug', `[MCLC]: Failed checking request for ${downloadLink}`);
+                    }
                 }),
             );
         }

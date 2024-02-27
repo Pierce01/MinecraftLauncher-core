@@ -12,6 +12,9 @@ launcher.launch({
         max: '4G',
         min: '2G',
     },
+    overrides: {
+        maxSockets: 32,
+    },
 });
 
 launcher.on('debug', (e) => console.log(e));
