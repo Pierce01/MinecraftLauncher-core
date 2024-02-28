@@ -1,4 +1,5 @@
-const { Client, Authenticator } = require('.');
+import { Authenticator, Client } from './src/index.mjs';
+
 const launcher = new Client();
 
 launcher.launch({

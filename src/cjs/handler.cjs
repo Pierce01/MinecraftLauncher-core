@@ -1,11 +1,12 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
+const child = require('node:child_process');
+const http = require('node:http');
+const https = require('node:https');
+const crypto = require('node:crypto');
 const axios = require('axios');
 const Zip = require('adm-zip');
-const child = require('child_process');
-const http = require('http');
-const https = require('https');
-const crypto = require('crypto');
+
 let counter = 0;
 
 class Handler {

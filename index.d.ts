@@ -280,7 +280,6 @@ declare module 'minecraft-launcher-core' {
 
     export class Client extends EventEmitter {
         launch(options: ILauncherOptions): Promise<ChildProcessWithoutNullStreams | null>;
-        protected printVersion(): void;
         protected createRootDirectory(): void;
         protected createGameDirectory(): void;
         protected extractPackage(): Promise<void>;

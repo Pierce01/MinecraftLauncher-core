@@ -2,7 +2,8 @@
     "name": "minecraft-launcher-core",
     "version": "3.18.0",
     "description": "Lightweight module that downloads and runs Minecraft using javascript / NodeJS",
-    "main": "index.js",
+    "main": "src/esm.js",
+    "type": "module",
     "dependencies": {
         "adm-zip": "^0.4.13",
         "axios": "^1.6.7",

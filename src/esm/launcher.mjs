@@ -1,13 +1,13 @@
-const child = require('child_process');
-const path = require('path');
-const Handler = require('./handler');
-const fs = require('fs');
-const EventEmitter = require('events').EventEmitter;
+import { spawn } from 'node:child_process';
+import { EventEmitter } from 'node:events';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import Handler from './handler.mjs';
 
 class MCLCore extends EventEmitter {
     async launch(options) {
         this.options = { ...options };
-        this.options.root = path.resolve(this.options.root);
+        this.options.root = resolve(this.options.root);
         this.options.overrides = {
             detached: true,
             ...this.options.overrides,
@@ -30,7 +30,7 @@ class MCLCore extends EventEmitter {
 
         this.handler = new Handler(this);
 
-        this.printVersion();
+        this.emit('debug', `[MCLC]: MCLC version ${this.version()}`);
 
         const java = await this.handler.checkJava(this.options.javaPath || 'java');
         if (!java.run) {
@@ -46,7 +46,7 @@ class MCLCore extends EventEmitter {
 
         const directory =
             this.options.overrides.directory ||
-            path.join(
+            join(
                 this.options.root,
                 'versions',
                 this.options.version.custom ? this.options.version.custom : this.options.version.number,
@@ -57,17 +57,12 @@ class MCLCore extends EventEmitter {
         const mcPath =
             this.options.overrides.minecraftJar ||
             (this.options.version.custom
-                ? path.join(
-                      this.options.root,
-                      'versions',
-                      this.options.version.custom,
-                      `${this.options.version.custom}.jar`,
-                  )
-                : path.join(directory, `${this.options.version.number}.jar`));
+                ? join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.jar`)
+                : join(directory, `${this.options.version.number}.jar`));
         this.options.mcPath = mcPath;
         const nativePath = await this.handler.getNatives();
 
-        if (!fs.existsSync(mcPath)) {
+        if (!existsSync(mcPath)) {
             this.emit('debug', '[MCLC]: Attempting to download Minecraft version jar');
             await this.handler.getJar();
         }
@@ -91,7 +86,7 @@ class MCLCore extends EventEmitter {
 
         if (this.options.customArgs) jvm = jvm.concat(this.options.customArgs);
         if (this.options.overrides.logj4ConfigurationFile) {
-            jvm.push(`-Dlog4j.configurationFile=${path.resolve(this.options.overrides.logj4ConfigurationFile)}`);
+            jvm.push(`-Dlog4j.configurationFile=${resolve(this.options.overrides.logj4ConfigurationFile)}`);
         }
         // https://help.minecraft.net/hc/en-us/articles/4416199399693-Security-Vulnerability-in-Minecraft-Java-Edition
         if (parseInt(versionFile.id.split('.')[1]) === 18 && !parseInt(versionFile.id.split('.')[2]))
@@ -99,7 +94,7 @@ class MCLCore extends EventEmitter {
         if (parseInt(versionFile.id.split('.')[1]) === 17) jvm.push('-Dlog4j2.formatMsgNoLookups=true');
         if (parseInt(versionFile.id.split('.')[1]) < 17) {
             if (!jvm.find((arg) => arg.includes('Dlog4j.configurationFile'))) {
-                const configPath = path.resolve(this.options.overrides.cwd || this.options.root);
+                const configPath = resolve(this.options.overrides.cwd || this.options.root);
                 const intVersion = parseInt(versionFile.id.split('.')[1]);
                 if (intVersion >= 12) {
                     await this.handler.downloadAsync(
@@ -131,9 +126,9 @@ class MCLCore extends EventEmitter {
         // Handling launch arguments.
         const file = modifyJson || versionFile;
         // So mods like fabric work.
-        const jar = fs.existsSync(mcPath)
+        const jar = existsSync(mcPath)
             ? `${separator}${mcPath}`
-            : `${separator}${path.join(directory, `${this.options.version.number}.jar`)}`;
+            : `${separator}${join(directory, `${this.options.version.number}.jar`)}`;
         classPaths.push(`${this.options.forge ? this.options.forge + separator : ''}${classes.join(separator)}${jar}`);
         classPaths.push(file.mainClass);
 
@@ -150,27 +145,18 @@ class MCLCore extends EventEmitter {
         return this.startMinecraft(launchArguments);
     }
 
-    printVersion() {
-        if (fs.existsSync(path.join(__dirname, '..', 'package.json'))) {
-            const { version } = require('../package.json');
-            this.emit('debug', `[MCLC]: MCLC version ${version}`);
-        } else {
-            this.emit('debug', '[MCLC]: Package JSON not found, skipping MCLC version check.');
-        }
-    }
-
     createRootDirectory() {
-        if (!fs.existsSync(this.options.root)) {
+        if (!existsSync(this.options.root)) {
             this.emit('debug', '[MCLC]: Attempting to create root folder');
-            fs.mkdirSync(this.options.root);
+            mkdirSync(this.options.root);
         }
     }
 
     createGameDirectory() {
         if (this.options.overrides.gameDirectory) {
-            this.options.overrides.gameDirectory = path.resolve(this.options.overrides.gameDirectory);
-            if (!fs.existsSync(this.options.overrides.gameDirectory)) {
-                fs.mkdirSync(this.options.overrides.gameDirectory, { recursive: true });
+            this.options.overrides.gameDirectory = resolve(this.options.overrides.gameDirectory);
+            if (!existsSync(this.options.overrides.gameDirectory)) {
+                mkdirSync(this.options.overrides.gameDirectory, { recursive: true });
             }
         }
     }
@@ -186,7 +172,7 @@ class MCLCore extends EventEmitter {
         let modifyJson = null;
 
         if (this.options.forge) {
-            this.options.forge = path.resolve(this.options.forge);
+            this.options.forge = resolve(this.options.forge);
             this.emit('debug', '[MCLC]: Detected Forge in options, getting dependencies');
             modifyJson = await this.handler.getForgedWrapped();
         } else if (this.options.version.custom) {
@@ -194,8 +180,8 @@ class MCLCore extends EventEmitter {
             modifyJson =
                 modifyJson ||
                 JSON.parse(
-                    fs.readFileSync(
-                        path.join(
+                    readFileSync(
+                        join(
                             this.options.root,
                             'versions',
                             this.options.version.custom,
@@ -210,7 +196,7 @@ class MCLCore extends EventEmitter {
     }
 
     startMinecraft(launchArguments) {
-        const minecraft = child.spawn(this.options.javaPath ? this.options.javaPath : 'java', launchArguments, {
+        const minecraft = spawn(this.options.javaPath ? this.options.javaPath : 'java', launchArguments, {
             cwd: this.options.overrides.cwd || this.options.root,
             detached: this.options.overrides.detached,
         });
@@ -219,6 +205,11 @@ class MCLCore extends EventEmitter {
         minecraft.on('close', (code) => this.emit('close', code));
         return minecraft;
     }
+
+    version() {
+        // Should be changed each update
+        return '3.18.0';
+    }
 }
 
-module.exports = MCLCore;
+export default MCLCore;
