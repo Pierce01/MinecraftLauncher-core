@@ -800,15 +800,11 @@ class Handler {
     }
 
     checksumFile(filename, callback) {
-        let options = {};
-        if (!options.algorithm) options.algorithm = 'sha1';
-        if (!options.encoding) options.encoding = 'hex';
-
         fs.stat(filename, function (err, stat) {
             if (!err && !stat.isFile()) err = new Error('Not a file');
             if (err) return callback(err);
 
-            const hash = crypto.createHash(options.algorithm);
+            const hash = crypto.createHash('sha1');
             const fileStream = fs.createReadStream(filename);
 
             if (!hash.write) {
@@ -817,10 +813,10 @@ class Handler {
                 });
 
                 fileStream.on('end', function () {
-                    callback(null, hash.digest(options.encoding));
+                    callback(null, hash.digest('hex'));
                 });
             } else {
-                hash.setEncoding(options.encoding);
+                hash.setEncoding('hex');
                 fileStream.pipe(hash, { end: false });
 
                 fileStream.on('end', function () {
