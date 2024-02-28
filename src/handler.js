@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
-const checksum = require('checksum');
 const Zip = require('adm-zip');
 const child = require('child_process');
 const http = require('http');
 const https = require('https');
+const crypto = require('crypto');
 let counter = 0;
 
 class Handler {
@@ -88,11 +88,12 @@ class Handler {
 
     checkSum(hash, file) {
         return new Promise((resolve, reject) => {
-            checksum.file(file, (err, sum) => {
+            this.checksumFile(file, (err, sum) => {
                 if (err) {
                     this.client.emit('debug', `[MCLC]: Failed to check file hash due to ${err}`);
-                    return resolve(false);
+                    return reject();
                 }
+
                 return resolve(hash === sum);
             });
         });
@@ -796,6 +797,38 @@ class Handler {
         if (options.removePackage) fs.unlinkSync(options.clientPackage);
 
         return this.client.emit('package-extract', true);
+    }
+
+    checksumFile(filename, callback) {
+        let options = {};
+        if (!options.algorithm) options.algorithm = 'sha1';
+        if (!options.encoding) options.encoding = 'hex';
+
+        fs.stat(filename, function (err, stat) {
+            if (!err && !stat.isFile()) err = new Error('Not a file');
+            if (err) return callback(err);
+
+            const hash = crypto.createHash(options.algorithm);
+            const fileStream = fs.createReadStream(filename);
+
+            if (!hash.write) {
+                fileStream.on('data', function (data) {
+                    hash.update(data);
+                });
+
+                fileStream.on('end', function () {
+                    callback(null, hash.digest(options.encoding));
+                });
+            } else {
+                hash.setEncoding(options.encoding);
+                fileStream.pipe(hash, { end: false });
+
+                fileStream.on('end', function () {
+                    hash.end();
+                    callback(null, hash.read());
+                });
+            }
+        });
     }
 }
 
