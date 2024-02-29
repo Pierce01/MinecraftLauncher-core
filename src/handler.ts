@@ -506,13 +506,11 @@ const getJVM = async () =>
 // To prevent launchers from breaking when they update. Will be reworked with rewrite.
 const getMemory = () => {
     if (typeof config.memory.min === 'number' && typeof config.memory.max === 'number') {
-        if (!isNaN(config.memory.max) && !isNaN(config.memory.min)) {
-            if (config.memory.max < config.memory.min) {
-                log('debug', 'MIN memory is higher then MAX! Resetting!');
-                setConfig('memory', { min: Math.pow(2, 9), max: Math.pow(2, 10) });
-            }
-            return [`${config.memory.max}M`, `${config.memory.min}M`];
+        if (config.memory.max < config.memory.min) {
+            log('debug', 'MIN memory is higher then MAX! Resetting!');
+            setConfig('memory', { min: Math.pow(2, 9), max: Math.pow(2, 10) });
         }
+        return [`${config.memory.max}M`, `${config.memory.min}M`];
     } else if (typeof config.memory.min === 'string' && typeof config.memory.max === 'string') {
         return [`${config.memory.max}`, `${config.memory.min}`];
     } else {
@@ -523,8 +521,6 @@ const getMemory = () => {
         setConfig('memory', { min: Math.pow(2, 9), max: Math.pow(2, 10) });
         return [`${config.memory.max}M`, `${config.memory.min}M`];
     }
-
-    return [`${config.memory.max}M`, `${config.memory.min}M`];
 };
 
 export {
