@@ -2,7 +2,6 @@
 
 ##### Project rewrite coming soon™
 
-[![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![version](https://img.shields.io/badge/stable_version-3.18.0-blue)
 
@@ -64,7 +63,6 @@ launcher.on('data', (e) => console.log(e));
 
 | Parameter                      | Type    | Description                                                                                                                      | Required |
 | ------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `options.clientPackage`        | String  | Path or URL to a zip file, which will be extracted to the root directory. (Not recommended for production use)                   | False    |
 | `options.removePackage`        | Boolean | Option to remove the client package zip file after its finished extracting.                                                      | False    |
 | `options.root`                 | String  | Path where you want the launcher to work in. `C:/Users/user/AppData/Roaming/.mc`                                                 | True     |
 | `options.cache`                | String  | Path where launcher files will be cached in. `C:/Users/user/AppData/Roaming/.mc/cache`                                           | False    |
@@ -107,7 +105,6 @@ let opts = {
        assetRoot: '',
        assetIndex: '',
        libraryRoot: '',
-       cwd: '', // working directory of the java process.
        detached: true, // whether or not the client is detached from the parent / launcher.
        classes: [], // all class paths are required if you use this.
        minArgs: 11, // The amount of launch arguments specified in the version file before it adds the default again
@@ -212,7 +209,6 @@ MCLC's authenticator module does not support Microsoft authentication. You will 
 | `arguments`       | Object  | Emitted when launch arguments are set for the Minecraft Jar.                        |
 | `data`            | String  | Emitted when information is returned from the Minecraft Process                     |
 | `close`           | Integer | Code number that is returned by the Minecraft Process                               |
-| `package-extract` | null    | Emitted when `clientPackage` finishes being extracted                               |
 | `download`        | String  | Emitted when a file successfully downloads                                          |
 | `download-status` | Object  | Emitted when data is received while downloading                                     |
 | `debug`           | String  | Emitted when functions occur, made to help debug if errors occur                    |

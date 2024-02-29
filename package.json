@@ -2,25 +2,39 @@
     "name": "minecraft-launcher-core",
     "version": "3.18.0",
     "description": "Lightweight module that downloads and runs Minecraft using javascript / NodeJS",
-    "main": "src/esm.js",
-    "type": "module",
+    "main": "./build/cjs/index.js",
+    "module": "./build/esm/index.js",
+    "types": "./build/esm/index.d.ts",
+    "files": [
+        "./build/"
+    ],
+    "type": "commonjs",
     "dependencies": {
-        "adm-zip": "^0.4.13",
+        "adm-zip": "^0.5.10",
         "axios": "^1.6.7",
         "uuid": "^8.3.2"
     },
     "devDependencies": {
         "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
+        "@types/adm-zip": "^0.5.5",
         "@types/node": "^14.0.27",
+        "@types/uuid": "^9.0.8",
         "@typescript-eslint/eslint-plugin": "^7.1.0",
         "@typescript-eslint/parser": "^7.1.0",
         "eslint": "^8.57.0",
         "eslint-config-prettier": "^9.1.0",
         "eslint-plugin-prettier": "^5.1.3",
-        "prettier": "^3.2.5"
+        "prettier": "^3.2.5",
+        "typescript": "^5.3.3"
     },
     "scripts": {
-        "test": "eslint ."
+        "clean": "rm -rf ./lib/",
+        "build": "yarn clean && yarn build:esm && yarn tsc",
+        "build:esm": "tsc --module esnext --declaration --outDir ./build/esm",
+        "lint": "eslint --color .",
+        "prettier": "prettier --check .",
+        "prettier:write": "prettier --write .",
+        "typecheck": "tsc --noEmit"
     },
     "repository": {
         "type": "git",
