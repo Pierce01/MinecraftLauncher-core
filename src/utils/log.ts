@@ -6,7 +6,7 @@ const log = (type: string, message: string | number | Record<string, any>) => {
     let msg = message;
     if (typeof message === 'object') msg = JSON.stringify(msg);
 
-    eventEmitter.emit(type, `[MCLC]: ${msg}`);
+    eventEmitter.emit(type, type !== 'data' ? `[MCLC]: ${msg}` : msg);
     return;
 };
 
