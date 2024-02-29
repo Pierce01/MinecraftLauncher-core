@@ -20,7 +20,13 @@ import { log } from './utils/log';
 // Should be changed each update
 const version = '3.18.0';
 
-export const launch = async () => {
+export const launch = () => {
+    throw Error(
+        'This function is no longer used. In order to install Minecraft, use the install function. To start Minecraft, use the start function',
+    );
+};
+
+export const install = async () => {
     log('debug', `MCLC version ${version}`);
 
     const java = await checkJava(config.javaPath || 'java');
@@ -45,6 +51,43 @@ export const launch = async () => {
         join(config.root, 'versions', config.version.custom ? config.version.custom : config.version.number);
     setConfig('directory', directory);
 
+    await getVersion();
+    const mcPath =
+        config.minecraftJar ||
+        (config.version.custom
+            ? join(config.root, 'versions', config.version.custom, `${config.version.custom}.jar`)
+            : join(directory, `${config.version.number}.jar`));
+    await getNatives();
+
+    if (!existsSync(mcPath)) {
+        log('debug', 'Attempting to download Minecraft version jar');
+        await getJar();
+    }
+
+    cleanUp(await getClasses());
+
+    log('debug', 'Attempting to download assets');
+    await getAssets();
+
+    log('debug', `Successfully installed Minecraft ${config.version.number}`);
+    return;
+};
+
+export const start = async () => {
+    log('debug', `MCLC version ${version}`);
+
+    const java = await checkJava(config.javaPath || 'java');
+    // if (!java || !java.run) {
+    if (!java) {
+        // log('debug', `Couldn't start Minecraft due to: ${java.message}`);
+        return log('close', 1);
+    }
+
+    const directory =
+        config.directory ||
+        join(config.root, 'versions', config.version.custom ? config.version.custom : config.version.number);
+    setConfig('directory', directory);
+
     const versionFile = await getVersion();
     const mcPath =
         config.minecraftJar ||
@@ -52,11 +95,6 @@ export const launch = async () => {
             ? join(config.root, 'versions', config.version.custom, `${config.version.custom}.jar`)
             : join(directory, `${config.version.number}.jar`));
     const nativePath = await getNatives();
-
-    if (!existsSync(mcPath)) {
-        log('debug', 'Attempting to download Minecraft version jar');
-        await getJar();
-    }
 
     const args: string[] = [];
 
@@ -118,9 +156,6 @@ export const launch = async () => {
         : `${separator}${join(directory, `${config.version.number}.jar`)}`;
     classPaths.push(`${classes.join(separator)}${jar}`);
     classPaths.push(versionFile.mainClass);
-
-    log('debug', 'Attempting to download assets');
-    await getAssets();
 
     const launchconfig = await getLaunchOptions();
 
