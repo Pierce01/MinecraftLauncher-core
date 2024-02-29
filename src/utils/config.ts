@@ -1,6 +1,6 @@
 import { Options } from './types';
 
-let config: Options = {
+const config: Options = {
     root: './minecraft',
     authorization: {
         access_token: 'e9df5bd1-28bb-31c6-8eb0-4ad41f47d874',
