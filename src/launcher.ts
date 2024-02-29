@@ -4,7 +4,6 @@ import { join, resolve } from 'node:path';
 import {
     checkJava,
     downloadAsync,
-    extractPackage,
     getAssets,
     getClasses,
     getJar,
@@ -134,6 +133,6 @@ export const launch = async () => {
     });
     minecraft.stdout.on('data', (data) => log('data', data.toString('utf-8')));
     minecraft.stderr.on('data', (data) => log('data', data.toString('utf-8')));
-    minecraft.on('close', (code) => log('close', code));
+    minecraft.on('close', (code) => code && log('close', code));
     return minecraft;
 };

@@ -2,8 +2,11 @@ import EventEmitter from 'events';
 
 const eventEmitter = new EventEmitter();
 
-const log = (type: string, message: any) => {
-    eventEmitter.emit(type, `[MCLC]: ${message}`);
+const log = (type: string, message: string | number | Record<string, any>) => {
+    let msg = message;
+    if (typeof message === 'object') msg = JSON.stringify(msg);
+
+    eventEmitter.emit(type, `[MCLC]: ${msg}`);
     return;
 };
 
