@@ -503,7 +503,6 @@ const getJVM = async () =>
         linux: '-Xss1M',
     })[getOS()];
 
-// To prevent launchers from breaking when they update. Will be reworked with rewrite.
 const getMemory = () => {
     if (typeof config.memory.min === 'number' && typeof config.memory.max === 'number') {
         if (config.memory.max < config.memory.min) {
