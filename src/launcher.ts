@@ -18,7 +18,7 @@ import { config, setConfig } from './utils/config';
 import { log } from './utils/log';
 
 // Should be changed each update
-const version = '3.18.0';
+export const version = '3.18.0';
 
 export const launch = () => {
     throw Error(
@@ -31,7 +31,7 @@ export const install = async () => {
 
     const java = await checkJava(config.javaPath || 'java');
     if (!java || !java.run) {
-        log('debug', `Couldn't start Minecraft due to: ${java.message}`);
+        log('debug', `Couldn't install Minecraft due to: ${java.message}`);
         return log('close', 1);
     }
 
