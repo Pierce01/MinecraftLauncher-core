@@ -30,9 +30,8 @@ export const install = async () => {
     log('debug', `MCLC version ${version}`);
 
     const java = await checkJava(config.javaPath || 'java');
-    // if (!java || !java.run) {
-    if (!java) {
-        // log('debug', `Couldn't start Minecraft due to: ${java.message}`);
+    if (!java || !java.run) {
+        log('debug', `Couldn't start Minecraft due to: ${java.message}`);
         return log('close', 1);
     }
 
