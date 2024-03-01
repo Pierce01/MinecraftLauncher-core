@@ -287,7 +287,8 @@ const getNatives = async () => {
                 if (!native) return;
                 const name = native.path.split('/').pop()!;
                 await downloadAsync(native.url, nativeDirectory, name, true, 'natives');
-                if (!(await checkSum(native.sha1, join(nativeDirectory, name)))) {
+                const downloaded = await checkSum(native.sha1, join(nativeDirectory, name));
+                if (!existsSync(join(nativeDirectory, name)) || !downloaded) {
                     await downloadAsync(native.url, nativeDirectory, name, true, 'natives');
                 }
                 try {
@@ -336,12 +337,11 @@ const downloadToDirectory = async (directory: string, libraries: libType[], even
                 jarPath = join(directory, `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`);
             }
 
-            const downloadLibrary = async (library: libType) =>
+            if (!existsSync(join(jarPath, name)))
                 await downloadAsync(library.downloads.artifact.url, jarPath, name, true, eventName);
-
-            if (!existsSync(join(jarPath, name))) await downloadLibrary(library);
             if (library.downloads && library.downloads.artifact)
-                if (!checkSum(library.downloads.artifact.sha1, join(jarPath, name))) await downloadLibrary(library);
+                if (!checkSum(library.downloads.artifact.sha1, join(jarPath, name)))
+                    await downloadAsync(library.downloads.artifact.url, jarPath, name, true, eventName);
 
             counter++;
             log('progress', {
