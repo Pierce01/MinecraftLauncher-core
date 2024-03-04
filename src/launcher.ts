@@ -13,12 +13,10 @@ import {
     getNatives,
     getVersion,
 } from './handler';
+import mclc from './mclc';
 import { cleanUp, getOS } from './utils';
 import { config, setConfig } from './utils/config';
 import { log } from './utils/log';
-
-// Should be changed each update
-export const version = '3.18.0';
 
 export const launch = () => {
     throw Error(
@@ -27,7 +25,7 @@ export const launch = () => {
 };
 
 export const install = async () => {
-    log('debug', `MCLC version ${version}`);
+    log('version', `MCLC version ${mclc}`);
 
     const java = await checkJava(config.javaPath || 'java');
     if (!java || !java.run) {
@@ -73,7 +71,7 @@ export const install = async () => {
 };
 
 export const start = async () => {
-    log('debug', `MCLC version ${version}`);
+    log('version', `MCLC version ${mclc}`);
 
     const java = await checkJava(config.javaPath || 'java');
     if (!java || !java.run) {

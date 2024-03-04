@@ -14,7 +14,7 @@ import { Agent as https } from 'node:https';
 import { resolve as _resolve, join, sep } from 'node:path';
 import Zip from 'adm-zip';
 import axios from 'axios';
-import { checksumFile, getOS, isLegacy, popString } from './utils';
+import { checkSum, getOS, isLegacy, popString } from './utils';
 import { config, setConfig } from './utils/config';
 import { log } from './utils/log';
 import { artifactType, Fields, libType, Version } from './utils/types';
@@ -51,8 +51,8 @@ const downloadAsync = async (url: string, directory: string, name: string, retry
         const response = await axios.get(url, {
             responseType: 'stream',
             timeout: config.timeout || 50000,
-            httpAgent: new http({ keepAlive: true, maxSockets: config.maxSockets || 2 }),
-            httpsAgent: new https({ keepAlive: true, maxSockets: config.maxSockets || 2 }),
+            httpAgent: new http({ maxSockets: config.maxSockets || 2 }),
+            httpsAgent: new https({ maxSockets: config.maxSockets || 2 }),
         });
 
         const totalBytes = parseInt(response.headers['content-length']);
@@ -72,9 +72,18 @@ const downloadAsync = async (url: string, directory: string, name: string, retry
         const file = createWriteStream(join(directory, name));
         response.data.pipe(file);
 
-        await new Promise((resolve, reject) => {
+        await new Promise((resolve) => {
             file.on('finish', resolve);
-            file.on('error', reject);
+            file.on('error', async (e) => {
+                log(
+                    'debug',
+                    `[MCLC]: Failed to download asset to ${join(directory, name)} due to\n${e}.` +
+                        ` Retrying... ${retry}`,
+                );
+                if (existsSync(join(directory, name))) unlinkSync(join(directory, name));
+                if (retry) await downloadAsync(url, directory, name, false, type);
+                return resolve(e);
+            });
         });
 
         log('download', name);
@@ -88,18 +97,6 @@ const downloadAsync = async (url: string, directory: string, name: string, retry
         return;
     }
 };
-
-const checkSum = (hash: string, file: string) =>
-    new Promise((resolve, reject) => {
-        checksumFile(file, (err, sum) => {
-            if (err) {
-                log('debug', `Failed to check file hash due to ${err}`);
-                return reject();
-            }
-
-            return resolve(hash === sum);
-        });
-    });
 
 const getVersion = async () => {
     const versionJsonPath = config.versionJson || join(config.directory!, `${config.version.number}.json`);
@@ -415,7 +412,7 @@ const getLaunchOptions = async () => {
     if (config.customLaunchArgs) args = args.concat(config.customLaunchArgs);
 
     config.authorization = await Promise.resolve(config.authorization);
-    config.authorization.meta = config.authorization.meta ? config.authorization.meta : { type: 'mojang' };
+    config.authorization.meta = config.authorization.meta ?? { demo: false, type: 'mojang' };
     const fields: Fields = {
         '${auth_access_token}': config.authorization.access_token,
         '${auth_session}': config.authorization.access_token,

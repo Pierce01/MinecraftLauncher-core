@@ -22,7 +22,7 @@ const config: Options = {
         min: '2G',
         max: '4G',
     },
-    maxSockets: 32,
+    maxSockets: Infinity,
 };
 
 const setConfig = <K extends keyof Options>(key: K, value: Options[K]) => (config[key] = value);

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { createReadStream, stat } from 'node:fs';
 import { resolve as _resolve } from 'node:path';
 import { config } from './config';
+import { log } from './log';
 import { Version } from './types';
 
 const popString = (path: string) => path.split('/').slice(0, -1).join('/');
@@ -22,24 +23,27 @@ const getOS = () => {
     }
 };
 
-const checksumFile = (filename: string, callback: (error: Error | null, hash?: string) => void) => {
-    stat(filename, (err, stat) => {
-        if (!err && !stat.isFile()) err = new Error('Not a file');
-        if (err) return callback(err);
+const checkSum = (hash: string, file: string): Promise<boolean> =>
+    new Promise((resolve, reject) => {
+        stat(file, (err, stat) => {
+            if (err || !stat.isFile()) {
+                log('debug', `Failed to check file due to ${err}`);
+                return reject(err || new Error('Not a file'));
+            }
 
-        const hash = createHash('sha1');
-        const fileStream = createReadStream(filename);
+            const hashStream = createHash('sha1');
+            const fileStream = createReadStream(file);
 
-        hash.setEncoding('hex');
-        fileStream.pipe(hash, { end: false });
+            hashStream.setEncoding('hex');
+            fileStream.pipe(hashStream, { end: false });
 
-        fileStream.on('end', function () {
-            hash.end();
-            callback(null, hash.read());
+            fileStream.on('end', () => {
+                hashStream.end();
+                resolve(hash === hashStream.read());
+            });
         });
     });
-};
 
 const isLegacy = (version: Version) => version.assets === 'legacy' || version.assets === 'pre-1.6';
 
-export { popString, cleanUp, getOS, checksumFile, isLegacy };
+export { popString, cleanUp, getOS, isLegacy, checkSum };
