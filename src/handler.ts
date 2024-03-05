@@ -135,7 +135,7 @@ const getJar = async () => {
     await downloadAsync(
         parsedVersion.downloads.client.url,
         config.directory!,
-        `${config.version.custom ? config.version.custom : config.version.number}.jar`,
+        `${config.version.custom ?? config.version.number}.jar`,
         true,
         'version-jar',
     );

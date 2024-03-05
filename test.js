@@ -1,11 +1,10 @@
-const { installForge, Config, onLog, Client } = require('./build/cjs/index.js');
+const { Config, onLog, Client } = require('./build/cjs/index.js');
 
 Config.setConfig('version', { number: '1.15.2', type: 'release' });
 // Config.setConfig('configPath', '/usr/lib/jvm/java-8-openjdk-amd64/bin/java');
 
 (async () => {
     await Client.install();
-    await installForge();
     await Client.start();
 })();
 
