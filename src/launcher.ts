@@ -1,11 +1,12 @@
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import {
     checkJava,
     downloadAsync,
     getAssets,
     getClasses,
+    getForgedWrapped,
     getJar,
     getJVM,
     getLaunchOptions,
@@ -43,9 +44,7 @@ export const install = async () => {
         if (!existsSync(config.gameDirectory)) mkdirSync(config.gameDirectory, { recursive: true });
     }
 
-    const directory =
-        config.directory ||
-        join(config.root, 'versions', config.version.custom ? config.version.custom : config.version.number);
+    const directory = config.directory || join(config.root, 'versions', config.version.custom ?? config.version.number);
     setConfig('directory', directory);
 
     await getVersion();
@@ -61,7 +60,17 @@ export const install = async () => {
         await getJar();
     }
 
-    cleanUp(await getClasses());
+    let modifyJson = null;
+    if (config.version.custom) {
+        log('debug', 'Detected custom in options, setting custom version file');
+        modifyJson = JSON.parse(
+            readFileSync(join(config.root, 'versions', config.version.custom, `${config.version.custom}.json`), {
+                encoding: 'utf8',
+            }),
+        );
+    }
+
+    cleanUp(await getClasses(modifyJson));
 
     log('debug', 'Attempting to download assets');
     await getAssets();
@@ -94,12 +103,26 @@ export const start = async () => {
 
     const args: string[] = [];
 
+    let modifyJson = null;
+    if (config.version.custom) {
+        log('debug', 'Detected custom in options, setting custom version file');
+        modifyJson = JSON.parse(
+            readFileSync(join(config.root, 'versions', config.version.custom, `${config.version.custom}.json`), {
+                encoding: 'utf8',
+            }),
+        );
+    } else if (config.forge) {
+        setConfig('forge', resolve(config.forge));
+        log('debug', '[MCLC]: Detected Forge in options, getting dependencies');
+        modifyJson = await getForgedWrapped();
+    }
+
     let jvm = [
         '-XX:-UseAdaptiveSizePolicy',
         '-XX:-OmitStackTraceInFastThrow',
         '-Dfml.ignorePatchDiscrepancies=true',
         '-Dfml.ignoreInvalidMinecraftCertificates=true',
-        `-Djava.library.path=${nativePath}`,
+        `-Djava.library.path=${resolve(nativePath)}`,
         `-Xmx${getMemory()[0]}`,
         `-Xms${getMemory()[1]}`,
     ];
@@ -141,20 +164,20 @@ export const start = async () => {
         }
     }
 
-    const classes = config.classes || cleanUp(await getClasses());
+    const classes = config.classes || cleanUp(await getClasses(modifyJson));
     const classPaths = ['-cp'];
     const separator = getOS() === 'windows' ? ';' : ':';
     log('debug', `Using ${separator} to separate class paths`);
     // Handling launch arguments.
+    const file = modifyJson || versionFile;
     // So mods like fabric work.
     const jar = existsSync(mcPath)
         ? `${separator}${mcPath}`
         : `${separator}${join(directory, `${config.version.number}.jar`)}`;
-    classPaths.push(`${classes.join(separator)}${jar}`);
-    classPaths.push(versionFile.mainClass);
+    classPaths.push(`${config.forge ? config.forge + separator : ''}${classes.join(separator)}${jar}`);
+    classPaths.push(file.mainClass);
 
-    const launchconfig = await getLaunchOptions();
-
+    const launchconfig = await getLaunchOptions(modifyJson);
     const launchArguments = args.concat(jvm, classPaths, launchconfig);
     log('arguments', launchArguments);
     log('debug', `Launching with arguments ${launchArguments.join(' ')}`);

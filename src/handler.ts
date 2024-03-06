@@ -11,13 +11,13 @@ import {
 import { exec, ExecException } from 'node:child_process';
 import { Agent as http } from 'node:http';
 import { Agent as https } from 'node:https';
-import { resolve as _resolve, join, sep } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import Zip from 'adm-zip';
 import axios from 'axios';
-import { checkSum, getOS, isLegacy, popString } from './utils';
+import { checkSum, cleanUp, getOS, isLegacy, popString } from './utils';
 import { config, setConfig } from './utils/config';
 import { log } from './utils/log';
-import { artifactType, Fields, libType, Version } from './utils/types';
+import { artifactType, customArtifactType, Fields, libType, Version } from './utils/types';
 
 let counter = 0;
 let parsedVersion: Version;
@@ -77,8 +77,7 @@ const downloadAsync = async (url: string, directory: string, name: string, retry
             file.on('error', async (e) => {
                 log(
                     'debug',
-                    `[MCLC]: Failed to download asset to ${join(directory, name)} due to\n${e}.` +
-                        ` Retrying... ${retry}`,
+                    `Failed to download asset to ${join(directory, name)} due to\n${e}.` + ` Retrying... ${retry}`,
                 );
                 if (existsSync(join(directory, name))) unlinkSync(join(directory, name));
                 if (retry) await downloadAsync(url, directory, name, false, type);
@@ -144,7 +143,7 @@ const getJar = async () => {
 };
 
 const getAssets = async () => {
-    const assetDirectory = _resolve(config.assetRoot || join(config.root, 'assets'));
+    const assetDirectory = resolve(config.assetRoot || join(config.root, 'assets'));
     const assetId = config.version.custom || config.version.number;
 
     if (!existsSync(join(assetDirectory, 'indexes', `${assetId}.json`))) {
@@ -171,9 +170,8 @@ const getAssets = async () => {
             const subhash = hash.substring(0, 2);
             const subAsset = join(assetDirectory, 'objects', subhash);
 
-            if (!existsSync(join(subAsset, hash)) || !(await checkSum(hash, join(subAsset, hash)))) {
+            if (!existsSync(join(subAsset, hash)) || !(await checkSum(hash, join(subAsset, hash))))
                 await downloadAsync(`${config.url?.resource}/${subhash}/${hash}`, subAsset, hash, true, 'assets');
-            }
             counter++;
             log('progress', {
                 type: 'assets',
@@ -245,7 +243,7 @@ const parseRule = (lib: libType) => {
 };
 
 const getNatives = async () => {
-    const nativeDirectory = _resolve(config.natives || join(config.root, 'natives', parsedVersion.id));
+    const nativeDirectory = resolve(config.natives || join(config.root, 'natives', parsedVersion.id));
 
     if (parseInt(parsedVersion.id.split('.')[1]) >= 19) return config.root;
 
@@ -285,9 +283,8 @@ const getNatives = async () => {
                 const name = native.path.split('/').pop()!;
                 await downloadAsync(native.url, nativeDirectory, name, true, 'natives');
                 const downloaded = await checkSum(native.sha1, join(nativeDirectory, name));
-                if (!existsSync(join(nativeDirectory, name)) || !downloaded) {
+                if (!existsSync(join(nativeDirectory, name)) || !downloaded)
                     await downloadAsync(native.url, nativeDirectory, name, true, 'natives');
-                }
                 try {
                     new Zip(join(nativeDirectory, name)).extractAllTo(nativeDirectory, true);
                 } catch (e) {
@@ -314,18 +311,193 @@ const getNatives = async () => {
     return nativeDirectory;
 };
 
-const downloadToDirectory = async (directory: string, libraries: libType[], eventName: string) => {
+const fwAddArgs = () => {
+    const forgeWrapperAgrs = [
+        `-Dforgewrapper.librariesDir=${resolve(config.libraryRoot || join(config.root, 'libraries'))}`,
+        `-Dforgewrapper.installer=${config.forge}`,
+        `-Dforgewrapper.minecraft=${resolve(join(config.directory!, `${config.version.number}.jar`))}`,
+    ];
+    config.customArgs
+        ? setConfig('customArgs', config.customArgs.concat(forgeWrapperAgrs))
+        : setConfig('customArgs', forgeWrapperAgrs);
+
+    return;
+};
+
+const getForgedWrapped = async () => {
+    let json = null;
+    let installerJson = null;
+    const versionPath = join(config.root, 'forge', `${parsedVersion.id}`, 'version.json');
+    // Since we're building a proper "custom" JSON that will work nativly with MCLC, the version JSON will not
+    // be re-generated on the next run.
+    if (existsSync(versionPath)) {
+        try {
+            json = JSON.parse(readFileSync(versionPath).toString());
+            if (!json.forgeWrapperVersion || !(json.forgeWrapperVersion === '1.6.0')) {
+                log('debug', 'Old ForgeWrapper has generated this version JSON, re-generating');
+            } else {
+                // If forge is modern, add ForgeWrappers launch arguments and set forge to null so MCLC treats it as a custom json.
+                if (
+                    json.inheritsFrom &&
+                    json.inheritsFrom.split('.')[1] >= 12 &&
+                    !(json.inheritsFrom === '1.12.2' && json.id.split('.')[json.id.split('.').length - 1] === '2847')
+                ) {
+                    fwAddArgs();
+                    setConfig('forge', undefined);
+                }
+                return json;
+            }
+        } catch (e) {
+            console.warn(e);
+            log('debug', 'Failed to parse Forge version JSON, re-generating');
+        }
+    }
+
+    log('debug', 'Generating Forge version json, this might take a bit');
+    const zipFile = new Zip(config.forge);
+    json = zipFile.readAsText('version.json');
+    if (zipFile.getEntry('install_profile.json')) installerJson = zipFile.readAsText('install_profile.json');
+
+    try {
+        json = JSON.parse(json);
+        if (installerJson) installerJson = JSON.parse(installerJson);
+    } catch (e) {
+        log('debug', 'Failed to load json files for ForgeWrapper, using Vanilla instead');
+        return null;
+    }
+    // Adding the installer libraries as mavenFiles so MCLC downloads them but doesn't add them to the class paths.
+    if (installerJson) {
+        json.mavenFiles
+            ? (json.mavenFiles = json.mavenFiles.concat(installerJson.libraries))
+            : (json.mavenFiles = installerJson.libraries);
+    }
+
+    // Holder for the specifc jar ending which depends on the specifc forge version.
+    let jarEnding = 'universal';
+    // We need to handle modern forge differently than legacy.
+    if (
+        json.inheritsFrom &&
+        json.inheritsFrom.split('.')[1] >= 12 &&
+        !(json.inheritsFrom === '1.12.2' && json.id.split('.')[json.id.split('.').length - 1] === '2847')
+    ) {
+        // If forge is modern and above 1.12.2, we add ForgeWrapper to the libraries so MCLC includes it in the classpaths.
+        if (json.inheritsFrom !== '1.12.2') {
+            fwAddArgs();
+            json.libraries.push({
+                name: 'io:github:zekerzhayard:ForgeWrapper:1.6.0',
+                downloads: {
+                    artifact: {
+                        path: 'io/github/zekerzhayard/ForgeWrapper/1.6.0/ForgeWrapper-1.6.0.jar',
+                        url: 'https://github.com/ZekerZhayard/ForgeWrapper/releases/download/1.6.0/ForgeWrapper-1.6.0.jar',
+                        sha1: '035a51fe6439792a61507630d89382f621da0f1f',
+                        size: 28679,
+                    },
+                },
+            });
+            json.mainClass = 'io.github.zekerzhayard.forgewrapper.installer.Main';
+            jarEnding = 'launcher';
+
+            // Providing a download URL to the universal jar mavenFile so it can be downloaded properly.
+            for (const library of json.mavenFiles) {
+                const lib = library.name.split(':');
+                if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) {
+                    library.downloads.artifact.url =
+                        'https://files.minecraftforge.net/maven/' + library.downloads.artifact.path;
+                    break;
+                }
+            }
+        } else {
+            // Remove the forge dependent since we're going to overwrite the first entry anyways.
+            for (const library in json.mavenFiles) {
+                const lib = json.mavenFiles[library].name.split(':');
+                if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) {
+                    delete json.mavenFiles[library];
+                    break;
+                }
+            }
+        }
+    } else {
+        // Modifying legacy library format to play nice with MCLC's downloadToDirectory function.
+        await Promise.all(
+            json.libraries.map(async (library: any) => {
+                const lib = library.name.split(':');
+                if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) return;
+                if (!library.url && !(library.serverreq || library.clientreq)) return;
+
+                library.url = library.url
+                    ? 'https://files.minecraftforge.net/maven/'
+                    : 'https://libraries.minecraft.net/';
+                const downloadLink = `${library.url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${lib[1]}-${lib[2]}.jar`;
+                // Checking if the file still exists on Forge's server, if not, replace it with the fallback.
+                // Not checking for sucess, only if it 404s.
+                await axios
+                    .get(downloadLink, {
+                        timeout: config.timeout || 50000,
+                        httpAgent: new http({ maxSockets: config.maxSockets || 2 }),
+                        httpsAgent: new https({ maxSockets: config.maxSockets || 2 }),
+                    })
+                    .then(
+                        ({ status }) =>
+                            status === 404 && (library.url = 'https://search.maven.org/remotecontent?filepath='),
+                    )
+                    .catch(() => log('debug', `Failed checking request for ${downloadLink}`));
+            }),
+        );
+    }
+    // If a downloads property exists, we modify the inital forge entry to include ${jarEnding} so ForgeWrapper can work properly.
+    // If it doesn't, we simply remove it since we're already providing the universal jar.
+    if (json.libraries[0].downloads) {
+        const name = json.libraries[0].name;
+        if (name.includes('minecraftforge:forge') && !name.includes('universal')) {
+            json.libraries[0].name = name + `:${jarEnding}`;
+            json.libraries[0].downloads.artifact.path = json.libraries[0].downloads.artifact.replace(
+                '.jar',
+                `-${jarEnding}.jar`,
+            );
+            json.libraries[0].downloads.artifact.url =
+                'https://files.minecraftforge.net/maven/' + json.libraries[0].downloads.artifact.path;
+        }
+    } else {
+        delete json.libraries[0];
+    }
+
+    // Removing duplicates and null types
+    json.libraries = cleanUp(json.libraries);
+    if (json.mavenFiles) json.mavenFiles = cleanUp(json.mavenFiles);
+
+    // Saving file for next run!
+    if (!existsSync(join(config.root, 'forge', parsedVersion.id))) {
+        mkdirSync(join(config.root, 'forge', parsedVersion.id), { recursive: true });
+    }
+    writeFileSync(versionPath, JSON.stringify(json, null, 4));
+
+    // Make MCLC treat modern forge as a custom version json rather then legacy forge.
+    if (
+        json.inheritsFrom &&
+        json.inheritsFrom.split('.')[1] >= 12 &&
+        !(json.inheritsFrom === '1.12.2' && json.id.split('.')[json.id.split('.').length - 1] === '2847')
+    )
+        setConfig('forge', undefined);
+
+    return json;
+};
+
+const downloadToDirectory = async (
+    directory: string,
+    libraries: libType[] | customArtifactType[],
+    eventName: string,
+) => {
     const libs: string[] = [];
 
     await Promise.all(
         libraries.map(async (library) => {
             if (!library) return;
-            if (parseRule(library)) return;
+            if ('downloads' in library && parseRule(library)) return;
             const lib = library.name.split(':');
 
             let jarPath: string;
             let name: string;
-            if (library.downloads && library.downloads.artifact && library.downloads.artifact.path) {
+            if ('downloads' in library && library.downloads.artifact && library.downloads.artifact.path) {
                 name =
                     library.downloads.artifact.path.split('/')[library.downloads.artifact.path.split('/').length - 1];
                 jarPath = join(directory, popString(library.downloads.artifact.path));
@@ -334,11 +506,19 @@ const downloadToDirectory = async (directory: string, libraries: libType[], even
                 jarPath = join(directory, `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`);
             }
 
-            if (!existsSync(join(jarPath, name)))
-                await downloadAsync(library.downloads.artifact.url, jarPath, name, true, eventName);
-            if (library.downloads && library.downloads.artifact)
-                if (!checkSum(library.downloads.artifact.sha1, join(jarPath, name)))
+            const downloadLibrary = async (library: libType | customArtifactType) => {
+                if ('url' in library) {
+                    const url = `${library.url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`;
+                    await downloadAsync(url, jarPath, name, true, eventName);
+                } else if ('downloads' in library && library.downloads.artifact && library.downloads.artifact.url) {
+                    // Only download if there's a URL provided. If not, we're assuming it's going a generated dependency.
                     await downloadAsync(library.downloads.artifact.url, jarPath, name, true, eventName);
+                }
+            };
+
+            if (!existsSync(join(jarPath, name))) await downloadLibrary(library);
+            if ('downloads' in library && library.downloads.artifact)
+                if (!checkSum(library.downloads.artifact.sha1, join(jarPath, name))) await downloadLibrary(library);
 
             counter++;
             log('progress', {
@@ -354,19 +534,40 @@ const downloadToDirectory = async (directory: string, libraries: libType[], even
     return libs;
 };
 
-const getClasses = async () => {
+// TODO: figure out the right type
+const getClasses = async (classJson: {
+    id: string;
+    mainClass: string;
+    arguments: {
+        game: string[];
+        jvm: string[];
+    };
+    mavenFiles?: any;
+    libraries: {
+        name: string;
+        url: string;
+        sha1?: string;
+        size?: number;
+    }[];
+}) => {
     let libs: string[] = [];
 
-    const libraryDirectory = _resolve(config.libraryRoot || join(config.root, 'libraries'));
+    const libraryDirectory = resolve(config.libraryRoot || join(config.root, 'libraries'));
 
-    const parsed = parsedVersion.libraries
-        .filter((lib: libType | undefined) => lib !== undefined)
-        .map((lib: libType) => {
-            if (lib.downloads && lib.downloads.artifact && !parseRule(lib)) return lib;
-        });
+    if (classJson) {
+        if (classJson.mavenFiles)
+            await downloadToDirectory(libraryDirectory, classJson.mavenFiles, 'classes-maven-custom');
+        libs = await downloadToDirectory(libraryDirectory, classJson.libraries, 'classes-custom');
+    }
+
+    const parsed = parsedVersion.libraries.filter(Boolean).map((lib: libType) => {
+        if (lib.downloads && lib.downloads.artifact && !parseRule(lib)) return lib;
+    });
 
     libs = libs.concat(await downloadToDirectory(libraryDirectory, parsed as libType[], 'classes'));
     counter = 0;
+
+    if (classJson) libs.sort();
 
     log('debug', 'Collected class paths');
     return libs;
@@ -395,11 +596,12 @@ const formatQuickPlay = () => {
     return returnArgs;
 };
 
-const getLaunchOptions = async () => {
-    const type = Object.assign({}, parsedVersion);
+// TODO: figure out the right type
+const getLaunchOptions = async (modification: any) => {
+    const type = Object.assign({}, parsedVersion, modification);
 
     let args = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
-    const assetRoot = join(_resolve(config.assetRoot || join(config.root, 'assets')));
+    const assetRoot = join(resolve(config.assetRoot || join(config.root, 'assets')));
     const assetPath = isLegacy(parsedVersion) ? join(config.root, 'resources') : join(assetRoot);
 
     const minArgs = config.minArgs || isLegacy(parsedVersion) ? 5 : 11;
@@ -423,7 +625,7 @@ const getLaunchOptions = async () => {
         '${user_type}': config.authorization.meta.type,
         '${version_name}': config.version.number || config.versionName,
         '${assets_index_name}': config.assetIndex || config.version.custom || config.version.number,
-        '${game_directory}': config.gameDirectory || _resolve(config.root),
+        '${game_directory}': config.gameDirectory || resolve(config.root),
         '${assets_root}': assetPath,
         '${game_assets}': assetPath,
         '${version_type}': config.version.type,
@@ -526,6 +728,7 @@ export {
     getJar,
     getAssets,
     getNatives,
+    getForgedWrapped,
     getClasses,
     getLaunchOptions,
     getJVM,

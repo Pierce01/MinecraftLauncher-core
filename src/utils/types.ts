@@ -179,6 +179,12 @@ export interface Options {
      * Path of json cache.
      */
     cache?: string;
+    /**
+     * Path to Forge Jar.
+     *
+     * Versions below 1.13 should be the "universal" jar while versions above 1.13+ should be the "installer" jar
+     */
+    forge?: string;
 }
 
 export interface User {
@@ -219,6 +225,24 @@ export type libType = {
             name?: string;
         };
     }[];
+};
+
+export type customArtifactType = {
+    name: string;
+    url: string;
+    sha1?: string;
+    size?: number;
+};
+
+export type customLibType = {
+    id: string;
+    mainClass: string;
+    arguments: {
+        game: string[];
+        jvm: string[];
+    };
+    mavenFiles?: any;
+    libraries: customArtifactType[];
 };
 
 export interface Version {
