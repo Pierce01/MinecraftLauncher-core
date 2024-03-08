@@ -2,6 +2,24 @@
     "name": "minecraft-launcher-core",
     "version": "3.18.0",
     "description": "Lightweight module that downloads and runs Minecraft using javascript / NodeJS",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Pierce01/MinecraftLauncher-core.git"
+    },
+    "keywords": [
+        "minecraft",
+        "minecraft-launcher-node",
+        "minecraft-launcher",
+        "launcher",
+        "minecraft-forge"
+    ],
+    "author": "Pierce Harriz",
+    "funding": "https://github.com/Pierce01/MinecraftLauncher-core?sponsor=1",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/Pierce01/MinecraftLauncher-core/issues"
+    },
+    "homepage": "https://github.com/Pierce01/MinecraftLauncher-core#readme",
     "main": "./build/cjs/index.js",
     "module": "./build/esm/index.js",
     "types": "./build/esm/index.d.ts",
@@ -9,6 +27,15 @@
         "./build/"
     ],
     "type": "commonjs",
+    "scripts": {
+        "clean": "rm -rf ./lib/",
+        "build": "yarn clean && yarn build:esm && yarn tsc",
+        "build:esm": "tsc --module esnext --declaration --outDir ./build/esm",
+        "lint": "eslint --color .",
+        "prettier": "prettier --check .",
+        "prettier:write": "prettier --write .",
+        "typecheck": "tsc --noEmit"
+    },
     "dependencies": {
         "adm-zip": "^0.5.10",
         "axios": "^1.6.7",
@@ -27,31 +54,5 @@
         "eslint-plugin-prettier": "^5.1.3",
         "prettier": "^3.2.5",
         "typescript": "^5.3.3"
-    },
-    "scripts": {
-        "clean": "rm -rf ./lib/",
-        "build": "yarn clean && yarn build:esm && yarn tsc",
-        "build:esm": "tsc --module esnext --declaration --outDir ./build/esm",
-        "lint": "eslint --color .",
-        "prettier": "prettier --check .",
-        "prettier:write": "prettier --write .",
-        "typecheck": "tsc --noEmit"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/Pierce01/MinecraftLauncher-core.git"
-    },
-    "keywords": [
-        "minecraft",
-        "minecraft-launcher-node",
-        "minecraft-launcher",
-        "launcher",
-        "minecraft-forge"
-    ],
-    "author": "Pierce Harriz",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/Pierce01/MinecraftLauncher-core/issues"
-    },
-    "homepage": "https://github.com/Pierce01/MinecraftLauncher-core#readme"
+    }
 }
