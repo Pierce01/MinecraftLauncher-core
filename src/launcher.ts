@@ -28,12 +28,6 @@ export const launch = () => {
 export const install = async () => {
     log('version', `MCLC version ${mclc}`);
 
-    const java = await checkJava(config.javaPath || 'java');
-    if (!java || !java.run) {
-        log('debug', `Couldn't install Minecraft due to: ${java.message}`);
-        return log('close', 1);
-    }
-
     if (!existsSync(config.root)) {
         log('debug', 'Attempting to create root folder');
         mkdirSync(config.root);
