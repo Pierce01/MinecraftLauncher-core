@@ -173,7 +173,6 @@ export interface Options {
         resource?: string;
     };
     logj4ConfigurationFile?: string;
-
     authorization: Promise<User> | User;
     /**
      * Path of json cache.
@@ -198,6 +197,11 @@ export interface User {
         demo?: boolean;
     };
 }
+
+type Rule = {
+    action: string;
+    features: Record<string, boolean>;
+};
 
 export type artifactType = {
     path: string;
@@ -238,10 +242,13 @@ export type customLibType = {
     id: string;
     mainClass: string;
     arguments: {
-        game: string[];
-        jvm: string[];
+        game: string | Rule | string[];
+        jvm: string | Rule | string[];
     };
-    mavenFiles?: any;
+    mavenFiles?: {
+        name: string;
+        url: string;
+    }[];
     libraries: customArtifactType[];
 };
 
@@ -264,8 +271,10 @@ export interface Version {
     };
     id: string;
     libraries: libType[];
-    minecraftArguments?: any;
-    arguments?: any;
+    arguments: {
+        game: string | Rule | string[];
+        jvm: string | Rule | string[];
+    };
     type: string;
     mainClass: string;
 }

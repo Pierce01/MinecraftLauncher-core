@@ -17,7 +17,7 @@ import axios from 'axios';
 import { checkSum, cleanUp, getOS, isLegacy, popString } from './utils';
 import { config, setConfig } from './utils/config';
 import { log } from './utils/log';
-import { artifactType, customArtifactType, Fields, libType, Version } from './utils/types';
+import { artifactType, customArtifactType, customLibType, Fields, libType, Version } from './utils/types';
 
 let counter = 0;
 let parsedVersion: Version;
@@ -420,6 +420,7 @@ const getForgedWrapped = async () => {
         // Modifying legacy library format to play nice with MCLC's downloadToDirectory function.
         await Promise.all(
             json.libraries.map(async (library: any) => {
+                console.log(library);
                 const lib = library.name.split(':');
                 if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) return;
                 if (!library.url && !(library.serverreq || library.clientreq)) return;
@@ -534,23 +535,8 @@ const downloadToDirectory = async (
     return libs;
 };
 
-const getClasses = async (classJson: {
-    id: string;
-    mainClass: string;
-    arguments: {
-        game: string[];
-        jvm: string[];
-    };
-    mavenFiles?: any;
-    libraries: {
-        name: string;
-        url: string;
-        sha1?: string;
-        size?: number;
-    }[];
-}) => {
+const getClasses = async (classJson: customLibType) => {
     let libs: string[] = [];
-
     const libraryDirectory = resolve(config.libraryRoot || join(config.root, 'libraries'));
 
     if (classJson) {
@@ -595,21 +581,14 @@ const formatQuickPlay = () => {
     return returnArgs;
 };
 
-// TODO: figure out the right type
-const getLaunchOptions = async (modification: any) => {
+const getLaunchOptions = async (modification: customLibType) => {
     const type = Object.assign({}, parsedVersion, modification);
-
-    let args = type.minecraftArguments ? type.minecraftArguments.split(' ') : type.arguments.game;
+    let args = type.arguments.game;
     const assetRoot = join(resolve(config.assetRoot || join(config.root, 'assets')));
     const assetPath = isLegacy(parsedVersion) ? join(config.root, 'resources') : join(assetRoot);
 
     const minArgs = config.minArgs || isLegacy(parsedVersion) ? 5 : 11;
-    if (args.length < minArgs)
-        args = args.concat(
-            parsedVersion.minecraftArguments
-                ? parsedVersion.minecraftArguments.split(' ')
-                : parsedVersion.arguments.game,
-        );
+    if (args.length < minArgs) args = args.concat(parsedVersion.arguments.game);
     if (config.customLaunchArgs) args = args.concat(config.customLaunchArgs);
 
     config.authorization = await Promise.resolve(config.authorization);
@@ -637,7 +616,7 @@ const getLaunchOptions = async (modification: any) => {
         args.push('--demo');
 
     const replaceArg = (obj: { value: string | string[] }, index: number) => {
-        if (!Array.isArray(obj.value)) {
+        if (Array.isArray(obj.value)) {
             for (const arg of obj.value) args.push(arg);
         } else {
             args.push(obj.value);
@@ -650,15 +629,11 @@ const getLaunchOptions = async (modification: any) => {
             if (args[index].rules) {
                 if (!config.features) continue;
                 const featureFlags = [];
-                for (const rule of args[index].rules) {
-                    featureFlags.push(...Object.keys(rule.features));
-                }
+                for (const rule of args[index].rules) featureFlags.push(...Object.keys(rule.features));
+
                 let hasAllRules = true;
-                for (const feature of config.features) {
-                    if (!featureFlags.includes(feature)) {
-                        hasAllRules = false;
-                    }
-                }
+                for (const feature of config.features) if (!featureFlags.includes(feature)) hasAllRules = false;
+
                 if (hasAllRules) replaceArg(args[index], index);
             } else {
                 replaceArg(args[index], index);
@@ -677,7 +652,7 @@ const getLaunchOptions = async (modification: any) => {
         }
     }
     if (config.quickPlay) args = args.concat(formatQuickPlay());
-    if (config.proxy) {
+    if (config.proxy)
         args.push(
             '--proxyHost',
             config.proxy.host,
@@ -688,7 +663,6 @@ const getLaunchOptions = async (modification: any) => {
             '--proxyPass',
             config.proxy.password,
         );
-    }
     args = args.filter((value: string | number) => typeof value === 'string' || typeof value === 'number');
     log('debug', 'Set launch options');
     return args;
