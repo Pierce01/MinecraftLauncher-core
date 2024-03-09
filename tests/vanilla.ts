@@ -1,10 +1,10 @@
 import { ChildProcessWithoutNullStreams } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { Client, Config } from '../src';
+import { Client, setConfig } from '../src';
 
 describe('Minecraft Vanilla Legacy (1.8.9)', () => {
-    Config.setConfig('version', { number: '1.8.9', type: 'release' });
+    setConfig('version', { number: '1.8.9', type: 'release' });
 
     test(
         'Installation',
@@ -36,7 +36,7 @@ describe('Minecraft Vanilla Legacy (1.8.9)', () => {
 });
 
 describe('Minecraft Vanilla Modern (1.14.4)', () => {
-    Config.setConfig('version', { number: '1.14.4', type: 'release' });
+    setConfig('version', { number: '1.14.4', type: 'release' });
 
     test(
         'Installation',
