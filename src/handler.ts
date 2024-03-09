@@ -534,7 +534,6 @@ const downloadToDirectory = async (
     return libs;
 };
 
-// TODO: figure out the right type
 const getClasses = async (classJson: {
     id: string;
     mainClass: string;

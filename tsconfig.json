@@ -20,5 +20,5 @@
         "types": ["node", "jest"]
     },
     "exclude": ["./build/"],
-    "include": ["./src/", "./tests/"]
+    "include": ["./src/"]
 }
