@@ -582,8 +582,8 @@ const formatQuickPlay = () => {
 };
 
 const getLaunchOptions = async (modification: customLibType) => {
-    const type = Object.assign({}, parsedVersion, modification);
-    let args = type.arguments.game;
+    const initialArgs = Object.assign({}, parsedVersion, modification).arguments.game;
+    let args = '';
     const assetRoot = join(resolve(config.assetRoot || join(config.root, 'assets')));
     const assetPath = isLegacy(parsedVersion) ? join(config.root, 'resources') : join(assetRoot);
 
@@ -615,34 +615,6 @@ const getLaunchOptions = async (modification: customLibType) => {
     if (config.authorization.meta.demo && (config.features ? !config.features.includes('is_demo_user') : true))
         args.push('--demo');
 
-    const replaceArg = (obj: { value: string | string[] }, index: number) => {
-        if (Array.isArray(obj.value)) {
-            for (const arg of obj.value) args.push(arg);
-        } else {
-            args.push(obj.value);
-        }
-        delete args[index];
-    };
-
-    for (let index = 0; index < args.length; index++) {
-        if (typeof args[index] === 'object') {
-            if (args[index].rules) {
-                if (!config.features) continue;
-                const featureFlags = [];
-                for (const rule of args[index].rules) featureFlags.push(...Object.keys(rule.features));
-
-                let hasAllRules = true;
-                for (const feature of config.features) if (!featureFlags.includes(feature)) hasAllRules = false;
-
-                if (hasAllRules) replaceArg(args[index], index);
-            } else {
-                replaceArg(args[index], index);
-            }
-        } else {
-            if (Object.keys(fields).includes(args[index] as keyof Fields))
-                args[index] = fields[args[index] as keyof Fields];
-        }
-    }
     if (config.window) {
         if (config.window.fullscreen) {
             args.push('--fullscreen');
@@ -651,6 +623,7 @@ const getLaunchOptions = async (modification: customLibType) => {
             if (config.window.height) args.push('--height', config.window.height);
         }
     }
+
     if (config.quickPlay) args = args.concat(formatQuickPlay());
     if (config.proxy)
         args.push(
@@ -663,7 +636,8 @@ const getLaunchOptions = async (modification: customLibType) => {
             '--proxyPass',
             config.proxy.password,
         );
-    args = args.filter((value: string | number) => typeof value === 'string' || typeof value === 'number');
+
+    args = args.filter((value: any) => typeof value === 'string' || typeof value === 'number');
     log('debug', 'Set launch options');
     return args;
 };
