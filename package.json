@@ -1,6 +1,6 @@
 {
     "name": "minecraft-launcher-core",
-    "version": "3.18.0",
+    "version": "3.19.0",
     "description": "Lightweight module that downloads and runs Minecraft using javascript / NodeJS",
     "repository": {
         "type": "git",
@@ -26,7 +26,7 @@
     "files": [
         "./build/"
     ],
-    "type": "commonjs",
+    "type": "module",
     "scripts": {
         "clean": "rm -rf ./lib/",
         "build": "yarn clean && yarn build:esm && yarn tsc",
