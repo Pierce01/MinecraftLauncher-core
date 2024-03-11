@@ -17,7 +17,7 @@ import axios from 'axios';
 import { checkSum, cleanUp, getOS, isLegacy, popString } from './utils';
 import { config, setConfig } from './utils/config';
 import { log } from './utils/log';
-import { artifactType, customArtifactType, customLibType, Fields, libType, Version } from './utils/types';
+import { artifactType, customArtifactType, customLibType, Fields, libType, Rule, Version } from './utils/types';
 
 let counter = 0;
 let parsedVersion: Version;
@@ -75,10 +75,7 @@ const downloadAsync = async (url: string, directory: string, name: string, retry
         await new Promise((resolve) => {
             file.on('finish', resolve);
             file.on('error', async (e) => {
-                log(
-                    'debug',
-                    `Failed to download asset to ${join(directory, name)} due to\n${e}.` + ` Retrying... ${retry}`,
-                );
+                log('debug', `Failed to download asset to ${join(directory, name)} due to\n${e}. Retrying... ${retry}`);
                 if (existsSync(join(directory, name))) unlinkSync(join(directory, name));
                 if (retry) await downloadAsync(url, directory, name, false, type);
                 return resolve(e);
@@ -324,6 +321,12 @@ const fwAddArgs = () => {
     return;
 };
 
+// I don't see a better way of putting anything else (for now)
+const isModern = (json: any): boolean =>
+    json.inheritsFrom &&
+    json.inheritsFrom.split('.')[1] >= 12 &&
+    !(json.inheritsFrom === '1.12.2' && json.id.split('.')[json.id.split('.').length - 1] === '2847');
+
 const getForgedWrapped = async () => {
     let json = null;
     let installerJson = null;
@@ -333,20 +336,12 @@ const getForgedWrapped = async () => {
     if (existsSync(versionPath)) {
         try {
             json = JSON.parse(readFileSync(versionPath).toString());
-            if (!json.forgeWrapperVersion || !(json.forgeWrapperVersion === '1.6.0')) {
-                log('debug', 'Old ForgeWrapper has generated this version JSON, re-generating');
-            } else {
-                // If forge is modern, add ForgeWrappers launch arguments and set forge to null so MCLC treats it as a custom json.
-                if (
-                    json.inheritsFrom &&
-                    json.inheritsFrom.split('.')[1] >= 12 &&
-                    !(json.inheritsFrom === '1.12.2' && json.id.split('.')[json.id.split('.').length - 1] === '2847')
-                ) {
-                    fwAddArgs();
-                    setConfig('forge', undefined);
-                }
-                return json;
+            // If forge is modern, add ForgeWrappers launch arguments and set forge to null so MCLC treats it as a custom json.
+            if (isModern(json)) {
+                fwAddArgs();
+                setConfig('forge', undefined);
             }
+            return json;
         } catch (e) {
             console.warn(e);
             log('debug', 'Failed to parse Forge version JSON, re-generating');
@@ -356,8 +351,8 @@ const getForgedWrapped = async () => {
     log('debug', 'Generating Forge version json, this might take a bit');
     const zipFile = new Zip(config.forge);
     json = zipFile.readAsText('version.json');
-    if (zipFile.getEntry('install_profile.json')) installerJson = zipFile.readAsText('install_profile.json');
 
+    if (zipFile.getEntry('install_profile.json')) installerJson = zipFile.readAsText('install_profile.json');
     try {
         json = JSON.parse(json);
         if (installerJson) installerJson = JSON.parse(installerJson);
@@ -366,20 +361,15 @@ const getForgedWrapped = async () => {
         return null;
     }
     // Adding the installer libraries as mavenFiles so MCLC downloads them but doesn't add them to the class paths.
-    if (installerJson) {
+    if (installerJson)
         json.mavenFiles
             ? (json.mavenFiles = json.mavenFiles.concat(installerJson.libraries))
             : (json.mavenFiles = installerJson.libraries);
-    }
 
     // Holder for the specifc jar ending which depends on the specifc forge version.
     let jarEnding = 'universal';
     // We need to handle modern forge differently than legacy.
-    if (
-        json.inheritsFrom &&
-        json.inheritsFrom.split('.')[1] >= 12 &&
-        !(json.inheritsFrom === '1.12.2' && json.id.split('.')[json.id.split('.').length - 1] === '2847')
-    ) {
+    if (isModern(json)) {
         // If forge is modern and above 1.12.2, we add ForgeWrapper to the libraries so MCLC includes it in the classpaths.
         if (json.inheritsFrom !== '1.12.2') {
             fwAddArgs();
@@ -401,8 +391,7 @@ const getForgedWrapped = async () => {
             for (const library of json.mavenFiles) {
                 const lib = library.name.split(':');
                 if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) {
-                    library.downloads.artifact.url =
-                        'https://files.minecraftforge.net/maven/' + library.downloads.artifact.path;
+                    library.downloads.artifact.url = `https://files.minecraftforge.net/maven/${library.downloads.artifact.path}`;
                     break;
                 }
             }
@@ -419,30 +408,31 @@ const getForgedWrapped = async () => {
     } else {
         // Modifying legacy library format to play nice with MCLC's downloadToDirectory function.
         await Promise.all(
-            json.libraries.map(async (library: any) => {
-                console.log(library);
-                const lib = library.name.split(':');
-                if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) return;
-                if (!library.url && !(library.serverreq || library.clientreq)) return;
+            json.libraries.map(
+                async (library: { name: string; url?: string; serverreq: boolean; clientreq?: boolean }) => {
+                    const lib = library.name.split(':');
+                    if (lib[0] === 'net.minecraftforge' && lib[1].includes('forge')) return;
+                    if (!library.url && !(library.serverreq || library.clientreq)) return;
 
-                library.url = library.url
-                    ? 'https://files.minecraftforge.net/maven/'
-                    : 'https://libraries.minecraft.net/';
-                const downloadLink = `${library.url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${lib[1]}-${lib[2]}.jar`;
-                // Checking if the file still exists on Forge's server, if not, replace it with the fallback.
-                // Not checking for sucess, only if it 404s.
-                await axios
-                    .get(downloadLink, {
-                        timeout: config.timeout || 50000,
-                        httpAgent: new http({ maxSockets: config.maxSockets || 2 }),
-                        httpsAgent: new https({ maxSockets: config.maxSockets || 2 }),
-                    })
-                    .then(
-                        ({ status }) =>
-                            status === 404 && (library.url = 'https://search.maven.org/remotecontent?filepath='),
-                    )
-                    .catch(() => log('debug', `Failed checking request for ${downloadLink}`));
-            }),
+                    library.url = library.url
+                        ? 'https://files.minecraftforge.net/maven/'
+                        : 'https://libraries.minecraft.net/';
+                    const downloadLink = `${library.url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${lib[1]}-${lib[2]}.jar`;
+                    // Checking if the file still exists on Forge's server, if not, replace it with the fallback.
+                    // Not checking for sucess, only if it 404s.
+                    await axios
+                        .get(downloadLink, {
+                            timeout: config.timeout || 50000,
+                            httpAgent: new http({ maxSockets: config.maxSockets || 2 }),
+                            httpsAgent: new https({ maxSockets: config.maxSockets || 2 }),
+                        })
+                        .then(
+                            ({ status }) =>
+                                status === 404 && (library.url = 'https://search.maven.org/remotecontent?filepath='),
+                        )
+                        .catch(() => log('debug', `Failed checking request for ${downloadLink}`));
+                },
+            ),
         );
     }
     // If a downloads property exists, we modify the inital forge entry to include ${jarEnding} so ForgeWrapper can work properly.
@@ -450,13 +440,12 @@ const getForgedWrapped = async () => {
     if (json.libraries[0].downloads) {
         const name = json.libraries[0].name;
         if (name.includes('minecraftforge:forge') && !name.includes('universal')) {
-            json.libraries[0].name = name + `:${jarEnding}`;
+            json.libraries[0].name = `${name}:${jarEnding}`;
             json.libraries[0].downloads.artifact.path = json.libraries[0].downloads.artifact.replace(
                 '.jar',
                 `-${jarEnding}.jar`,
             );
-            json.libraries[0].downloads.artifact.url =
-                'https://files.minecraftforge.net/maven/' + json.libraries[0].downloads.artifact.path;
+            json.libraries[0].downloads.artifact.url = `https://files.minecraftforge.net/maven/${json.libraries[0].downloads.artifact.path}`;
         }
     } else {
         delete json.libraries[0];
@@ -503,7 +492,7 @@ const downloadToDirectory = async (
                     library.downloads.artifact.path.split('/')[library.downloads.artifact.path.split('/').length - 1];
                 jarPath = join(directory, popString(library.downloads.artifact.path));
             } else {
-                name = `${lib[1]}-${lib[2]}${lib[3] ? '-' + lib[3] : ''}.jar`;
+                name = `${lib[1]}-${lib[2]}${lib[3] ? `-${lib[3]}` : ''}.jar`;
                 jarPath = join(directory, `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`);
             }
 
@@ -558,38 +547,29 @@ const getClasses = async (classJson: customLibType) => {
     return libs;
 };
 
-const formatQuickPlay = () => {
-    if (!config.quickPlay) return;
+const processArguments = (...args: (string | Rule | string[])[]): string[] => {
+    const result: string[] = [];
+    args.forEach((arg) => {
+        if (Array.isArray(arg)) {
+            result.push(...arg);
+        } else if (typeof arg === 'string') {
+            result.push(arg);
+        }
+    });
 
-    const types = {
-        singleplayer: '--quickPlaySingleplayer',
-        multiplayer: '--quickPlayMultiplayer',
-        realms: '--quickPlayRealms',
-        legacy: null,
-    };
-    const { type, identifier, path } = config.quickPlay;
-    const keys = Object.keys(types);
-    if (!keys.includes(type)) {
-        log('debug', `quickPlay type is not valid. Valid types are: ${keys.join(', ')}`);
-        return null;
-    }
-    const returnArgs =
-        type === 'legacy'
-            ? ['--server', identifier.split(':')[0], '--port', identifier.split(':')[1] || '25565']
-            : [types[type], identifier];
-    if (path) returnArgs.push('--quickPlayPath', path);
-    return returnArgs;
+    return result;
 };
 
-const getLaunchOptions = async (modification: customLibType) => {
-    const initialArgs = Object.assign({}, parsedVersion, modification).arguments.game;
-    let args = '';
-    const assetRoot = join(resolve(config.assetRoot || join(config.root, 'assets')));
-    const assetPath = isLegacy(parsedVersion) ? join(config.root, 'resources') : join(assetRoot);
+const getLaunchOptions = async (modification: customLibType | null): Promise<string[]> => {
+    const type = Object.assign({}, parsedVersion, modification);
+    const args = type.minecraftArguments ? type.minecraftArguments.split(' ') : processArguments(type.arguments.game);
+    const assetPath = resolve(
+        isLegacy(parsedVersion)
+            ? join(config.root, 'resources')
+            : join(config.assetRoot || join(config.root, 'assets')),
+    );
 
-    const minArgs = config.minArgs || isLegacy(parsedVersion) ? 5 : 11;
-    if (args.length < minArgs) args = args.concat(parsedVersion.arguments.game);
-    if (config.customLaunchArgs) args = args.concat(config.customLaunchArgs);
+    if (config.customLaunchArgs) args.concat(config.customLaunchArgs);
 
     config.authorization = await Promise.resolve(config.authorization);
     config.authorization.meta = config.authorization.meta ?? { demo: false, type: 'mojang' };
@@ -619,27 +599,49 @@ const getLaunchOptions = async (modification: customLibType) => {
         if (config.window.fullscreen) {
             args.push('--fullscreen');
         } else {
-            if (config.window.width) args.push('--width', config.window.width);
-            if (config.window.height) args.push('--height', config.window.height);
+            if (config.window.width) args.push('--width', config.window.width.toString());
+            if (config.window.height) args.push('--height', config.window.height.toString());
         }
     }
 
-    if (config.quickPlay) args = args.concat(formatQuickPlay());
-    if (config.proxy)
-        args.push(
-            '--proxyHost',
-            config.proxy.host,
-            '--proxyPort',
-            config.proxy.port || '8080',
-            '--proxyUser',
-            config.proxy.username,
-            '--proxyPass',
-            config.proxy.password,
-        );
+    if (config.quickPlay) {
+        const types = {
+            singleplayer: '--quickPlaySingleplayer',
+            multiplayer: '--quickPlayMultiplayer',
+            realms: '--quickPlayRealms',
+            legacy: null,
+        };
 
-    args = args.filter((value: any) => typeof value === 'string' || typeof value === 'number');
+        const { type, identifier, path } = config.quickPlay;
+        const keys = Object.keys(types);
+        if (!keys.includes(type)) {
+            log('debug', `quickPlay type is not valid. Valid types are: ${keys.join(', ')}`);
+        } else {
+            const returnArgs =
+                type === 'legacy'
+                    ? ['--server', identifier.split(':')[0], '--port', identifier.split(':')[1] || '25565']
+                    : [types[type], identifier];
+
+            if (path) returnArgs.push('--quickPlayPath', path);
+            args.concat(returnArgs);
+        }
+    }
+
+    if (config.proxy) {
+        args.push('--proxyHost', config.proxy.host, '--proxyPort', config.proxy.port || '8080');
+
+        if (config.proxy.username) args.push('--proxyUser', config.proxy.username);
+        if (config.proxy.password) args.push('--proxyPass', config.proxy.password);
+    }
+
     log('debug', 'Set launch options');
-    return args;
+    return args.map((arg) =>
+        Object.entries(fields).reduce(
+            (acc, [placeholder, replacement]) =>
+                acc.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), replacement),
+            arg,
+        ),
+    );
 };
 
 const getJVM = async () =>

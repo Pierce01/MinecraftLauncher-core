@@ -107,11 +107,11 @@ export const start = async () => {
         );
     } else if (config.forge) {
         setConfig('forge', resolve(config.forge));
-        log('debug', '[MCLC]: Detected Forge in options, getting dependencies');
+        log('debug', 'Detected Forge in options, getting dependencies');
         modifyJson = await getForgedWrapped();
     }
 
-    let jvm = [
+    const jvm = [
         '-XX:-UseAdaptiveSizePolicy',
         '-XX:-OmitStackTraceInFastThrow',
         '-Dfml.ignorePatchDiscrepancies=true',
@@ -124,10 +124,8 @@ export const start = async () => {
         if (parseInt(versionFile.id.split('.')[1]) > 12) jvm.push(await getJVM());
     } else jvm.push(await getJVM());
 
-    if (config.customArgs) jvm = jvm.concat(config.customArgs);
-    if (config.logj4ConfigurationFile) {
-        jvm.push(`-Dlog4j.configurationFile=${resolve(config.logj4ConfigurationFile)}`);
-    }
+    if (config.customArgs) jvm.concat(config.customArgs);
+    if (config.logj4ConfigurationFile) jvm.push(`-Dlog4j.configurationFile=${resolve(config.logj4ConfigurationFile)}`);
     // https://help.minecraft.net/hc/en-us/articles/4416199399693-Security-Vulnerability-in-Minecraft-Java-Edition
     if (parseInt(versionFile.id.split('.')[1]) === 18 && !parseInt(versionFile.id.split('.')[2]))
         jvm.push('-Dlog4j2.formatMsgNoLookups=true');
@@ -144,7 +142,7 @@ export const start = async () => {
                     true,
                     'log4j',
                 );
-                jvm.push('-Dlog4j.configurationFile=log4j2_112-116.xml');
+                jvm.push(`-Dlog4j.configurationFile=${resolve(join(configPath, 'log4j2_112-116.xml'))}`);
             } else if (intVersion >= 7) {
                 await downloadAsync(
                     'https://launcher.mojang.com/v1/objects/dd2b723346a8dcd48e7f4d245f6bf09e98db9696/log4j2_17-111.xml',
@@ -153,7 +151,7 @@ export const start = async () => {
                     true,
                     'log4j',
                 );
-                jvm.push('-Dlog4j.configurationFile=log4j2_17-111.xml');
+                jvm.push(`-Dlog4j.configurationFile=${resolve(join(configPath, 'log4j2_17-111.xml'))}`);
             }
         }
     }
@@ -166,9 +164,9 @@ export const start = async () => {
     const file = modifyJson || versionFile;
     // So mods like fabric work.
     const jar = existsSync(mcPath)
-        ? `${separator}${mcPath}`
-        : `${separator}${join(directory, `${config.version.number}.jar`)}`;
-    classPaths.push(`${config.forge ? config.forge + separator : ''}${classes.join(separator)}${jar}`);
+        ? `${separator}${resolve(mcPath)}`
+        : `${separator}${resolve(join(directory, `${config.version.number}.jar`))}`;
+    classPaths.push(`${config.forge ? `${config.forge}${separator}` : ''}${classes.join(separator)}${jar}`);
     classPaths.push(file.mainClass);
 
     const launchconfig = await getLaunchOptions(modifyJson);
@@ -176,7 +174,7 @@ export const start = async () => {
     log('arguments', launchArguments);
     log('debug', `Launching with arguments ${launchArguments.join(' ')}`);
 
-    const minecraft = spawn(config.javaPath ? config.javaPath : 'java', launchArguments, {
+    const minecraft = spawn(config.javaPath ?? 'java', launchArguments, {
         detached: config.detached,
     });
     minecraft.stdout.on('data', (data) => log('data', data.toString('utf-8')));

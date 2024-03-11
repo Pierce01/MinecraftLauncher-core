@@ -198,7 +198,7 @@ export interface User {
     };
 }
 
-type Rule = {
+export type Rule = {
     action: string;
     features: Record<string, boolean>;
 };
@@ -271,10 +271,11 @@ export interface Version {
     };
     id: string;
     libraries: libType[];
-    arguments: {
+    arguments?: {
         game: string | Rule | string[];
-        jvm: string | Rule | string[];
+        jvm?: string | Rule | string[];
     };
+    minecraftArguments?: string;
     type: string;
     mainClass: string;
 }
