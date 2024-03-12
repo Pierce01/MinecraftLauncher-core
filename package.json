@@ -28,7 +28,7 @@
     ],
     "type": "module",
     "scripts": {
-        "clean": "rm -rf ./lib/",
+        "clean": "node clean.js",
         "test": "vitest",
         "build": "yarn clean && yarn build:esm && yarn tsc",
         "build:esm": "tsc --module esnext --declaration --outDir ./build/esm",
