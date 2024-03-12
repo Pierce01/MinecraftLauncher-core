@@ -1,4 +1,4 @@
-import { LibType, Rule } from '.';
+import { LibType, Rule } from '@types';
 
 export default interface Version {
     assetIndex: {

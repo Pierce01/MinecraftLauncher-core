@@ -2,11 +2,11 @@ import { ChildProcessWithoutNullStreams } from 'node:child_process';
 import { existsSync, rmdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
-import { Client, defineOptions } from '../src';
+import { Client, defineConfig } from '../src';
 
 describe('Minecraft Vanilla Legacy (1.8.9)', () => {
     beforeAll(() => {
-        defineOptions({
+        defineConfig({
             version: {
                 number: '1.8.9',
                 type: 'release',

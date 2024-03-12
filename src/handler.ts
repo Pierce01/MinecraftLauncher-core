@@ -1,3 +1,4 @@
+import { exec, ExecException } from 'node:child_process';
 import {
     copyFileSync,
     createWriteStream,
@@ -7,20 +8,16 @@ import {
     readFileSync,
     unlinkSync,
     writeFileSync,
-} from 'fs';
-import { exec, ExecException } from 'node:child_process';
+} from 'node:fs';
 import { Agent as http } from 'node:http';
 import { Agent as https } from 'node:https';
 import { join, resolve, sep } from 'node:path';
+import { ArtifactType, CustomArtifactType, CustomLibType, Fields, LibType, Rule, Version } from '@types';
+import { checkSum, cleanUp, getOS, isLegacy, popString } from '@utils';
+import { config } from '@utils/config';
+import { log } from '@utils/log';
 import Zip from 'adm-zip';
 import axios from 'axios';
-import { ArtifactType, LibType, Rule } from './types';
-import { CustomArtifactType, CustomLibType } from './types/Custom';
-import Fields from './types/Fields';
-import Version from './types/Version';
-import { checkSum, cleanUp, getOS, isLegacy, popString } from './utils';
-import { config } from './utils/config';
-import { log } from './utils/log';
 
 let counter = 0;
 let parsedVersion: Version;

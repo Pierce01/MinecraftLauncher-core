@@ -1,4 +1,4 @@
-import { Rule } from '.';
+import { Rule } from '@types';
 
 export type CustomArtifactType = {
     name: string;

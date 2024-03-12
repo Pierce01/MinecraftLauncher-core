@@ -13,11 +13,11 @@ import {
     getMemory,
     getNatives,
     getVersion,
-} from './handler';
-import mclc from './mclc';
-import { cleanUp, getOS } from './utils';
-import { config, defineOptions } from './utils/config';
-import { log } from './utils/log';
+} from '@/handler';
+import mclc from '@/mclc';
+import { cleanUp, getOS } from '@utils';
+import { config, defineConfig } from '@utils/config';
+import { log } from '@utils/log';
 
 export const launch = () => {
     throw Error(
@@ -34,7 +34,7 @@ export const install = async () => {
     }
 
     if (config.gameDirectory) {
-        defineOptions({ gameDirectory: resolve(config.gameDirectory) });
+        defineConfig({ gameDirectory: resolve(config.gameDirectory) });
         if (!existsSync(config.gameDirectory)) mkdirSync(config.gameDirectory, { recursive: true });
     }
 
@@ -98,7 +98,7 @@ export const start = async () => {
             }),
         );
     } else if (config.forge) {
-        defineOptions({ forge: resolve(config.forge) });
+        defineConfig({ forge: resolve(config.forge) });
         log('debug', 'Detected Forge in options, getting dependencies');
         modifyJson = await getForgedWrapped();
     }

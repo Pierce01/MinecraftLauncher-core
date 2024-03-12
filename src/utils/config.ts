@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { offline } from 'src';
-import Options from 'src/types/Options';
+import { offline } from '@/authenticator';
+import { Options } from '@types';
 
 let config: Options = {
     root: './minecraft',
@@ -21,10 +21,10 @@ let config: Options = {
     },
 };
 
-const defineOptions = (newConfig: Partial<Options>): void => {
+const defineConfig = (newConfig: Partial<Options>): void => {
     config = { ...config, ...newConfig };
     config.directory = join(config.root, 'versions', config.version.custom || config.version.number);
     return;
 };
 
-export { config, defineOptions };
+export { config, defineConfig };

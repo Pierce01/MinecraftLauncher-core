@@ -1,3 +1,10 @@
+// There's no other way to make it work
+import { CustomArtifactType, CustomLibType } from './Custom';
+import Fields from './Fields';
+import Options from './Options';
+import User from './User';
+import Version from './Version';
+
 export type OS = 'windows' | 'osx' | 'linux';
 
 export type Rule = {
@@ -32,3 +39,5 @@ export type LibType = {
         };
     }[];
 };
+
+export type { Version, User, CustomArtifactType, CustomLibType, Fields, Options };

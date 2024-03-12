@@ -17,7 +17,14 @@
         "resolveJsonModule": true,
         "strict": true,
         "target": "ESNext",
-        "types": ["node"]
+        "types": ["node"],
+        "paths": {
+            "@types": ["src/types/"],
+            "@utils": ["src/utils/"],
+            "@utils/*": ["src/utils/*"],
+            "@": ["src/"],
+            "@/*": ["src/*"]
+        }
     },
     "exclude": ["./build/"],
     "include": ["./src/"]
