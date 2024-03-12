@@ -52,11 +52,11 @@ export interface Options {
         /**
          * Max amount of memory being used by Minecraft.
          */
-        min: string | number;
+        min: `${number}M` | `${number}G` | number;
         /**
          * Min amount of memory being used by Minecraft.
          */
-        max: string | number;
+        max: `${number}M` | `${number}G` | number;
     };
     /**
      * Path to the JRE executable file, will default to java if not entered.
