@@ -15,7 +15,7 @@ import { join, resolve, sep } from 'node:path';
 import Zip from 'adm-zip';
 import axios from 'axios';
 import { checkSum, cleanUp, getOS, isLegacy, popString } from './utils';
-import { config, setConfig } from './utils/config';
+import { config } from './utils/config';
 import { log } from './utils/log';
 import { artifactType, customArtifactType, customLibType, Fields, libType, Rule, Version } from './utils/types';
 
@@ -101,7 +101,7 @@ const getVersion = async () => {
         return parsedVersion;
     }
 
-    const manifest = `${config.url?.meta}/mc/game/version_manifest.json`;
+    const manifest = `${config.url.meta}/mc/game/version_manifest.json`;
     const cache = config.cache ? `${config.cache}/json` : `${config.root}/cache/json`;
     const { data } = await axios.get(manifest);
 
@@ -168,7 +168,7 @@ const getAssets = async () => {
             const subAsset = join(assetDirectory, 'objects', subhash);
 
             if (!existsSync(join(subAsset, hash)) || !(await checkSum(hash, join(subAsset, hash))))
-                await downloadAsync(`${config.url?.resource}/${subhash}/${hash}`, subAsset, hash, true, 'assets');
+                await downloadAsync(`${config.url.resource}/${subhash}/${hash}`, subAsset, hash, true, 'assets');
             counter++;
             log('progress', {
                 type: 'assets',
@@ -315,8 +315,8 @@ const fwAddArgs = () => {
         `-Dforgewrapper.minecraft=${resolve(join(config.directory!, `${config.version.number}.jar`))}`,
     ];
     config.customArgs
-        ? setConfig('customArgs', config.customArgs.concat(forgeWrapperAgrs))
-        : setConfig('customArgs', forgeWrapperAgrs);
+        ? (config.customArgs = config.customArgs.concat(forgeWrapperAgrs))
+        : (config.customArgs = forgeWrapperAgrs);
 
     return;
 };
@@ -339,7 +339,7 @@ const getForgedWrapped = async () => {
             // If forge is modern, add ForgeWrappers launch arguments and set forge to null so MCLC treats it as a custom json.
             if (isModern(json)) {
                 fwAddArgs();
-                setConfig('forge', undefined);
+                config.forge = undefined;
             }
             return json;
         } catch (e) {
@@ -467,7 +467,7 @@ const getForgedWrapped = async () => {
         json.inheritsFrom.split('.')[1] >= 12 &&
         !(json.inheritsFrom === '1.12.2' && json.id.split('.')[json.id.split('.').length - 1] === '2847')
     )
-        setConfig('forge', undefined);
+        config.forge = undefined;
 
     return json;
 };
@@ -551,7 +551,7 @@ const processArguments = (...args: (string | Rule | string[])[]): string[] => {
     const result: string[] = [];
     args.forEach((arg) => {
         if (Array.isArray(arg)) {
-            result.push(...arg);
+            result.push(...arg.filter((item) => typeof item !== 'object'));
         } else if (typeof arg === 'string') {
             result.push(arg);
         }
@@ -655,7 +655,10 @@ const getMemory = () => {
     if (typeof config.memory.min === 'number' && typeof config.memory.max === 'number') {
         if (config.memory.max < config.memory.min) {
             log('debug', 'MIN memory is higher then MAX! Resetting!');
-            setConfig('memory', { min: Math.pow(2, 9), max: Math.pow(2, 10) });
+            config.memory = {
+                min: Math.pow(2, 9),
+                max: Math.pow(2, 10),
+            };
         }
         return [`${config.memory.max}M`, `${config.memory.min}M`];
     } else if (typeof config.memory.min === 'string' && typeof config.memory.max === 'string') {
@@ -665,7 +668,10 @@ const getMemory = () => {
             'debug',
             `MIN memory is a ${typeof config.memory.min} while MAX is ${typeof config.memory.max}! Resetting!`,
         );
-        setConfig('memory', { min: Math.pow(2, 9), max: Math.pow(2, 10) });
+        config.memory = {
+            min: Math.pow(2, 9),
+            max: Math.pow(2, 10),
+        };
         return [`${config.memory.max}M`, `${config.memory.min}M`];
     }
 };

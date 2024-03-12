@@ -1,17 +1,12 @@
+import { offline } from 'src';
 import { Options } from './types';
 
-const config: Options = {
+let config: Options = {
     root: './minecraft',
-    authorization: {
-        access_token: 'e9df5bd1-28bb-31c6-8eb0-4ad41f47d874',
-        client_token: 'e9df5bd1-28bb-31c6-8eb0-4ad41f47d874',
-        uuid: 'e9df5bd1-28bb-31c6-8eb0-4ad41f47d874',
-        name: 'Steve',
-        user_properties: '{}',
-    },
+    authorization: offline('Steve'),
     detached: true,
     version: {
-        number: '1.7.10',
+        number: '1.14.4',
         type: 'release',
     },
     url: {
@@ -19,12 +14,15 @@ const config: Options = {
         resource: 'https://resources.download.minecraft.net',
     },
     memory: {
-        min: '2G',
-        max: '4G',
+        min: Math.pow(2, 9),
+        max: Math.pow(2, 10),
     },
     maxSockets: Infinity,
 };
 
-const setConfig = <K extends keyof Options>(key: K, value: Options[K]) => (config[key] = value);
+const defineOptions = (newConfig: Partial<Options>): void => {
+    config = { ...config, ...newConfig };
+    return;
+};
 
-export { config, setConfig };
+export { config, defineOptions };

@@ -16,7 +16,7 @@ import {
 } from './handler';
 import mclc from './mclc';
 import { cleanUp, getOS } from './utils';
-import { config, setConfig } from './utils/config';
+import { config, defineOptions } from './utils/config';
 import { log } from './utils/log';
 
 export const launch = () => {
@@ -34,12 +34,12 @@ export const install = async () => {
     }
 
     if (config.gameDirectory) {
-        setConfig('gameDirectory', resolve(config.gameDirectory));
+        defineOptions({ gameDirectory: resolve(config.gameDirectory) });
         if (!existsSync(config.gameDirectory)) mkdirSync(config.gameDirectory, { recursive: true });
     }
 
     const directory = config.directory || join(config.root, 'versions', config.version.custom ?? config.version.number);
-    setConfig('directory', directory);
+    defineOptions({ directory: directory });
 
     await getVersion();
     const mcPath =
@@ -85,7 +85,7 @@ export const start = async () => {
     const directory =
         config.directory ||
         join(config.root, 'versions', config.version.custom ? config.version.custom : config.version.number);
-    setConfig('directory', directory);
+    defineOptions({ directory: directory });
 
     const versionFile = await getVersion();
     const mcPath =
@@ -106,7 +106,7 @@ export const start = async () => {
             }),
         );
     } else if (config.forge) {
-        setConfig('forge', resolve(config.forge));
+        defineOptions({ forge: resolve(config.forge) });
         log('debug', 'Detected Forge in options, getting dependencies');
         modifyJson = await getForgedWrapped();
     }

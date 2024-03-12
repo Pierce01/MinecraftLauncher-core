@@ -162,7 +162,7 @@ export interface Options {
      * This is for launcher developers located in countries that have the Minecraft resource servers
      * blocked for what ever reason. They obviously need to mirror the formatting of the original JSONs / file structures.
      */
-    url?: {
+    url: {
         /**
          * List of versions.
          */
