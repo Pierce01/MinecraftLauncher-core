@@ -22,12 +22,7 @@ import axios from 'axios';
 let counter = 0;
 let parsedVersion: Version;
 
-const checkJava = (
-    java: string,
-): Promise<{
-    run: boolean;
-    message?: ExecException;
-}> =>
+const checkJava = (java: string): Promise<{ run: boolean; message?: ExecException }> =>
     new Promise((resolve) => {
         exec(`"${java}" -version`, (error, _, stderr) => {
             if (error)
