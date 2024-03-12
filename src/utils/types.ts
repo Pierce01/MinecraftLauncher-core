@@ -13,7 +13,7 @@ export interface Options {
      *
      * @default will autodetect
      */
-    os?: 'windows' | 'osx' | 'linux';
+    os?: OS;
     /**
      * Array of custom Minecraft arguments.
      */
@@ -198,6 +198,7 @@ export interface User {
     };
 }
 
+export type OS = 'windows' | 'osx' | 'linux';
 export type Rule = {
     action: string;
     features: Record<string, boolean>;

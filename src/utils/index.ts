@@ -3,12 +3,12 @@ import { createReadStream, stat } from 'node:fs';
 import { resolve as _resolve } from 'node:path';
 import { config } from './config';
 import { log } from './log';
-import { Version } from './types';
+import { OS, Version } from './types';
 
 const popString = (path: string) => path.split('/').slice(0, -1).join('/');
 const cleanUp = (array: string[]) => [...new Set(Object.values(array).filter((value) => value !== null))];
 
-const getOS = () => {
+const getOS = (): OS => {
     if (config.os) {
         return config.os;
     } else {
