@@ -27,7 +27,6 @@ class FileDownloader {
         sha1: string | null,
         retry: boolean = true,
     ): Promise<boolean> {
-        if (!retry) return true;
         const fileToCheck = join(directory, name);
 
         try {
@@ -48,31 +47,31 @@ class FileDownloader {
                 });
             });
 
-            const file = createWriteStream(fileToCheck);
-            await response.data.pipe(file);
+            await response.data.pipe(createWriteStream(fileToCheck));
 
-            file.on('finish', async () => {
-                if (sha1) {
-                    const sum = await checkSum(sha1, fileToCheck);
-                    if (!sum) {
-                        await this.download(url, directory, name, type, sha1, false);
-                        return false;
+            return new Promise((resolve, reject) => {
+                response.data.on('finish', async () => {
+                    if (sha1) {
+                        const sum = await checkSum(sha1, fileToCheck);
+                        if (!sum) {
+                            if (retry) await this.download(url, directory, name, type, sha1, false);
+                            reject(false);
+                        }
                     }
-                }
-            });
 
-            file.on('error', async (e) => {
-                log('debug', `Failed to download asset to ${fileToCheck} due to\n${e}. Retrying...`);
-                if (existsSync(fileToCheck)) unlinkSync(fileToCheck);
-                await this.download(url, directory, name, type, sha1, false);
-                return false;
-            });
+                    resolve(true);
+                });
 
-            log('download', name);
-            return true;
+                response.data.on('error', async (e: Error) => {
+                    log('debug', `Failed to download asset to ${fileToCheck} due to\n${e}. Retrying...`);
+                    if (existsSync(fileToCheck)) unlinkSync(fileToCheck);
+                    if (retry) await this.download(url, directory, name, type, sha1, false);
+                    reject(false);
+                });
+            });
         } catch (error) {
             log('debug', `Failed to download asset to ${fileToCheck} due\n${error}. Retrying...`);
-            await this.download(url, directory, name, type, sha1, false);
+            if (retry) await this.download(url, directory, name, type, sha1, false);
             return false;
         }
     }
