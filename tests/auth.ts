@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest';
 import { offline } from '../src';
 
 describe('Testing the offline authentication', () => {

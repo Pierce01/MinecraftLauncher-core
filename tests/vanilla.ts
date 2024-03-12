@@ -1,10 +1,16 @@
 import { ChildProcessWithoutNullStreams } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, rmdirSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { Client, setConfig } from '../src';
+import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { Client, defineOptions } from '../src';
 
 describe('Minecraft Vanilla Legacy (1.8.9)', () => {
-    setConfig('version', { number: '1.8.9', type: 'release' });
+    defineOptions({
+        version: {
+            number: '1.8.9',
+            type: 'release',
+        },
+    });
 
     test(
         'Installation',
@@ -33,10 +39,21 @@ describe('Minecraft Vanilla Legacy (1.8.9)', () => {
         },
         3 * 60 * 1000,
     );
+
+    // Cleanup for other tests
+    afterAll(() => {
+        rmdirSync(resolve('./minecraft/saves'));
+        rmdirSync(resolve('./minecraft/resourcepacks'));
+    });
 });
 
 describe('Minecraft Vanilla Modern (1.14.4)', () => {
-    setConfig('version', { number: '1.14.4', type: 'release' });
+    defineOptions({
+        version: {
+            number: '1.14.4',
+            type: 'release',
+        },
+    });
 
     test(
         'Installation',
@@ -58,11 +75,17 @@ describe('Minecraft Vanilla Modern (1.14.4)', () => {
                 setTimeout(() => {
                     (process as ChildProcessWithoutNullStreams).kill();
                     resolve();
-                }, 10 * 1000);
+                }, 20 * 1000);
             });
             expect(existsSync(resolve('./minecraft/saves'))).toBe(true);
             expect(existsSync(resolve('./minecraft/resourcepacks'))).toBe(true);
         },
         3 * 60 * 1000,
     );
+
+    // Cleanup for other tests
+    afterAll(() => {
+        rmdirSync(resolve('./minecraft/saves'));
+        rmdirSync(resolve('./minecraft/resourcepacks'));
+    });
 });

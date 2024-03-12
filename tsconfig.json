@@ -17,7 +17,7 @@
         "resolveJsonModule": true,
         "strict": true,
         "target": "ESNext",
-        "types": ["node", "jest"]
+        "types": ["node"]
     },
     "exclude": ["./build/"],
     "include": ["./src/"]
