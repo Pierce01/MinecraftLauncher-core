@@ -191,7 +191,6 @@ export interface User {
     client_token: string;
     uuid: string;
     name: string;
-    user_properties: Partial<any> | string;
     meta?: {
         type: 'mojang' | 'msa';
         demo?: boolean;
@@ -287,7 +286,7 @@ export interface Fields {
     '${auth_player_name}': string;
     '${auth_uuid}': string;
     '${auth_xuid}': string;
-    '${user_properties}': string | Partial<any>;
+    '${user_properties}': '{}';
     '${user_type}': string;
     '${version_name}'?: string;
     '${assets_index_name}': string;

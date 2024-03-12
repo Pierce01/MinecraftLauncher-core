@@ -582,7 +582,7 @@ const getLaunchOptions = async (modification: CustomLibType | null): Promise<str
         '${auth_player_name}': config.authorization.name,
         '${auth_uuid}': config.authorization.uuid,
         '${auth_xuid}': config.authorization.access_token,
-        '${user_properties}': config.authorization.user_properties,
+        '${user_properties}': '{}',
         '${user_type}': config.authorization.meta.type,
         '${version_name}': config.version.number || config.versionName,
         '${assets_index_name}': config.assetIndex || config.version.custom || config.version.number,
