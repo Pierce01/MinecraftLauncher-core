@@ -537,6 +537,7 @@ const getClasses = async (classJson: CustomLibType) => {
     });
 
     libs = libs.concat(await downloadToDirectory(libraryDirectory, parsed as LibType[], 'classes'));
+    counter = 0;
 
     if (classJson) libs.sort();
 
