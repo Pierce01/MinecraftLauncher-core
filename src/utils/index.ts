@@ -10,17 +10,15 @@ const popString = (path: string) => path.split('/').slice(0, -1).join('/');
 const cleanUp = (array: string[]) => [...new Set(Object.values(array).filter((value) => value !== null))];
 
 const getOS = (): OS => {
-    if (config.os) {
-        return config.os;
-    } else {
-        switch (process.platform) {
-            case 'win32':
-                return 'windows';
-            case 'darwin':
-                return 'osx';
-            default:
-                return 'linux';
-        }
+    if (config.os) return config.os;
+
+    switch (process.platform) {
+        case 'win32':
+            return 'windows';
+        case 'darwin':
+            return 'osx';
+        default:
+            return 'linux';
     }
 };
 
