@@ -1,5 +1,5 @@
 import { v3 } from 'uuid';
-import { User } from './utils/types';
+import User from './types/User';
 
 export const offline = (username: string): User => {
     const uuid = v3(username, v3.DNS);

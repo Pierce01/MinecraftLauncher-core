@@ -1,4 +1,7 @@
-export interface Options {
+import { OS } from '.';
+import User from './User';
+
+export default interface Options {
     /**
      * if true MCLC will remove the client package zip file after its finished extracting.
      */
@@ -184,117 +187,4 @@ export interface Options {
      * Versions below 1.13 should be the "universal" jar while versions above 1.13+ should be the "installer" jar
      */
     forge?: string;
-}
-
-export interface User {
-    access_token: string;
-    client_token: string;
-    uuid: string;
-    name: string;
-    meta?: {
-        type: 'mojang' | 'msa';
-        demo?: boolean;
-    };
-}
-
-export type OS = 'windows' | 'osx' | 'linux';
-export type Rule = {
-    action: string;
-    features: Record<string, boolean>;
-};
-
-export type ArtifactType = {
-    path: string;
-    sha1: string;
-    size: number;
-    url: string;
-};
-
-export type LibType = {
-    downloads: {
-        artifact: ArtifactType;
-        classifiers?: {
-            'natives-linux'?: ArtifactType;
-            'natives-osx'?: ArtifactType;
-            'natives-macos'?: ArtifactType;
-            'natives-windows'?: ArtifactType;
-            'natives-windows-64'?: ArtifactType;
-            'natives-windows-32'?: ArtifactType;
-        };
-    };
-    name: string;
-    rules?: {
-        action: 'allow' | 'disallow';
-        os: {
-            name?: string;
-        };
-    }[];
-};
-
-export type CustomArtifactType = {
-    name: string;
-    url: string;
-    sha1?: string;
-    size?: number;
-};
-
-export type CustomLibType = {
-    id: string;
-    mainClass: string;
-    arguments: {
-        game: string | Rule | string[];
-        jvm: string | Rule | string[];
-    };
-    mavenFiles?: {
-        name: string;
-        url: string;
-    }[];
-    libraries: CustomArtifactType[];
-};
-
-export interface Version {
-    assetIndex: {
-        id: string;
-        sha1: string;
-        size: number;
-        totalSize: number;
-        url: string;
-    };
-    assets: string;
-    complianceLevel: number;
-    downloads: {
-        client: {
-            sha1: string;
-            size: number;
-            url: string;
-        };
-    };
-    id: string;
-    libraries: LibType[];
-    arguments?: {
-        game: string | Rule | string[];
-        jvm?: string | Rule | string[];
-    };
-    minecraftArguments?: string;
-    type: string;
-    mainClass: string;
-}
-
-export interface Fields {
-    '${auth_access_token}': string;
-    '${auth_session}': string;
-    '${auth_player_name}': string;
-    '${auth_uuid}': string;
-    '${auth_xuid}': string;
-    '${user_properties}': '{}';
-    '${user_type}': string;
-    '${version_name}'?: string;
-    '${assets_index_name}': string;
-    '${game_directory}': string;
-    '${assets_root}': string;
-    '${game_assets}': string;
-    '${version_type}': string;
-    '${clientid}': string;
-    '${resolution_width}'?: number;
-    '${resolution_height}'?: number;
 }

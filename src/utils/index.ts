@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
 import { createReadStream, stat } from 'node:fs';
 import { resolve as _resolve } from 'node:path';
+import { OS } from 'src/types';
+import Version from 'src/types/Version';
 import { config } from './config';
 import { log } from './log';
-import { OS, Version } from './types';
 
 const popString = (path: string) => path.split('/').slice(0, -1).join('/');
 const cleanUp = (array: string[]) => [...new Set(Object.values(array).filter((value) => value !== null))];

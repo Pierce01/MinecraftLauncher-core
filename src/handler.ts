@@ -14,10 +14,13 @@ import { Agent as https } from 'node:https';
 import { join, resolve, sep } from 'node:path';
 import Zip from 'adm-zip';
 import axios from 'axios';
+import { ArtifactType, LibType, Rule } from './types';
+import { CustomArtifactType, CustomLibType } from './types/Custom';
+import Fields from './types/Fields';
+import Version from './types/Version';
 import { checkSum, cleanUp, getOS, isLegacy, popString } from './utils';
 import { config } from './utils/config';
 import { log } from './utils/log';
-import { ArtifactType, CustomArtifactType, CustomLibType, Fields, LibType, Rule, Version } from './utils/types';
 
 let counter = 0;
 let parsedVersion: Version;
