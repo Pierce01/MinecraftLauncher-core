@@ -38,15 +38,12 @@ export const install = async () => {
         if (!existsSync(config.gameDirectory)) mkdirSync(config.gameDirectory, { recursive: true });
     }
 
-    const directory = config.directory || join(config.root, 'versions', config.version.custom ?? config.version.number);
-    defineOptions({ directory: directory });
-
     await getVersion();
     const mcPath =
         config.minecraftJar ||
         (config.version.custom
             ? join(config.root, 'versions', config.version.custom, `${config.version.custom}.jar`)
-            : join(directory, `${config.version.number}.jar`));
+            : join(config.directory, `${config.version.number}.jar`));
     await getNatives();
 
     if (!existsSync(mcPath)) {
@@ -82,17 +79,12 @@ export const start = async () => {
         return log('close', 1);
     }
 
-    const directory =
-        config.directory ||
-        join(config.root, 'versions', config.version.custom ? config.version.custom : config.version.number);
-    defineOptions({ directory: directory });
-
     const versionFile = await getVersion();
     const mcPath =
         config.minecraftJar ||
         (config.version.custom
             ? join(config.root, 'versions', config.version.custom, `${config.version.custom}.jar`)
-            : join(directory, `${config.version.number}.jar`));
+            : join(config.directory, `${config.version.number}.jar`));
     const nativePath = await getNatives();
 
     const args: string[] = [];
@@ -165,7 +157,7 @@ export const start = async () => {
     // So mods like fabric work.
     const jar = existsSync(mcPath)
         ? `${separator}${resolve(mcPath)}`
-        : `${separator}${resolve(join(directory, `${config.version.number}.jar`))}`;
+        : `${separator}${resolve(join(config.directory, `${config.version.number}.jar`))}`;
     classPaths.push(`${config.forge ? `${config.forge}${separator}` : ''}${classes.join(separator)}${jar}`);
     classPaths.push(file.mainClass);
 

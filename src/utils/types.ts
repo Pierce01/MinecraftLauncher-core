@@ -138,7 +138,7 @@ export interface Options {
     /**
      * Folder, where the Minecraft jar and version json are located.
      */
-    directory?: string;
+    directory: string;
     natives?: string;
     assetRoot?: string;
     assetIndex?: string;

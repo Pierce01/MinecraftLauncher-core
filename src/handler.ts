@@ -51,8 +51,8 @@ const downloadAsync = async (url: string, directory: string, name: string, retry
         const response = await axios.get(url, {
             responseType: 'stream',
             timeout: config.timeout || 50000,
-            httpAgent: new http({ maxSockets: config.maxSockets || 2 }),
-            httpsAgent: new https({ maxSockets: config.maxSockets || 2 }),
+            httpAgent: new http({ maxSockets: config.maxSockets || Infinity }),
+            httpsAgent: new https({ maxSockets: config.maxSockets || Infinity }),
         });
 
         const totalBytes = parseInt(response.headers['content-length']);
@@ -95,7 +95,7 @@ const downloadAsync = async (url: string, directory: string, name: string, retry
 };
 
 const getVersion = async () => {
-    const versionJsonPath = config.versionJson || join(config.directory!, `${config.version.number}.json`);
+    const versionJsonPath = config.versionJson || join(config.directory, `${config.version.number}.json`);
     if (existsSync(versionJsonPath)) {
         parsedVersion = JSON.parse(readFileSync(versionJsonPath).toString());
         return parsedVersion;
@@ -130,12 +130,12 @@ const getVersion = async () => {
 const getJar = async () => {
     await downloadAsync(
         parsedVersion.downloads.client.url,
-        config.directory!,
+        config.directory,
         `${config.version.custom ?? config.version.number}.jar`,
         true,
         'version-jar',
     );
-    writeFileSync(join(config.directory!, `${config.version.number}.json`), JSON.stringify(parsedVersion, null, 4));
+    writeFileSync(join(config.directory, `${config.version.number}.json`), JSON.stringify(parsedVersion, null, 4));
     return log('debug', 'Downloaded version jar and wrote version json');
 };
 
@@ -277,7 +277,10 @@ const getNatives = async () => {
         await Promise.all(
             stat.map(async (native) => {
                 if (!native) return;
-                const name = native.path.split('/').pop()!;
+                const name = native.path.split('/').pop();
+
+                // Shouldn't even be happening
+                if (!name) return;
                 await downloadAsync(native.url, nativeDirectory, name, true, 'natives');
                 const downloaded = await checkSum(native.sha1, join(nativeDirectory, name));
                 if (!existsSync(join(nativeDirectory, name)) || !downloaded)
@@ -312,7 +315,7 @@ const fwAddArgs = () => {
     const forgeWrapperAgrs = [
         `-Dforgewrapper.librariesDir=${resolve(config.libraryRoot || join(config.root, 'libraries'))}`,
         `-Dforgewrapper.installer=${config.forge}`,
-        `-Dforgewrapper.minecraft=${resolve(join(config.directory!, `${config.version.number}.jar`))}`,
+        `-Dforgewrapper.minecraft=${resolve(join(config.directory, `${config.version.number}.jar`))}`,
     ];
     config.customArgs
         ? (config.customArgs = config.customArgs.concat(forgeWrapperAgrs))
@@ -423,8 +426,8 @@ const getForgedWrapped = async () => {
                     await axios
                         .get(downloadLink, {
                             timeout: config.timeout || 50000,
-                            httpAgent: new http({ maxSockets: config.maxSockets || 2 }),
-                            httpsAgent: new https({ maxSockets: config.maxSockets || 2 }),
+                            httpAgent: new http({ maxSockets: config.maxSockets || Infinity }),
+                            httpsAgent: new https({ maxSockets: config.maxSockets || Infinity }),
                         })
                         .then(
                             ({ status }) =>

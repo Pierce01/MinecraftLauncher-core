@@ -1,4 +1,4 @@
-import { existsSync, rm } from 'fs';
+import { existsSync, rm } from 'node:fs';
 
 // A simple way to delete the `build` folder
 // instead of `rm -rf` which is limited per OS
