@@ -17,7 +17,7 @@ import axios from 'axios';
 import { checkSum, cleanUp, getOS, isLegacy, popString } from './utils';
 import { config } from './utils/config';
 import { log } from './utils/log';
-import { artifactType, customArtifactType, customLibType, Fields, libType, Rule, Version } from './utils/types';
+import { ArtifactType, CustomArtifactType, CustomLibType, Fields, LibType, Rule, Version } from './utils/types';
 
 let counter = 0;
 let parsedVersion: Version;
@@ -229,7 +229,7 @@ const getAssets = async () => {
     log('debug', 'Downloaded assets');
 };
 
-const parseRule = (lib: libType) => {
+const parseRule = (lib: LibType) => {
     if (!lib.rules) return false;
     if (lib.rules.length <= 1 && lib.rules[0].action === 'allow' && lib.rules[0].os)
         return lib.rules[0].os.name !== getOS();
@@ -248,18 +248,18 @@ const getNatives = async () => {
         mkdirSync(nativeDirectory, { recursive: true });
 
         const natives = async () => {
-            const natives: artifactType[] = [];
+            const natives: ArtifactType[] = [];
             await Promise.all(
-                parsedVersion.libraries.map(async (lib: libType) => {
+                parsedVersion.libraries.map(async (lib: LibType) => {
                     if (!lib.downloads || !lib.downloads.classifiers) return;
                     if (parseRule(lib)) return;
 
                     const native =
                         getOS() === 'osx'
                             ? lib.downloads.classifiers['natives-osx']
-                                ? (lib.downloads.classifiers['natives-osx'] as artifactType)
-                                : (lib.downloads.classifiers['natives-macos'] as artifactType)
-                            : (lib.downloads.classifiers[`natives-${getOS()}`] as artifactType);
+                                ? (lib.downloads.classifiers['natives-osx'] as ArtifactType)
+                                : (lib.downloads.classifiers['natives-macos'] as ArtifactType)
+                            : (lib.downloads.classifiers[`natives-${getOS()}`] as ArtifactType);
 
                     natives.push(native);
                 }),
@@ -474,7 +474,7 @@ const getForgedWrapped = async () => {
 
 const downloadToDirectory = async (
     directory: string,
-    libraries: libType[] | customArtifactType[],
+    libraries: LibType[] | CustomArtifactType[],
     eventName: string,
 ) => {
     const libs: string[] = [];
@@ -496,7 +496,7 @@ const downloadToDirectory = async (
                 jarPath = join(directory, `${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}`);
             }
 
-            const downloadLibrary = async (library: libType | customArtifactType) => {
+            const downloadLibrary = async (library: LibType | CustomArtifactType) => {
                 if ('url' in library) {
                     const url = `${library.url}${lib[0].replace(/\./g, '/')}/${lib[1]}/${lib[2]}/${name}`;
                     await downloadAsync(url, jarPath, name, true, eventName);
@@ -524,7 +524,7 @@ const downloadToDirectory = async (
     return libs;
 };
 
-const getClasses = async (classJson: customLibType) => {
+const getClasses = async (classJson: CustomLibType) => {
     let libs: string[] = [];
     const libraryDirectory = resolve(config.libraryRoot || join(config.root, 'libraries'));
 
@@ -534,11 +534,11 @@ const getClasses = async (classJson: customLibType) => {
         libs = await downloadToDirectory(libraryDirectory, classJson.libraries, 'classes-custom');
     }
 
-    const parsed = parsedVersion.libraries.filter(Boolean).map((lib: libType) => {
+    const parsed = parsedVersion.libraries.filter(Boolean).map((lib: LibType) => {
         if (lib.downloads && lib.downloads.artifact && !parseRule(lib)) return lib;
     });
 
-    libs = libs.concat(await downloadToDirectory(libraryDirectory, parsed as libType[], 'classes'));
+    libs = libs.concat(await downloadToDirectory(libraryDirectory, parsed as LibType[], 'classes'));
     counter = 0;
 
     if (classJson) libs.sort();
@@ -560,7 +560,7 @@ const processArguments = (...args: (string | Rule | string[])[]): string[] => {
     return result;
 };
 
-const getLaunchOptions = async (modification: customLibType | null): Promise<string[]> => {
+const getLaunchOptions = async (modification: CustomLibType | null): Promise<string[]> => {
     const type = Object.assign({}, parsedVersion, modification);
     const args = type.minecraftArguments ? type.minecraftArguments.split(' ') : processArguments(type.arguments.game);
     const assetPath = resolve(

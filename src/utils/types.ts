@@ -203,23 +203,23 @@ export type Rule = {
     features: Record<string, boolean>;
 };
 
-export type artifactType = {
+export type ArtifactType = {
     path: string;
     sha1: string;
     size: number;
     url: string;
 };
 
-export type libType = {
+export type LibType = {
     downloads: {
-        artifact: artifactType;
+        artifact: ArtifactType;
         classifiers?: {
-            'natives-linux'?: artifactType;
-            'natives-osx'?: artifactType;
-            'natives-macos'?: artifactType;
-            'natives-windows'?: artifactType;
-            'natives-windows-64'?: artifactType;
-            'natives-windows-32'?: artifactType;
+            'natives-linux'?: ArtifactType;
+            'natives-osx'?: ArtifactType;
+            'natives-macos'?: ArtifactType;
+            'natives-windows'?: ArtifactType;
+            'natives-windows-64'?: ArtifactType;
+            'natives-windows-32'?: ArtifactType;
         };
     };
     name: string;
@@ -231,14 +231,14 @@ export type libType = {
     }[];
 };
 
-export type customArtifactType = {
+export type CustomArtifactType = {
     name: string;
     url: string;
     sha1?: string;
     size?: number;
 };
 
-export type customLibType = {
+export type CustomLibType = {
     id: string;
     mainClass: string;
     arguments: {
@@ -249,7 +249,7 @@ export type customLibType = {
         name: string;
         url: string;
     }[];
-    libraries: customArtifactType[];
+    libraries: CustomArtifactType[];
 };
 
 export interface Version {
@@ -270,7 +270,7 @@ export interface Version {
         };
     };
     id: string;
-    libraries: libType[];
+    libraries: LibType[];
     arguments?: {
         game: string | Rule | string[];
         jvm?: string | Rule | string[];
