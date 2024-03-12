@@ -434,16 +434,15 @@ const getForgedWrapped = async () => {
     }
     // If a downloads property exists, we modify the inital forge entry to include ${jarEnding} so ForgeWrapper can work properly.
     // If it doesn't, we simply remove it since we're already providing the universal jar.
-    if (json.libraries[0].downloads) {
-        const name = json.libraries[0].name;
-        if (name.includes('minecraftforge:forge') && !name.includes('universal')) {
-            json.libraries[0].name = `${name}:${jarEnding}`;
-            json.libraries[0].downloads.artifact.path = json.libraries[0].downloads.artifact.replace(
-                '.jar',
-                `-${jarEnding}.jar`,
-            );
-            json.libraries[0].downloads.artifact.url = `https://files.minecraftforge.net/maven/${json.libraries[0].downloads.artifact.path}`;
+    const firstLibrary = json.libraries[0];
+    if (firstLibrary.downloads) {
+        if (firstLibrary.name.includes('minecraftforge:forge') && !firstLibrary.name.includes('universal')) {
+            firstLibrary.name = `${firstLibrary.name}:${jarEnding}`;
+            firstLibrary.downloads.artifact.path = firstLibrary.downloads.artifact.replace('.jar', `-${jarEnding}.jar`);
+            firstLibrary.downloads.artifact.url = `https://files.minecraftforge.net/maven/${firstLibrary.downloads.artifact.path}`;
         }
+
+        json.libraries[0] = firstLibrary;
     } else {
         delete json.libraries[0];
     }
@@ -453,9 +452,8 @@ const getForgedWrapped = async () => {
     if (json.mavenFiles) json.mavenFiles = cleanUp(json.mavenFiles);
 
     // Saving file for next run!
-    if (!existsSync(join(config.root, 'forge', parsedVersion.id))) {
+    if (!existsSync(join(config.root, 'forge', parsedVersion.id)))
         mkdirSync(join(config.root, 'forge', parsedVersion.id), { recursive: true });
-    }
     writeFileSync(versionPath, JSON.stringify(json, null, 4));
 
     // Make MCLC treat modern forge as a custom version json rather then legacy forge.
