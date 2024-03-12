@@ -15,11 +15,12 @@ import { join, resolve, sep } from 'node:path';
 import { ArtifactType, CustomArtifactType, CustomLibType, Fields, LibType, Rule, Version } from '@types';
 import { checkSum, cleanUp, getOS, isLegacy, popString } from '@utils';
 import { config } from '@utils/config';
+import Counter from '@utils/Counter';
 import { log } from '@utils/log';
 import Zip from 'adm-zip';
 import axios from 'axios';
 
-let counter = 0;
+const counter = new Counter();
 let parsedVersion: Version;
 
 const checkJava = (java: string): Promise<{ run: boolean; message?: ExecException }> =>
@@ -164,15 +165,15 @@ const getAssets = async () => {
 
             if (!existsSync(join(subAsset, hash)) || !(await checkSum(hash, join(subAsset, hash))))
                 await downloadAsync(`${config.url.resource}/${subhash}/${hash}`, subAsset, hash, true, 'assets');
-            counter++;
+            counter.increment();
             log('progress', {
                 type: 'assets',
-                task: counter,
+                task: counter.getValue(),
                 total: Object.keys(index.objects).length,
             });
         }),
     );
-    counter = 0;
+    counter.reset();
 
     // Copy assets to legacy if it's an older Minecraft version.
     if (isLegacy(parsedVersion)) {
@@ -210,16 +211,16 @@ const getAssets = async () => {
                 if (!existsSync(join(legacyDirectory, asset))) {
                     copyFileSync(join(subAsset, hash), join(legacyDirectory, asset));
                 }
-                counter++;
+                counter.increment();
                 log('progress', {
                     type: 'assets-copy',
-                    task: counter,
+                    task: counter.getValue(),
                     total: Object.keys(index.objects).length,
                 });
             }),
         );
     }
-    counter = 0;
+    counter.reset();
 
     log('debug', 'Downloaded assets');
 };
@@ -289,10 +290,10 @@ const getNatives = async () => {
                     console.warn(e);
                 }
                 unlinkSync(join(nativeDirectory, name));
-                counter++;
+                counter.increment();
                 log('progress', {
                     type: 'natives',
-                    task: counter,
+                    task: counter.getValue(),
                     total: stat.length,
                 });
             }),
@@ -300,7 +301,7 @@ const getNatives = async () => {
         log('debug', 'Downloaded and extracted natives');
     }
 
-    counter = 0;
+    counter.reset();
     log('debug', `Set native path to ${nativeDirectory}`);
 
     return nativeDirectory;
@@ -508,16 +509,16 @@ const downloadToDirectory = async (
             if ('downloads' in library && library.downloads.artifact)
                 if (!checkSum(library.downloads.artifact.sha1, join(jarPath, name))) await downloadLibrary(library);
 
-            counter++;
+            counter.increment();
             log('progress', {
                 type: eventName,
-                task: counter,
+                task: counter.getValue(),
                 total: libraries.length,
             });
             libs.push(`${jarPath}${sep}${name}`);
         }),
     );
-    counter = 0;
+    counter.reset();
 
     return libs;
 };
@@ -537,7 +538,7 @@ const getClasses = async (classJson: CustomLibType) => {
     });
 
     libs = libs.concat(await downloadToDirectory(libraryDirectory, parsed as LibType[], 'classes'));
-    counter = 0;
+    counter.reset();
 
     if (classJson) libs.sort();
 
