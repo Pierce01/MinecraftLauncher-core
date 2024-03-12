@@ -112,8 +112,6 @@ const getVersion = async () => {
     const desiredVersion = data.versions.find((version: { id: string }) => version.id === config.version.number);
     if (desiredVersion) {
         const { data } = await axios.get(desiredVersion.url);
-        writeFileSync(join(`${cache}/${config.version.number}.json`), JSON.stringify(data));
-        log('debug', `Cached ${config.version.number}.json`);
 
         log('debug', 'Parsed version from version manifest');
         parsedVersion = data;
