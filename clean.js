@@ -1,4 +1,4 @@
-import { existsSync, rm } from 'node:fs';
+const { existsSync, rm } = require('node:fs');
 
 // A simple way to delete the `build` folder
 // instead of `rm -rf` which is limited per OS

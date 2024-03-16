@@ -26,7 +26,6 @@
     "files": [
         "./build/"
     ],
-    "type": "module",
     "scripts": {
         "clean": "node clean.js",
         "test": "vitest",
