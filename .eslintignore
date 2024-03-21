@@ -1,0 +1,4 @@
+tests/
+build/
+clean.js
+vitest.config.ts
