@@ -7,32 +7,84 @@ import { config } from '@utils/config';
 import { log } from '@utils/log';
 import axios, { AxiosInstance } from 'axios';
 
+interface DownloadableFile {
+    url: string;
+    directory: string;
+    name: string;
+    type: string;
+    hash?: string;
+    retriedCount?: number;
+}
+
 class FileDownloader {
     axios: AxiosInstance;
+    maxParallel: number;
+    maxRetries: number;
+    queue: DownloadableFile[] = [];
+    private _counter: number = 0;
+    private _total: number = 0;
 
-    constructor() {
+    constructor(maxParallel?: number, maxRetries?: number) {
         this.axios = axios.create({
             responseType: 'stream',
             timeout: config.timeout || 50000,
             httpAgent: new http({ maxSockets: config.maxSockets || Infinity }),
             httpsAgent: new https({ maxSockets: config.maxSockets || Infinity }),
         });
+        this.maxParallel = maxParallel || 5;
+        this.maxRetries = maxRetries || 5;
     }
 
-    async download(
-        url: string,
-        directory: string,
-        name: string,
-        type: string,
-        sha1: string | null,
-        retry: boolean = true,
-    ): Promise<boolean> {
-        const fileToCheck = join(directory, name);
+    public add(file: DownloadableFile) {
+        this.queue.push(file);
+        this._total++;
+    }
+
+    public reset() {
+        this.queue = [];
+        this._counter = 0;
+        this._total = 0;
+    }
+
+    public get counter() {
+        return this._counter;
+    }
+
+    public get total() {
+        return this._total;
+    }
+
+    public async start() {
+        const promises: Promise<boolean>[] = [];
+
+        while (this.queue.length > 0 && this.counter < this.maxParallel) {
+            const file = this.queue.shift();
+            if (file) {
+                this._counter++;
+                promises.push(this.download(file));
+            }
+        }
 
         try {
-            mkdirSync(directory, { recursive: true });
+            await Promise.all(promises);
+        } catch (err) {
+            console.error(err);
+        }
+    }
 
-            const response = await this.axios.get(url);
+    private onDownloadFinished() {
+        this._counter++;
+        const nextFile = this.queue.shift();
+        if (nextFile) this.download(nextFile);
+    }
+
+    public async download(file: DownloadableFile): Promise<boolean> {
+        const fileToCheck = join(file.directory, file.name);
+
+        try {
+            mkdirSync(file.directory, { recursive: true });
+
+            const response = await this.axios.get(file.url);
             const totalBytes = parseInt(response.headers['content-length']);
             let receivedBytes = 0;
 
@@ -40,40 +92,53 @@ class FileDownloader {
                 typeof data === 'string' ? (receivedBytes += Buffer.byteLength(data)) : (receivedBytes += data.length);
 
                 log('download-status', {
-                    name: name,
-                    type: type,
+                    name: file.name,
+                    type: file.type,
                     current: receivedBytes,
                     total: totalBytes,
                 });
             });
 
-            await response.data.pipe(createWriteStream(fileToCheck));
+            const fileStream = createWriteStream(fileToCheck);
+            response.data.pipe(fileStream);
 
-            return new Promise((resolve, reject) => {
-                response.data.on('finish', async () => {
-                    if (sha1) {
-                        const sum = await checkSum(sha1, fileToCheck);
-                        if (!sum) {
-                            if (retry) await this.download(url, directory, name, type, sha1, false);
-                            reject(false);
-                        }
+            return await new Promise((resolve, reject) => {
+                fileStream.on('finish', async () => {
+                    if (file.hash) {
+                        const sum = await checkSum(file.hash, fileToCheck);
+                        if (!sum) this.onFileDownloadFailed(file);
                     }
 
+                    this.onDownloadFinished();
                     resolve(true);
                 });
 
-                response.data.on('error', async (e: Error) => {
-                    log('debug', `Failed to download asset to ${fileToCheck} due to\n${e}. Retrying...`);
+                fileStream.on('error', (error: Error) => {
+                    log('debug', `Failed to download asset to ${fileToCheck} due\n${error}. Retrying...`);
                     if (existsSync(fileToCheck)) unlinkSync(fileToCheck);
-                    if (retry) await this.download(url, directory, name, type, sha1, false);
-                    reject(false);
+
+                    this.onFileDownloadFailed(file);
+                    reject();
                 });
             });
         } catch (error) {
             log('debug', `Failed to download asset to ${fileToCheck} due\n${error}. Retrying...`);
-            if (retry) await this.download(url, directory, name, type, sha1, false);
+            this.onFileDownloadFailed(file);
             return false;
         }
+    }
+
+    private onFileDownloadFailed(file: DownloadableFile) {
+        file.retriedCount = file.retriedCount ? file.retriedCount + 1 : 1;
+        if (file.retriedCount >= this.maxRetries)
+            throw new Error(
+                `Failed to download asset too many times. ${file.name} has been retried ${this.maxRetries} times and still failed.`,
+            );
+
+        this._counter--;
+        this._total--;
+        this.add(file);
+        return;
     }
 }
 

@@ -16,10 +16,12 @@ import { ArtifactType, CustomArtifactType, CustomLibType, Fields, LibType, Rule,
 import { checkSum, cleanUp, getOS, isLegacy, popString } from '@utils';
 import { config } from '@utils/config';
 import Counter from '@utils/Counter';
+import FileDownloader from '@utils/FileDownloader';
 import { log } from '@utils/log';
 import Zip from 'adm-zip';
 import axios from 'axios';
 
+const fd = new FileDownloader();
 const counter = new Counter();
 let parsedVersion: Version;
 
@@ -122,13 +124,14 @@ const getVersion = async () => {
 };
 
 const getJar = async () => {
-    await downloadAsync(
-        parsedVersion.downloads.client.url,
-        config.directory,
-        `${config.version.custom ?? config.version.number}.jar`,
-        true,
-        'version-jar',
-    );
+    fd.add({
+        url: parsedVersion.downloads.client.url,
+        directory: config.directory,
+        name: `${config.version.custom ?? config.version.number}.jar`,
+        type: 'version-jar',
+        hash: parsedVersion.downloads.client.sha1,
+    });
+    await fd.start();
     writeFileSync(join(config.directory, `${config.version.number}.json`), JSON.stringify(parsedVersion, null, 4));
     return log('debug', 'Downloaded version jar and wrote version json');
 };
@@ -138,40 +141,32 @@ const getAssets = async () => {
     const assetId = config.version.custom || config.version.number;
 
     if (!existsSync(join(assetDirectory, 'indexes', `${assetId}.json`))) {
-        await downloadAsync(
-            parsedVersion.assetIndex.url,
-            join(assetDirectory, 'indexes'),
-            `${assetId}.json`,
-            true,
-            'asset-json',
-        );
+        fd.add({
+            url: parsedVersion.assetIndex.url,
+            directory: join(assetDirectory, 'indexes'),
+            name: `${assetId}.json`,
+            type: 'asset-json',
+            hash: parsedVersion.assetIndex.sha1,
+        });
+        await fd.start();
     }
 
     const index = JSON.parse(readFileSync(join(assetDirectory, 'indexes', `${assetId}.json`), { encoding: 'utf8' }));
+    Object.keys(index.objects).map(async (asset) => {
+        const hash = index.objects[asset].hash;
+        const subhash = hash.substring(0, 2);
+        const subAsset = join(assetDirectory, 'objects', subhash);
 
-    log('progress', {
-        type: 'assets',
-        task: 0,
-        total: Object.keys(index.objects).length,
+        if (!existsSync(join(subAsset, hash)) || !(await checkSum(hash, join(subAsset, hash))))
+            fd.add({
+                url: `${config.url.resource}/${subhash}/${hash}`,
+                directory: subAsset,
+                name: hash,
+                type: 'assets',
+            });
     });
 
-    await Promise.all(
-        Object.keys(index.objects).map(async (asset) => {
-            const hash = index.objects[asset].hash;
-            const subhash = hash.substring(0, 2);
-            const subAsset = join(assetDirectory, 'objects', subhash);
-
-            if (!existsSync(join(subAsset, hash)) || !(await checkSum(hash, join(subAsset, hash))))
-                await downloadAsync(`${config.url.resource}/${subhash}/${hash}`, subAsset, hash, true, 'assets');
-            counter.increment();
-            log('progress', {
-                type: 'assets',
-                task: counter.getValue(),
-                total: Object.keys(index.objects).length,
-            });
-        }),
-    );
-    counter.reset();
+    await fd.start();
 
     // Copy assets to legacy if it's an older Minecraft version.
     if (isLegacy(parsedVersion)) {
