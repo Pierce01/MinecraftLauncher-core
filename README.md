@@ -1,10 +1,10 @@
-![Main Logo](/imgs/header.png)
+![MCLC](/imgs/header.png)
 
 [![MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Version](https://img.shields.io/badge/stable_version-3.19.0-blue)
 
 MCLC (Minecraft Launcher Core) is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
-Basically a core for your Electron or script based launchers.
+Basically a core for your Electron or script based launcher.
 
 ### Getting support
 
@@ -28,145 +28,93 @@ pnpm add minecraft-launcher-core
 ### Example
 
 ```js
-import { Authenticator, Client } from 'minecraft-launcher-core';
+import { Client, defineConfig, onLog, offline } from 'minecraft-launcher-core';
 
-const launcher = new Client();
-const options = {
-    // This will launch in offline mode, if you want
-    // to use a Microsoft Account, see details below
-    authorization: Authenticator.getAuth('Steve'),
-    root: './minecraft',
+defineConfig({
+    // This will launch in offline mode, if you want to use
+    // a Microsoft Account, see details below
+    authorization: offline('Steve'),
+    // 1.14.4 is the default version, you can remove it if you are using it
     version: {
         number: '1.14.4',
         type: 'release',
-    },
-    memory: {
-        max: '4G',
-        min: '2G',
-    },
-};
+    }
+});
 
-launcher.launch(options);
+await Client.install();
+await Client.launch();
 
-launcher.on('debug', (e) => console.log(e));
-launcher.on('data', (e) => console.log(e));
+onLog('debug', (e) => console.log(e));
+onLog('data', (e) => console.log(e));
 ```
 
 ### Using a Microsoft Account
 
-In order to authenticate with a Microsoft Account, you would need to use [MSMC](https://github.com/Hanro50/MSMC).
-Make sure to install it, as it doesn't come by default
+In order to authenticate with a Microsoft Account, you would need to use [MSMC](https://npm.im/msmc).
+Make sure to install it, as it doesn't come by default.
 
 #### Example
 
 ```js
-import { Authenticator, Client } from 'minecraft-launcher-core';
+import { Client, defineConfig, onLog } from 'minecraft-launcher-core';
 import { Auth } from 'msmc';
 
 const authManager = new Auth('select_account');
 const xboxManager = await authManager.launch('raw'); // Can be 'electron' or 'nwjs'
 const token = await xboxManager.getMinecraft();
 
-const launcher = new Client();
-const options = {
-    authorization: token.mclc(),
-    root: './minecraft',
+defineConfig({
+    authorization: token.mclc()
+});
+
+await Client.install();
+await Client.launch();
+
+onLog('debug', (e) => console.log(e));
+onLog('data', (e) => console.log(e));
+```
+
+### Modded versions
+
+MCLC only supports installing Vanilla automatically. In order to automate the process of installing [Forge](https://minecraftforge.net), [Fabric](https://fabricmc.net), [Quilt](https://quiltmc.org) and [NeoForge](https://neoforged.net) you would need to install [tomate-loaders](https://npm.im/tomate-loaders).
+
+If you wish to not use `tomate-loaders`, MCLC supports installing Forge and NeoForge for you (you would need to install the installer yourself)
+
+#### Example
+
+```js
+import { Client, defineConfig, onLog, offline } from 'minecraft-launcher-core';
+import { join } from 'path';
+
+defineConfig({
+    authorization: offline('Steve'),
     version: {
         number: '1.14.4',
         type: 'release',
-    },
-    memory: {
-        max: '4G',
-        min: '2G',
-    },
-};
+        forge: join('path', 'to', 'forge-installer.jar')
+    }
+});
 
-launcher.launch(options);
+await Client.install();
+await Client.launch();
 
-launcher.on('debug', (e) => console.log(e));
-launcher.on('data', (e) => console.log(e));
+onLog('debug', (e) => console.log(e));
+onLog('data', (e) => console.log(e));
 ```
-
-### Having modded version
-
-<!-- will fill in later-->
-
-MCLC by default only has Vanilla. In order to automate the process of installing [Forge](https://minecraftforge.net), [Fabric](https://fabricmc.net) and [Quilt](https://quiltmc.org) you would need to use lorem ipsum
-
-### Documentation
-
-#### Client Functions
-
-<!-- will fill in later-->
-
-| Function | Type    | Description                                                                                |
-| -------- | ------- | ------------------------------------------------------------------------------------------ |
-| `launch` | Promise | Launches the client with the specified `options` as a parameter. Returns child the process |
-
-##### launch
-
-<!-- will fill in later-->
-
-| Parameter                      | Type    | Description                                                                                                                      | Required |
-| ------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `options.removePackage`        | Boolean | Option to remove the client package zip file after its finished extracting.                                                      | False    |
-| `options.root`                 | String  | Path where you want the launcher to work in. `C:/Users/user/AppData/Roaming/.mc`                                                 | True     |
-| `options.cache`                | String  | Path where launcher files will be cached in. `C:/Users/user/AppData/Roaming/.mc/cache`                                           | False    |
-| `options.os`                   | String  | windows, osx or linux. MCLC will auto determine the OS if this field isn't provided.                                             | False    |
-| `options.customLaunchArgs`     | Array   | Array of custom Minecraft arguments you want to add.                                                                             | False    |
-| `options.customArgs`           | Array   | Array of custom Java arguments you want to add.                                                                                  | False    |
-| `options.features`             | Array   | Array of game argument feature flags. ex: `is_demo_user` or `has_custom_resolution`                                              | False    |
-| `options.version.number`       | String  | Minecraft version that is going to be launched.                                                                                  | True     |
-| `options.version.type`         | String  | Any string. The actual Minecraft launcher uses `release` and `snapshot`.                                                         | True     |
-| `options.version.custom`       | String  | The name of the folder, jar file, and version json in the version folder.                                                        | False    |
-| `options.memory.max`           | String  | Max amount of memory being used by Minecraft.                                                                                    | True     |
-| `options.memory.min`           | String  | Min amount of memory being used by Minecraft.                                                                                    | True     |
-| `options.forge`                | String  | Path to Forge Jar. (Versions below 1.12.2 should be the "universal" jar while versions above 1.13 should be the "installer" jar) | False    |
-| `options.javaPath`             | String  | Path to the JRE executable file, will default to `java` if not entered.                                                          | False    |
-| `options.quickPlay.type`       | String  | The type of the quickPlay session. `singleplayer`, `multiplayer`, `realms`, `legacy`                                             | False    |
-| `options.quickPlay.identifier` | String  | The folder name, server address, or realm ID, relating to the specified type. `legacy` follows `multiplayer` format.             | False    |
-| `options.quickPlay.path`       | String  | The specified path for logging (relative to the run directory)                                                                   | False    |
-| `options.proxy.host`           | String  | Host url to the proxy, don't include the port.                                                                                   | False    |
-| `options.proxy.port`           | String  | Port of the host proxy, will default to `8080` if not entered.                                                                   | False    |
-| `options.proxy.username`       | String  | Username for the proxy.                                                                                                          | False    |
-| `options.proxy.password`       | String  | Password for the proxy.                                                                                                          | False    |
-| `options.timeout`              | Integer | Timeout on download requests.                                                                                                    | False    |
-| `options.window.width`         | String  | Width of the Minecraft Client.                                                                                                   | False    |
-| `options.window.height`        | String  | Height of the Minecraft Client.                                                                                                  | False    |
-| `options.window.fullscreen`    | Boolean | Fullscreen the Minecraft Client.                                                                                                 | False    |
-| `options.overrides`            | Object  | Json object redefining paths for better customization. Example below.                                                            | False    |
-
-#### Authenticator Functions
-
-##### getAuth
-
-| Parameter  | Type   | Description       | Required |
-| ---------- | ------ | ----------------- | -------- |
-| `username` | String | Email or username | True     |
-
-#### Events
-
-| Event Name        | Type    | Description                                                                         |
-| ----------------- | ------- | ----------------------------------------------------------------------------------- |
-| `arguments`       | Object  | Emitted when launch arguments are set for the Minecraft Jar.                        |
-| `data`            | String  | Emitted when information is returned from the Minecraft Process                     |
-| `close`           | Integer | Code number that is returned by the Minecraft Process                               |
-| `download`        | String  | Emitted when a file successfully downloads                                          |
-| `download-status` | Object  | Emitted when data is received while downloading                                     |
-| `debug`           | String  | Emitted when functions occur, made to help debug if errors occur                    |
-| `progress`        | Object  | Emitted when files are being downloaded in order. (Assets, Forge, Natives, Classes) |
-
-#### What should it look like running from console?
-
-The `pid` is printed in console after the process is launched.
-![gif](https://owo.whats-th.is/3N3PMC4.gif)
 
 ## Contributors
 
 These are the people that helped out that aren't listed [here](https://github.com/Pierce01/MinecraftLauncher-core/graphs/contributors)!
 
--   [Pyker](https://github.com/Pyker) - Forge dependency parsing.
--   [Khionu](https://github.com/khionu) - Research on how Minecraft's `natives` are handled.
--   [Coding-Kiwi](https://github.com/Coding-Kiwi) - Pointed out I didn't pass `clientToken` in initial authentication function.
--   maxbsoft - Pointed out that a certain JVM option causes OSX Minecraft to bug out.
--   [Noé](https://github.com/NoXeDev) - Pointed out launch args weren't being passed for Forge 1.13+.
+- [Pyker](https://github.com/Pyker) - Forge dependency parsing.
+- [Khionu](https://github.com/khionu) - Research on how Minecraft's `natives` are handled.
+- [Coding-Kiwi](https://github.com/Coding-Kiwi) - Pointed out I didn't pass `clientToken` in initial authentication function.
+- maxbsoft - Pointed out that a certain JVM option causes OSX Minecraft to bug out.
+- [Noé](https://github.com/NoXeDev) - Pointed out launch args weren't being passed for Forge 1.13+.
+
+### Related projects
+
+- [MSMC](https://npm.im/msmc) - Allows using a Microsoft Account for the authorization
+- [tomate-loaders](https://npm.im/tomate-loaders) - Downloads mod loaders automatically
+<!-- not yet on npm  -->
+<!-- - [tomate-mods](https://npm.im/tomate-mods) - Downloads mods from [Modrinth](https://modrinth.com/mods) and [Curseforge](https://curseforge.com/minecraft) automatically -->
