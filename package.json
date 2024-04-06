@@ -2,6 +2,7 @@
     "name": "minecraft-launcher-core",
     "version": "3.19.0",
     "description": "Lightweight module that downloads and runs Minecraft using javascript / NodeJS",
+    "type": "module",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Pierce01/MinecraftLauncher-core.git"
@@ -27,7 +28,7 @@
         "./build/"
     ],
     "scripts": {
-        "clean": "node clean.js",
+        "clean": "rimraf build",
         "test": "vitest",
         "build": "yarn clean && yarn build:esm && tsc",
         "build:esm": "tsc --module esnext --declaration --outDir ./build/esm",
@@ -40,6 +41,7 @@
     "dependencies": {
         "adm-zip": "^0.5.10",
         "axios": "^1.6.7",
+        "rimraf": "^5.0.5",
         "uuid": "^8.3.2"
     },
     "devDependencies": {
