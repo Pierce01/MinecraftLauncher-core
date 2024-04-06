@@ -19,10 +19,6 @@
         "target": "ESNext",
         "types": ["node"],
         "paths": {
-            "@types": ["src/types/"],
-            "@utils": ["src/utils/"],
-            "@utils/*": ["src/utils/*"],
-            "@": ["src/"],
             "@/*": ["src/*"]
         }
     },

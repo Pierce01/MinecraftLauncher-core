@@ -1,4 +1,4 @@
-import { User } from '@types';
+import { User } from '@/types';
 import { v3 } from 'uuid';
 
 export const offline = (username: string): User => {

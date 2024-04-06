@@ -1,9 +1,8 @@
-// There's no other way to make it work
-import { CustomArtifactType, CustomLibType } from './Custom';
-import Fields from './Fields';
-import Options from './Options';
-import User from './User';
-import Version from './Version';
+import { CustomArtifactType, CustomLibType } from '@/types/Custom';
+import Fields from '@/types/Fields';
+import Options from '@/types/Options';
+import User from '@/types/User';
+import Version from '@/types/Version';
 
 export type OS = 'windows' | 'osx' | 'linux';
 

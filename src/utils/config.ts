@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { offline } from '@/authenticator';
-import { Options } from '@types';
+import { Options } from '@/types';
 
 let config: Options = {
     root: './minecraft',

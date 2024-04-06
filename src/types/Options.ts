@@ -1,4 +1,4 @@
-import { OS, User } from '@types';
+import { OS, User } from '@/types';
 
 export default interface Options {
     /**

@@ -15,9 +15,9 @@ import {
     getVersion,
 } from '@/handler';
 import mclc from '@/mclc';
-import { cleanUp, getOS } from '@utils';
-import { config, defineConfig } from '@utils/config';
-import { log } from '@utils/log';
+import { cleanUp, getOS } from '@/utils';
+import { config, defineConfig } from '@/utils/config';
+import { log } from '@/utils/log';
 
 export const launch = () => {
     throw Error(

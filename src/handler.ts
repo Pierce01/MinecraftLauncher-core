@@ -12,11 +12,11 @@ import {
 import { Agent as http } from 'node:http';
 import { Agent as https } from 'node:https';
 import { join, resolve, sep } from 'node:path';
-import { ArtifactType, CustomArtifactType, CustomLibType, Fields, LibType, Rule, Version } from '@types';
-import { checkSum, cleanUp, getOS, isLegacy, popString } from '@utils';
-import { config } from '@utils/config';
-import Counter from '@utils/Counter';
-import { log } from '@utils/log';
+import { ArtifactType, CustomArtifactType, CustomLibType, Fields, LibType, Rule, Version } from '@/types';
+import { checkSum, cleanUp, getOS, isLegacy, popString } from '@/utils';
+import { config } from '@/utils/config';
+import Counter from '@/utils/Counter';
+import { log } from '@/utils/log';
 import Zip from 'adm-zip';
 import axios from 'axios';
 
