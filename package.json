@@ -28,10 +28,9 @@
         "./build/"
     ],
     "scripts": {
-        "clean": "rimraf build",
         "test": "vitest",
-        "build": "yarn clean && yarn build:esm && tsc",
-        "build:esm": "tsc --module esnext --declaration --outDir ./build/esm",
+        "prebuild": "rimraf build",
+        "build": "tsc && tsc --module esnext --declaration --outDir ./build/esm",
         "postbuild": "tsc-alias && tsc-alias --outDir ./build/esm",
         "lint": "eslint --color .",
         "prettier": "prettier --check .",
