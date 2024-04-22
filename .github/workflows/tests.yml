@@ -10,8 +10,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "18.x"
-      # - run: yarn install --frozen-lockfile
-      # - run: yarn test
+      - uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "8"
+      - run: yarn install --frozen-lockfile
+      - run: yarn test
 
   prettier:
     runs-on: ubuntu-latest
@@ -20,10 +24,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "18.x"
-      - uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version: "8"
-      - run: java -v
-      # - run: yarn install --frozen-lockfile
-      # - run: yarn prettier
+      - run: yarn install --frozen-lockfile
+      - run: yarn prettier
