@@ -28,7 +28,7 @@ pnpm add minecraft-launcher-core
 ### Example
 
 ```js
-import { Client, onLog, offline } from 'minecraft-launcher-core';
+import { Client, offline, onLog } from 'minecraft-launcher-core';
 
 const client = new Client({
     // This will launch in offline mode, if you want to use
@@ -38,7 +38,7 @@ const client = new Client({
     version: {
         number: '1.14.4',
         type: 'release',
-    }
+    },
 });
 
 await client.install();
@@ -64,7 +64,7 @@ const xboxManager = await authManager.launch('raw'); // Can be 'electron' or 'nw
 const token = await xboxManager.getMinecraft();
 
 const client = new Client({
-    authorization: token.mclc()
+    authorization: token.mclc(),
 });
 
 await client.install();
@@ -82,16 +82,16 @@ supports installing Forge and NeoForge for you (you would need to install the in
 #### Example
 
 ```js
-import { Client, onLog, offline } from 'minecraft-launcher-core';
 import { join } from 'path';
+import { Client, offline, onLog } from 'minecraft-launcher-core';
 
 const client = new Client({
     authorization: offline('Steve'),
     version: {
         number: '1.14.4',
         type: 'release',
-        forge: join('path', 'to', 'forge-installer.jar')
-    }
+        forge: join('path', 'to', 'forge-installer.jar'),
+    },
 });
 
 await client.install();
@@ -105,13 +105,13 @@ onLog('data', (e) => console.log(e));
 
 These are the people that helped out that aren't listed [here](https://github.com/Pierce01/MinecraftLauncher-core/graphs/contributors)!
 
-- [Pyker](https://github.com/Pyker) - Forge dependency parsing.
-- [Khionu](https://github.com/khionu) - Research on how Minecraft's `natives` are handled.
-- [Coding-Kiwi](https://github.com/Coding-Kiwi) - Pointed out I didn't pass `clientToken` in initial authentication function.
-- maxbsoft - Pointed out that a certain JVM option causes OSX Minecraft to bug out.
-- [Noé](https://github.com/NoXeDev) - Pointed out launch args weren't being passed for Forge 1.13+.
+-   [Pyker](https://github.com/Pyker) - Forge dependency parsing.
+-   [Khionu](https://github.com/khionu) - Research on how Minecraft's `natives` are handled.
+-   [Coding-Kiwi](https://github.com/Coding-Kiwi) - Pointed out I didn't pass `clientToken` in initial authentication function.
+-   maxbsoft - Pointed out that a certain JVM option causes OSX Minecraft to bug out.
+-   [Noé](https://github.com/NoXeDev) - Pointed out launch args weren't being passed for Forge 1.13+.
 
 ### Related projects
 
-- [MSMC](https://npm.im/msmc) - Allows using a Microsoft Account for the authorization
-- [tomate-loaders](https://npm.im/tomate-loaders) - Downloads mod loaders automatically
+-   [MSMC](https://npm.im/msmc) - Allows using a Microsoft Account for the authorization
+-   [tomate-loaders](https://npm.im/tomate-loaders) - Downloads mod loaders automatically
