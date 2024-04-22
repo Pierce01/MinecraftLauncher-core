@@ -3,27 +3,24 @@ name: Vitest & Prettier
 on: [push, pull_request]
 
 jobs:
-  setup:
+  vitest:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "18.x"
-      - run: yarn install --frozen-lockfile
-
-  vitest:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
       - run: |
-          cd minecraft-utils-pierce
+          yarn install --frozen-lockfile
           yarn test
 
   prettier:
-    needs: setup
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "18.x"
       - run: |
-          cd minecraft-utils-pierce
+          yarn install --frozen-lockfile
           yarn prettier
