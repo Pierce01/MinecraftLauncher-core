@@ -10,18 +10,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "18.x"
-      - run: |
-          cd minecraft-utils-pierce/minecraft-utils-pierce
-          yarn install --frozen-lockfile
+      - run: yarn install --frozen-lockfile
 
   vitest:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - run: yarn test
+      - run: |
+          cd minecraft-utils-pierce/minecraft-utils-pierce
+          yarn test
 
   prettier:
     needs: setup
     runs-on: ubuntu-latest
     steps:
-      - run: yarn prettier
+      - run: |
+          cd minecraft-utils-pierce/minecraft-utils-pierce
+          yarn prettier
