@@ -1,4 +1,4 @@
-![MCLC](/imgs/header.png)
+![MCLC](/assets/header.png)
 
 [![MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Version](https://img.shields.io/badge/stable_version-3.19.0-blue)
@@ -28,9 +28,9 @@ pnpm add minecraft-launcher-core
 ### Example
 
 ```js
-import { Client, defineConfig, onLog, offline } from 'minecraft-launcher-core';
+import { Client, onLog, offline } from 'minecraft-launcher-core';
 
-defineConfig({
+const client = new Client({
     // This will launch in offline mode, if you want to use
     // a Microsoft Account, see details below
     authorization: offline('Steve'),
@@ -41,8 +41,8 @@ defineConfig({
     }
 });
 
-await Client.install();
-await Client.launch();
+await client.install();
+await client.launch();
 
 onLog('debug', (e) => console.log(e));
 onLog('data', (e) => console.log(e));
@@ -56,19 +56,19 @@ Make sure to install it, as it doesn't come by default.
 #### Example
 
 ```js
-import { Client, defineConfig, onLog } from 'minecraft-launcher-core';
+import { Client, onLog } from 'minecraft-launcher-core';
 import { Auth } from 'msmc';
 
 const authManager = new Auth('select_account');
 const xboxManager = await authManager.launch('raw'); // Can be 'electron' or 'nwjs'
 const token = await xboxManager.getMinecraft();
 
-defineConfig({
+const client = new Client({
     authorization: token.mclc()
 });
 
-await Client.install();
-await Client.launch();
+await client.install();
+await client.launch();
 
 onLog('debug', (e) => console.log(e));
 onLog('data', (e) => console.log(e));
@@ -76,17 +76,16 @@ onLog('data', (e) => console.log(e));
 
 ### Modded versions
 
-MCLC only supports installing Vanilla automatically. In order to automate the process of installing [Forge](https://minecraftforge.net), [Fabric](https://fabricmc.net), [Quilt](https://quiltmc.org) and [NeoForge](https://neoforged.net) you would need to install [tomate-loaders](https://npm.im/tomate-loaders).
-
-If you wish to not use `tomate-loaders`, MCLC supports installing Forge and NeoForge for you (you would need to install the installer yourself)
+MCLC only supports installing Vanilla automatically, but it also
+supports installing Forge and NeoForge for you (you would need to install the installer yourself)
 
 #### Example
 
 ```js
-import { Client, defineConfig, onLog, offline } from 'minecraft-launcher-core';
+import { Client, onLog, offline } from 'minecraft-launcher-core';
 import { join } from 'path';
 
-defineConfig({
+const client = new Client({
     authorization: offline('Steve'),
     version: {
         number: '1.14.4',
@@ -95,8 +94,8 @@ defineConfig({
     }
 });
 
-await Client.install();
-await Client.launch();
+await client.install();
+await client.launch();
 
 onLog('debug', (e) => console.log(e));
 onLog('data', (e) => console.log(e));
@@ -116,5 +115,3 @@ These are the people that helped out that aren't listed [here](https://github.co
 
 - [MSMC](https://npm.im/msmc) - Allows using a Microsoft Account for the authorization
 - [tomate-loaders](https://npm.im/tomate-loaders) - Downloads mod loaders automatically
-<!-- not yet on npm  -->
-<!-- - [tomate-mods](https://npm.im/tomate-mods) - Downloads mods from [Modrinth](https://modrinth.com/mods) and [Curseforge](https://curseforge.com/minecraft) automatically -->
