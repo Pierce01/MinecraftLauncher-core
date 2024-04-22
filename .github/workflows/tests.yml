@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          cd minecraft-utils-pierce/minecraft-utils-pierce
+          cd minecraft-utils-pierce
           yarn test
 
   prettier:
@@ -25,5 +25,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          cd minecraft-utils-pierce/minecraft-utils-pierce
+          cd minecraft-utils-pierce
           yarn prettier
