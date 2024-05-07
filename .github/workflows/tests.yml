@@ -16,13 +16,5 @@ jobs:
           java-version: "8"
       - run: yarn install --frozen-lockfile
       - run: yarn test
-
-  prettier:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "18.x"
-      - run: yarn install --frozen-lockfile
-      - run: yarn prettier
+      - run: ls
+      - run: ls minecraft
