@@ -1,28 +1,45 @@
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import {
-    checkJava,
-    downloadAsync,
-    getAssets,
-    getClasses,
-    getForgedWrapped,
-    getJar,
-    getJVM,
-    getLaunchOptions,
-    getMemory,
-    getNatives,
-    getVersion,
-} from '@/handler';
+import { offline } from '@/authenticator';
+import Handler from '@/handler';
 import mclc from '@/mclc';
+import { Options } from '@/types';
 import { cleanUp, getOS } from '@/utils';
-import { config, defineConfig } from '@/utils/config';
 import { log } from '@/utils/log';
-import { Options } from './types';
+
+const initialConfig: Options = {
+    mclc_log: true,
+    root: './minecraft',
+    directory: '',
+    authorization: offline('Steve'),
+    detached: true,
+    version: {
+        number: '1.14.4',
+        type: 'release',
+    },
+    url: {
+        meta: 'https://launchermeta.mojang.com',
+        resource: 'https://resources.download.minecraft.net',
+    },
+    memory: {
+        min: Math.pow(2, 9),
+        max: Math.pow(2, 10),
+    },
+};
 
 export class Client {
+    config: Options;
+    handler: Handler;
+
     constructor(config: Options) {
-        defineConfig(config);
+        this.config = { ...initialConfig, ...config };
+        this.config.directory = join(
+            this.config.root,
+            'versions',
+            this.config.version.custom || this.config.version.number,
+        );
+        this.handler = new Handler(this.config);
     }
 
     launch() {
@@ -32,81 +49,97 @@ export class Client {
     }
 
     async install() {
-        log('version', `MCLC version ${mclc}`);
+        this.config.mclc_log && log('version', `MCLC version ${mclc}`);
 
-        if (!existsSync(config.root)) {
+        if (!existsSync(this.config.root)) {
             log('debug', 'Attempting to create root folder');
-            mkdirSync(config.root);
+            mkdirSync(this.config.root);
         }
 
-        if (config.gameDirectory) {
-            defineConfig({ gameDirectory: resolve(config.gameDirectory) });
-            if (!existsSync(config.gameDirectory)) mkdirSync(config.gameDirectory, { recursive: true });
+        if (this.config.gameDirectory) {
+            this.config.gameDirectory = resolve(this.config.gameDirectory);
+            if (!existsSync(this.config.gameDirectory)) mkdirSync(this.config.gameDirectory, { recursive: true });
         }
 
-        await getVersion();
+        await this.handler.getVersion();
         const mcPath =
-            config.minecraftJar ||
-            (config.version.custom
-                ? join(config.root, 'versions', config.version.custom, `${config.version.custom}.jar`)
-                : join(config.directory, `${config.version.number}.jar`));
-        await getNatives();
+            this.config.minecraftJar ||
+            (this.config.version.custom
+                ? join(this.config.root, 'versions', this.config.version.custom, `${this.config.version.custom}.jar`)
+                : join(this.config.directory, `${this.config.version.number}.jar`));
+        await this.handler.getNatives();
 
         if (!existsSync(mcPath)) {
             log('debug', 'Attempting to download Minecraft version jar');
-            await getJar();
+            await this.handler.getJar();
         }
 
         let modifyJson = null;
-        if (config.version.custom) {
+        if (this.config.version.custom) {
             log('debug', 'Detected custom in options, setting custom version file');
             modifyJson = JSON.parse(
-                readFileSync(join(config.root, 'versions', config.version.custom, `${config.version.custom}.json`), {
-                    encoding: 'utf8',
-                }),
+                readFileSync(
+                    join(
+                        this.config.root,
+                        'versions',
+                        this.config.version.custom,
+                        `${this.config.version.custom}.json`,
+                    ),
+                    {
+                        encoding: 'utf8',
+                    },
+                ),
             );
         }
 
-        cleanUp(await getClasses(modifyJson));
+        cleanUp(await this.handler.getClasses(modifyJson));
 
         log('debug', 'Attempting to download assets');
-        await getAssets();
+        await this.handler.getAssets();
 
-        log('debug', `Successfully installed Minecraft ${config.version.number}`);
+        log('debug', `Successfully installed Minecraft ${this.config.version.number}`);
         return;
     }
 
     async start() {
-        log('version', `MCLC version ${mclc}`);
+        this.config.mclc_log && log('version', `MCLC version ${mclc}`);
 
-        const java = await checkJava(config.javaPath || 'java');
+        const java = await this.handler.checkJava(this.config.javaPath || 'java');
         if (!java || !java.run) {
             log('debug', `Couldn't start Minecraft due to: ${java.message}`);
             return log('close', 1);
         }
 
-        const versionFile = await getVersion();
+        const versionFile = await this.handler.getVersion();
         const mcPath =
-            config.minecraftJar ||
-            (config.version.custom
-                ? join(config.root, 'versions', config.version.custom, `${config.version.custom}.jar`)
-                : join(config.directory, `${config.version.number}.jar`));
-        const nativePath = await getNatives();
+            this.config.minecraftJar ||
+            (this.config.version.custom
+                ? join(this.config.root, 'versions', this.config.version.custom, `${this.config.version.custom}.jar`)
+                : join(this.config.directory, `${this.config.version.number}.jar`));
+        const nativePath = await this.handler.getNatives();
 
         const args: string[] = [];
 
         let modifyJson = null;
-        if (config.version.custom) {
+        if (this.config.version.custom) {
             log('debug', 'Detected custom in options, setting custom version file');
             modifyJson = JSON.parse(
-                readFileSync(join(config.root, 'versions', config.version.custom, `${config.version.custom}.json`), {
-                    encoding: 'utf8',
-                }),
+                readFileSync(
+                    join(
+                        this.config.root,
+                        'versions',
+                        this.config.version.custom,
+                        `${this.config.version.custom}.json`,
+                    ),
+                    {
+                        encoding: 'utf8',
+                    },
+                ),
             );
-        } else if (config.forge) {
-            defineConfig({ forge: resolve(config.forge) });
+        } else if (this.config.forge) {
+            this.config.forge = resolve(this.config.forge);
             log('debug', 'Detected Forge in options, getting dependencies');
-            modifyJson = await getForgedWrapped();
+            modifyJson = await this.handler.getForgedWrapped();
         }
 
         const jvm = [
@@ -115,26 +148,26 @@ export class Client {
             '-Dfml.ignorePatchDiscrepancies=true',
             '-Dfml.ignoreInvalidMinecraftCertificates=true',
             `-Djava.library.path=${resolve(nativePath)}`,
-            `-Xmx${getMemory()[0]}`,
-            `-Xms${getMemory()[1]}`,
+            `-Xmx${this.handler.getMemory()[0]}`,
+            `-Xms${this.handler.getMemory()[1]}`,
         ];
-        if (getOS() === 'osx') {
-            if (parseInt(versionFile.id.split('.')[1]) > 12) jvm.push(await getJVM());
-        } else jvm.push(await getJVM());
+        if (getOS(this.config.os) === 'osx') {
+            if (parseInt(versionFile.id.split('.')[1]) > 12) jvm.push(await this.handler.getJVM());
+        } else jvm.push(await this.handler.getJVM());
 
-        if (config.customArgs) jvm.concat(config.customArgs);
-        if (config.logj4ConfigurationFile)
-            jvm.push(`-Dlog4j.configurationFile=${resolve(config.logj4ConfigurationFile)}`);
+        if (this.config.customArgs) jvm.concat(this.config.customArgs);
+        if (this.config.logj4ConfigurationFile)
+            jvm.push(`-Dlog4j.configurationFile=${resolve(this.config.logj4ConfigurationFile)}`);
         // https://help.minecraft.net/hc/en-us/articles/4416199399693-Security-Vulnerability-in-Minecraft-Java-Edition
         if (parseInt(versionFile.id.split('.')[1]) === 18 && !parseInt(versionFile.id.split('.')[2]))
             jvm.push('-Dlog4j2.formatMsgNoLookups=true');
         if (parseInt(versionFile.id.split('.')[1]) === 17) jvm.push('-Dlog4j2.formatMsgNoLookups=true');
         if (parseInt(versionFile.id.split('.')[1]) < 17) {
             if (!jvm.find((arg) => arg.includes('Dlog4j.configurationFile'))) {
-                const configPath = resolve(config.root);
+                const configPath = resolve(this.config.root);
                 const intVersion = parseInt(versionFile.id.split('.')[1]);
                 if (intVersion >= 12) {
-                    await downloadAsync(
+                    await this.handler.downloadAsync(
                         'https://launcher.mojang.com/v1/objects/02937d122c86ce73319ef9975b58896fc1b491d1/log4j2_112-116.xml',
                         configPath,
                         'log4j2_112-116.xml',
@@ -143,7 +176,7 @@ export class Client {
                     );
                     jvm.push(`-Dlog4j.configurationFile=${resolve(join(configPath, 'log4j2_112-116.xml'))}`);
                 } else if (intVersion >= 7) {
-                    await downloadAsync(
+                    await this.handler.downloadAsync(
                         'https://launcher.mojang.com/v1/objects/dd2b723346a8dcd48e7f4d245f6bf09e98db9696/log4j2_17-111.xml',
                         configPath,
                         'log4j2_17-111.xml',
@@ -155,26 +188,28 @@ export class Client {
             }
         }
 
-        const classes = config.classes || cleanUp(await getClasses(modifyJson));
+        const classes = this.config.classes || cleanUp(await this.handler.getClasses(modifyJson));
         const classPaths = ['-cp'];
-        const separator = getOS() === 'windows' ? ';' : ':';
+        const separator = getOS(this.config.os) === 'windows' ? ';' : ':';
         log('debug', `Using ${separator} to separate class paths`);
         // Handling launch arguments.
         const file = modifyJson || versionFile;
         // So mods like fabric work.
         const jar = existsSync(mcPath)
             ? `${separator}${resolve(mcPath)}`
-            : `${separator}${resolve(join(config.directory, `${config.version.number}.jar`))}`;
-        classPaths.push(`${config.forge ? `${config.forge}${separator}` : ''}${classes.join(separator)}${jar}`);
+            : `${separator}${resolve(join(this.config.directory, `${this.config.version.number}.jar`))}`;
+        classPaths.push(
+            `${this.config.forge ? `${this.config.forge}${separator}` : ''}${classes.join(separator)}${jar}`,
+        );
         classPaths.push(file.mainClass);
 
-        const launchconfig = await getLaunchOptions(modifyJson);
+        const launchconfig = await this.handler.getLaunchOptions(modifyJson);
         const launchArguments = args.concat(jvm, classPaths, launchconfig);
         log('arguments', launchArguments);
         log('debug', `Launching with arguments ${launchArguments.join(' ')}`);
 
-        const minecraft = spawn(config.javaPath ?? 'java', launchArguments, {
-            detached: config.detached,
+        const minecraft = spawn(this.config.javaPath ?? 'java', launchArguments, {
+            detached: this.config.detached,
         });
         minecraft.stdout.on('data', (data) => log('data', data.toString('utf-8')));
         minecraft.stderr.on('data', (data) => log('data', data.toString('utf-8')));

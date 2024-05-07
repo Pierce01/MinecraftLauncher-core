@@ -5,15 +5,17 @@ import { afterAll, describe, expect, test } from 'vitest';
 import { Client } from '../src';
 
 describe('Minecraft Vanilla Legacy (1.8.9)', () => {
+    const client = new Client({
+        version: {
+            number: '1.8.9',
+            type: 'release',
+        },
+    });
+
     test(
         'Installation',
         async () => {
-            await new Client({
-                version: {
-                    number: '1.8.9',
-                    type: 'release',
-                },
-            }).install();
+            await client.install();
             expect(existsSync(resolve('./minecraft/natives/1.8.9'))).toBe(true);
             expect(existsSync(resolve('./minecraft/versions/1.8.9/1.8.9.jar'))).toBe(true);
             expect(existsSync(resolve('./minecraft/versions/1.8.9/1.8.9.json'))).toBe(true);
@@ -24,12 +26,7 @@ describe('Minecraft Vanilla Legacy (1.8.9)', () => {
     test(
         'Starting',
         async () => {
-            const process = await new Client({
-                version: {
-                    number: '1.8.9',
-                    type: 'release',
-                },
-            }).start();
+            const process = await client.start();
             expect(process && typeof process.kill === 'function').toBe(true);
             await new Promise<void>((resolve) => {
                 setTimeout(() => {
@@ -51,15 +48,17 @@ describe('Minecraft Vanilla Legacy (1.8.9)', () => {
 });
 
 describe('Minecraft Vanilla Modern (1.14.4)', () => {
+    const client = new Client({
+        version: {
+            number: '1.14.4',
+            type: 'release',
+        },
+    });
+
     test(
         'Installation',
         async () => {
-            await new Client({
-                version: {
-                    number: '1.14.4',
-                    type: 'release',
-                },
-            }).install();
+            await client.install();
             expect(existsSync(resolve('./minecraft/natives/1.14.4'))).toBe(true);
             expect(existsSync(resolve('./minecraft/versions/1.14.4/1.14.4.jar'))).toBe(true);
             expect(existsSync(resolve('./minecraft/versions/1.14.4/1.14.4.json'))).toBe(true);
@@ -70,12 +69,7 @@ describe('Minecraft Vanilla Modern (1.14.4)', () => {
     test(
         'Starting',
         async () => {
-            const process = await new Client({
-                version: {
-                    number: '1.14.4',
-                    type: 'release',
-                },
-            }).start();
+            const process = await client.start();
             expect(process && typeof process.kill === 'function').toBe(true);
             await new Promise<void>((resolve) => {
                 setTimeout(() => {

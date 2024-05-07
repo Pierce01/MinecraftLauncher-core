@@ -2,6 +2,10 @@ import { OS, User } from '@/types';
 
 export default interface Options {
     /**
+     * console.log the MCLC version
+     */
+    mclc_log?: boolean;
+    /**
      * if true MCLC will remove the client package zip file after its finished extracting.
      */
     removePackage?: boolean;
