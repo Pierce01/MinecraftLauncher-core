@@ -16,7 +16,5 @@ jobs:
           java-version: "8"
       - run: yarn install --frozen-lockfile
       - run: yarn test
-      - run: ls
-        if: always()
-      - run: ls minecraft
+      - run: ls minecraft/versions
         if: always()

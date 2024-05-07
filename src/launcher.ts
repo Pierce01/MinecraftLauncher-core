@@ -206,7 +206,7 @@ export class Client {
         const launchconfig = await this.handler.getLaunchOptions(modifyJson);
         const launchArguments = args.concat(jvm, classPaths, launchconfig);
         log('arguments', launchArguments);
-        log('debug', `Launching with arguments ${launchArguments.join(' ')}`);
+        console.log('debug', `Launching with arguments ${launchArguments.join(' ')}`);
 
         const minecraft = spawn(this.config.javaPath ?? 'java', launchArguments, {
             detached: this.config.detached,
