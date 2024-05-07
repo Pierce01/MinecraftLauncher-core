@@ -1,7 +1,6 @@
-import { ChildProcessWithoutNullStreams } from 'node:child_process';
-import { existsSync, rmdirSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { afterAll, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { Client } from '../src';
 
 describe('Minecraft 1.8.9', () => {
