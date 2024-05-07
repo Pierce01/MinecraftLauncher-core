@@ -17,4 +17,6 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn test
       - run: ls
+        if: always()
       - run: ls minecraft
+        if: always()
