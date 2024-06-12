@@ -130,10 +130,6 @@ export default interface Options {
          */
         path?: string;
     };
-    /**
-     * The amount of launch arguments specified in the version file before it adds the default again
-     */
-    minArgs?: number;
     minecraftJar?: string;
     versionJson?: string;
     versionName?: string;
@@ -159,7 +155,7 @@ export default interface Options {
      */
     classes?: Array<string>;
     /**
-     * Max sockets for downloadAsync.
+     * Max sockets for downloadAsync. Defaults is Infinity
      */
     maxSockets?: number;
     /**
