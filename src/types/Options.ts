@@ -23,15 +23,15 @@ export default interface Options {
     /**
      * Array of custom Minecraft arguments.
      */
-    customLaunchArgs?: Array<string>;
+    customLaunchArgs?: string[];
     /**
      * Array of custom Java arguments
      */
-    customArgs?: Array<string>;
+    customArgs?: string[];
     /**
      * Array of game argument feature flags
      */
-    features?: Array<string>;
+    features?: string[];
     /**
      * minecraft version info
      */
@@ -153,7 +153,7 @@ export default interface Options {
      * List of classes.
      * All class paths are required if you use this.
      */
-    classes?: Array<string>;
+    classes?: string[];
     /**
      * Max sockets for downloadAsync. Defaults is Infinity
      */
