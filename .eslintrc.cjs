@@ -7,7 +7,6 @@ module.exports = {
         tsconfigRootDir: './',
     },
     env: {
-        browser: true,
         es6: true,
     },
     plugins: ['prettier', '@typescript-eslint'],
