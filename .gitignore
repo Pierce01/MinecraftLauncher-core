@@ -66,4 +66,5 @@ typings/
 # IntelliJ Files
 .idea/
 
+# Minecraft folder
 minecraft/
