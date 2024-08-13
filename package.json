@@ -1,42 +1,64 @@
 {
-  "name": "minecraft-launcher-core",
-  "version": "3.18.1",
-  "description": "Lightweight module that downloads and runs Minecraft using javascript / NodeJS",
-  "main": "index.js",
-  "dependencies": {
-    "adm-zip": "^0.4.13",
-    "checksum": "^0.1.1",
-    "request": "^2.88.2",
-    "uuid": "^8.3.2"
-  },
-  "devDependencies": {
-    "@types/checksum": "^0.1.35",
-    "@types/node": "^14.0.27",
-    "eslint": "^6.8.0",
-    "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-import": "^2.20.2",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1"
-  },
-  "scripts": {
-    "test": "eslint ."
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Pierce01/MinecraftLauncher-core.git"
-  },
-  "keywords": [
-    "minecraft",
-    "minecraft-launcher-node",
-    "minecraft-launcher",
-    "launcher",
-    "minecraft-forge"
-  ],
-  "author": "Pierce Harriz",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/Pierce01/MinecraftLauncher-core/issues"
-  },
-  "homepage": "https://github.com/Pierce01/MinecraftLauncher-core#readme"
+    "name": "minecraft-launcher-core",
+    "version": "3.19.0",
+    "description": "Lightweight module that downloads and runs Minecraft using javascript / NodeJS",
+    "type": "module",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Pierce01/MinecraftLauncher-core.git"
+    },
+    "keywords": [
+        "minecraft",
+        "minecraft-launcher-node",
+        "minecraft-launcher",
+        "launcher",
+        "minecraft-forge"
+    ],
+    "author": "Pierce Harriz",
+    "funding": "https://github.com/Pierce01/MinecraftLauncher-core?sponsor=1",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/Pierce01/MinecraftLauncher-core/issues"
+    },
+    "homepage": "https://github.com/Pierce01/MinecraftLauncher-core#readme",
+    "main": "./build/cjs/index.js",
+    "module": "./build/esm/index.js",
+    "types": "./build/esm/index.d.ts",
+    "files": [
+        "./build/"
+    ],
+    "scripts": {
+        "test": "vitest",
+        "prebuild": "rimraf build",
+        "build": "tsc && tsc --module esnext --declaration --outDir ./build/esm",
+        "postbuild": "tsc-alias && tsc-alias --outDir ./build/esm",
+        "lint": "eslint --color .",
+        "prettier": "prettier --check .",
+        "prettier:write": "prettier --write .",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "adm-zip": "^0.5.10",
+        "axios": "^1.6.7",
+        "rimraf": "^5.0.5",
+        "uuid": "^8.3.2"
+    },
+    "devDependencies": {
+        "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
+        "@types/adm-zip": "^0.5.5",
+        "@types/node": "^14.0.27",
+        "@types/uuid": "^9.0.8",
+        "@typescript-eslint/eslint-plugin": "^7.1.0",
+        "@typescript-eslint/parser": "^7.1.0",
+        "eslint": "^8.57.0",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-prettier": "^5.1.3",
+        "prettier": "^3.2.5",
+        "ts-node": "^10.9.2",
+        "tsc-alias": "^1.8.8",
+        "typescript": "^5.3.3",
+        "vite": "^5.1.6",
+        "vite-tsconfig-paths": "^4.3.1",
+        "vitest": "^1.3.1"
+    }
 }

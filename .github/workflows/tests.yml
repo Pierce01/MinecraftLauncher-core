@@ -1,0 +1,36 @@
+name: Vitest & Prettier
+
+on: [push, pull_request]
+
+jobs:
+  vitest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install NodeJS v18
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18.x"
+
+      - name: Install packages
+        run: yarn install --frozen-lockfile
+
+      - name: Run Vitest
+        run: yarn test
+
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install NodeJS v18
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18.x"
+
+      - name: Install packages
+        run: yarn install --frozen-lockfile
+
+      - name: Run Prettier
+        run: yarn prettier
