@@ -43,7 +43,7 @@ const client = new Client({
 });
 
 await client.install();
-await client.launch();
+await client.start();
 
 onLog('debug', (e) => console.log(e));
 onLog('data', (e) => console.log(e));
@@ -69,7 +69,7 @@ const client = new Client({
 });
 
 await client.install();
-await client.launch();
+await client.start();
 
 onLog('debug', (e) => console.log(e));
 onLog('data', (e) => console.log(e));
@@ -96,7 +96,7 @@ const client = new Client({
 });
 
 await client.install();
-await client.launch();
+await client.start();
 
 onLog('debug', (e) => console.log(e));
 onLog('data', (e) => console.log(e));
