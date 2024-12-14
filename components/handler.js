@@ -530,7 +530,7 @@ class Handler {
     }
 
     const parsed = this.version.libraries.map(lib => {
-      if (lib.downloads && lib.downloads.artifact && !this.parseRule(lib)) return lib
+      if (lib.downloads && lib.downloads.artifact && !this.parseRule(lib) && !classJson.libraries.some(l => l.name.split(':')[0] == lib.name.split(':')[0])) return lib
     })
 
     libs = libs.concat((await this.downloadToDirectory(libraryDirectory, parsed, 'classes')))
