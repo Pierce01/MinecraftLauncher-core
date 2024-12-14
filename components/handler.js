@@ -536,9 +536,6 @@ class Handler {
     libs = libs.concat((await this.downloadToDirectory(libraryDirectory, parsed, 'classes')))
     counter = 0
 
-    // Temp Quilt support
-    if (classJson) libs.sort()
-
     this.client.emit('debug', '[MCLC]: Collected class paths')
     return libs
   }
