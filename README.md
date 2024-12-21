@@ -1,8 +1,7 @@
 ![logo](https://owo.whats-th.is/8mT5kxc.png)
 ##### Project rewrite coming soon™
-[![Build Status](https://travis-ci.com/Pierce01/MinecraftLauncher-core.svg?branch=master)](https://travis-ci.com/Pierce01/MinecraftLauncher-core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-![version](https://img.shields.io/badge/stable_version-3.18.1-blue)
+![version](https://img.shields.io/badge/stable_version-3.18.2-blue)
 
 MCLC (Minecraft Launcher Core) is a NodeJS solution for launching modded and vanilla Minecraft without having to download and format everything yourself.
 Basically a core for your Electron or script based launchers.

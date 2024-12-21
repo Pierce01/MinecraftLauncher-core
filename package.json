@@ -1,6 +1,6 @@
 {
   "name": "minecraft-launcher-core",
-  "version": "3.18.1",
+  "version": "3.18.2",
   "description": "Lightweight module that downloads and runs Minecraft using javascript / NodeJS",
   "main": "index.js",
   "dependencies": {
