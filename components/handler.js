@@ -529,15 +529,17 @@ class Handler {
       libs = await this.downloadToDirectory(libraryDirectory, classJson.libraries, 'classes-custom')
     }
 
-    const parsed = this.version.libraries.map(lib => {
-      if (lib.downloads && lib.downloads.artifact && !this.parseRule(lib)) return lib
+    const parsed = this.version.libraries.filter(lib => {
+      if (lib.downloads && lib.downloads.artifact && !this.parseRule(lib)) {
+        if (!classJson || !classJson.libraries.some(l => l.name.split(':')[1] === lib.name.split(':')[1])) {
+          return true
+        }
+      }
+      return false
     })
 
     libs = libs.concat((await this.downloadToDirectory(libraryDirectory, parsed, 'classes')))
     counter = 0
-
-    // Temp Quilt support
-    if (classJson) libs.sort()
 
     this.client.emit('debug', '[MCLC]: Collected class paths')
     return libs
