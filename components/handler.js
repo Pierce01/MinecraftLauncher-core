@@ -329,7 +329,7 @@ class Handler {
   async getForgedWrapped () {
     let json = null
     let installerJson = null
-    const versionPath = path.join(this.options.root, 'forge', `${this.version.id}`, 'version.json')
+    const versionPath = path.join(this.options.overrides.directory || this.options.root, `forge-${this.version.id}`, 'version.json')
     // Since we're building a proper "custom" JSON that will work nativly with MCLC, the version JSON will not
     // be re-generated on the next run.
     if (fs.existsSync(versionPath)) {
@@ -460,8 +460,8 @@ class Handler {
     json.forgeWrapperVersion = this.options.overrides.fw.version
 
     // Saving file for next run!
-    if (!fs.existsSync(path.join(this.options.root, 'forge', this.version.id))) {
-      fs.mkdirSync(path.join(this.options.root, 'forge', this.version.id), { recursive: true })
+    if (!fs.existsSync(path.join(this.options.overrides.directory || this.options.root, `forge-${this.version.id}`))) {
+      fs.mkdirSync(path.join(this.options.overrides.directory || this.options.root, `forge-${this.version.id}`), { recursive: true })
     }
     fs.writeFileSync(versionPath, JSON.stringify(json, null, 4))
 
@@ -501,7 +501,7 @@ class Handler {
 
       if (!fs.existsSync(path.join(jarPath, name))) await downloadLibrary(library)
       if (library.downloads && library.downloads.artifact) {
-        if (!this.checkSum(library.downloads.artifact.sha1, path.join(jarPath, name))) await downloadLibrary(library)
+        if (!await this.checkSum(library.downloads.artifact.sha1, path.join(jarPath, name))) await downloadLibrary(library)
       }
 
       counter++

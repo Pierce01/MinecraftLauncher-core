@@ -54,7 +54,7 @@ class MCLCore extends EventEmitter {
 
       const versionFile = await this.handler.getVersion()
       const mcPath = this.options.overrides.minecraftJar || (this.options.version.custom
-        ? path.join(this.options.root, 'versions', this.options.version.custom, `${this.options.version.custom}.jar`)
+        ? path.join(this.options.overrides.directory || path.join(this.options.root, 'versions', this.options.version.custom), `${this.options.version.custom}.jar`)
         : path.join(directory, `${this.options.version.number}.jar`))
       this.options.mcPath = mcPath
       const nativePath = await this.handler.getNatives()
@@ -93,12 +93,16 @@ class MCLCore extends EventEmitter {
           const configPath = path.resolve(this.options.overrides.cwd || this.options.root)
           const intVersion = parseInt(versionFile.id.split('.')[1])
           if (intVersion >= 12) {
-            await this.handler.downloadAsync('https://launcher.mojang.com/v1/objects/02937d122c86ce73319ef9975b58896fc1b491d1/log4j2_112-116.xml',
-              configPath, 'log4j2_112-116.xml', true, 'log4j')
+            if (!fs.existsSync(path.join(configPath, 'log4j2_112-116.xml'))) {
+              await this.handler.downloadAsync('https://launcher.mojang.com/v1/objects/02937d122c86ce73319ef9975b58896fc1b491d1/log4j2_112-116.xml',
+                configPath, 'log4j2_112-116.xml', true, 'log4j')
+            }
             jvm.push('-Dlog4j.configurationFile=log4j2_112-116.xml')
           } else if (intVersion >= 7) {
-            await this.handler.downloadAsync('https://launcher.mojang.com/v1/objects/dd2b723346a8dcd48e7f4d245f6bf09e98db9696/log4j2_17-111.xml',
-              configPath, 'log4j2_17-111.xml', true, 'log4j')
+            if (!fs.existsSync(path.join(configPath, 'log4j2_17-111.xml'))) {
+              await this.handler.downloadAsync('https://launcher.mojang.com/v1/objects/dd2b723346a8dcd48e7f4d245f6bf09e98db9696/log4j2_17-111.xml',
+                configPath, 'log4j2_17-111.xml', true, 'log4j')
+            }
             jvm.push('-Dlog4j.configurationFile=log4j2_17-111.xml')
           }
         }
